@@ -1,0 +1,19 @@
+spring:
+  main:
+    web-application-type: none
+  application:
+    name: curious-tunes
+
+
+application:
+  title: cTunes
+
+spring.jpa.database-platform: org.hibernate.community.dialect.SQLiteDialect
+driverClassName: org.sqlite.JDBC
+url: jdbc:sqlite:data/solfeggio.db
+username: sa
+password: sa
+
+spring.sql.init.mode: always
+spring.jpa.hibernate.ddl-auto: update
+spring.jpa.defer-datasource-initialization: false

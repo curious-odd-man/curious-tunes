@@ -1,0 +1,87 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'idea'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'application'
+}
+
+group = 'com.github.curiousoddman'
+version = '0.0.1-SNAPSHOT'
+description = 'An audio player resembling iTunes'
+
+def javafxVersion = '25.0.1'
+def testfxVersion = '4.0.18'
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+run {
+    jvmArgs([
+            "--add-reads", "javafx.graphics=ALL-UNNAMED",
+            "--add-opens", "javafx.controls/com.sun.javafx.charts=ALL-UNNAMED",
+            "--add-opens", "javafx.graphics/com.sun.javafx.iio=ALL-UNNAMED",
+            "--add-opens", "javafx.graphics/com.sun.javafx.iio.common=ALL-UNNAMED",
+            "--add-opens", "javafx.graphics/com.sun.javafx.css=ALL-UNNAMED",
+            "--add-opens", "javafx.base/com.sun.javafx.runtime=ALL-UNNAMED"
+    ])
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+javafx {
+    version = "${javafxVersion}"
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClass = 'com.github.curiousoddman.curious_tunes.Main'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-h2console'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+
+    implementation "org.openjfx:javafx-controls:${javafxVersion}"
+    implementation "org.openjfx:javafx-fxml:${javafxVersion}"
+
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'com.h2database:h2'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-jooq-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "org.testfx:testfx-core:${testfxVersion}"
+    testImplementation "org.testfx:testfx-junit5:${testfxVersion}"
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    testLogging.showStandardStreams = true
+    jvmArgs('--add-opens=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED')
+}
