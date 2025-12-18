@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+<HBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+      minWidth="-Infinity" onMouseClicked="#onArtistClicked" xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryArtistController">
+    <children>
+        <ImageView fx:id="artistImageView" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+        </ImageView>
+        <Label fx:id="artistNameLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+               text="Red Hot Chile Peppers">
+            <font>
+                <Font name="Consolas Bold" size="14.0"/>
+            </font>
+        </Label>
+    </children>
+</HBox>

@@ -1,12 +1,12 @@
 package com.github.curiousoddman.curious_tunes.config;
 
-public enum FxmlView {
-    HOME {
-        @Override
-        public String getFxmlPath() {
-            return "/fxml/home.fxml";
-        }
-    };
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-    public abstract String getFxmlPath();
+@Getter
+@RequiredArgsConstructor
+public enum FxmlView {
+    LIBRARY(".\\fxml\\library.fxml");
+
+    private final String fxmlPath;
 }

@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.config;
 
+import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import lombok.RequiredArgsConstructor;
@@ -7,17 +8,25 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 @Component
 @RequiredArgsConstructor
 public class FxmlLoader {
     private final ApplicationContext context;
 
-    public Parent load(String fxmlPath) throws IOException {
+    public <T> LoadedFxml<T> load(String fxmlPath, ResourceBundle resourceBundle) throws IOException {
         FXMLLoader loader = new FXMLLoader();
         loader.setControllerFactory(context::getBean);
-        loader.setLocation(getClass().getResource(fxmlPath));
+        URL resource = getClass().getClassLoader().getResource(fxmlPath);
+        loader.setLocation(resource);
+        loader.setResources(resourceBundle);
         loader.setClassLoader(context.getClassLoader());
-        return loader.load();
+        Parent parent = loader.load();
+        return new LoadedFxml<>(
+                parent,
+                loader.getController()
+        );
     }
 }

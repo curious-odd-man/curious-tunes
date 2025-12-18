@@ -29,6 +29,6 @@ public class JavafxApplication extends Application {
     public void start(Stage primaryStage) {
         stage = primaryStage;
         stageManager = applicationContext.getBean(StageManager.class, primaryStage);
-        stageManager.switchScene(FxmlView.HOME);
+        stageManager.switchScene(FxmlView.LIBRARY);
     }
 }
