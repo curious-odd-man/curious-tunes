@@ -3,17 +3,14 @@ spring:
     web-application-type: none
   application:
     name: curious-tunes
-
-
-application:
+  datasource:
+    url: jdbc:h2:file:~/ctunes-prod;DB_CLOSE_ON_EXIT=FALSE:application
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+  sql.init.mode: always
+  jpa.defer-datasource-initialization: false
   title: cTunes
-
-spring.jpa.database-platform: org.hibernate.community.dialect.SQLiteDialect
-driverClassName: org.sqlite.JDBC
-url: jdbc:sqlite:data/solfeggio.db
-username: sa
-password: sa
-
-spring.sql.init.mode: always
-spring.jpa.hibernate.ddl-auto: update
-spring.jpa.defer-datasource-initialization: false
+  h2:
+    console:
+      enabled: true
