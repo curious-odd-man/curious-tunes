@@ -117,6 +117,8 @@ dependencies {
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers:${tikaVersion}"
     implementation "org.apache.tika:tika-parser-audiovideo-module:${tikaVersion}"
+    implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
+    //implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
 
     implementation "org.openjfx:javafx-controls:${javafxVersion}"
     implementation "org.openjfx:javafx-fxml:${javafxVersion}"
