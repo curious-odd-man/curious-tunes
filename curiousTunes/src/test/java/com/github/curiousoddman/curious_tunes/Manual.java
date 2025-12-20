@@ -2,16 +2,20 @@ package com.github.curiousoddman.curious_tunes;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tika.Tika;
-import org.apache.tika.exception.TikaException;
-import org.apache.tika.metadata.Metadata;
+import org.mp4parser.Box;
+import org.mp4parser.IsoFile;
+import org.mp4parser.boxes.UnknownBox;
+import org.mp4parser.boxes.apple.Utf8AppleDataBox;
+import org.mp4parser.boxes.iso14496.part12.FreeBox;
+import org.mp4parser.boxes.iso14496.part12.HandlerBox;
+import org.mp4parser.support.AbstractBox;
+import org.mp4parser.support.AbstractContainerBox;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.FileInputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Manual {
@@ -29,12 +33,19 @@ public class Manual {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                if (!attrs.isRegularFile()) {
+                    return FileVisitResult.CONTINUE;
+                }
                 System.out.print('.');
                 if (i++ % 150 == 0) {
                     System.out.println();
                 }
                 try {
-                    Map<String, String> tags = extractMetadata(file);
+                    Map<String, String> tags = extractMp4ParserMetadata(file);
+                    if (tags == null || tags.isEmpty()) {
+                        log.warn("{} contained no metadata", file);
+                        return FileVisitResult.CONTINUE;
+                    }
                     StringBuilder sb = new StringBuilder("File: ").append(file.toAbsolutePath()).append('\n');
                     tags.forEach((k, v) -> {
                         stats.compute(k, (_, vv) -> vv == null ? 1 : vv + 1);
@@ -42,7 +53,7 @@ public class Manual {
                     });
                     Files.writeString(resultPath, sb.toString(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
                 } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    log.error("{}: {}", file, e.getMessage(), e);
                 }
                 return FileVisitResult.CONTINUE;
             }
@@ -56,19 +67,41 @@ public class Manual {
     }
 
 
-    private static Map<String, String> extractMetadata(Path file) throws IOException {
-        Tika tika = new Tika();
-        Metadata metadata = new Metadata();
-        try (InputStream fis = Files.newInputStream(file)) {
-            tika.parseToString(fis, metadata);
-        } catch (TikaException e) {
-            log.error(e.getMessage(), e);
+    @SneakyThrows
+    private static Map<String, String> extractMp4ParserMetadata(Path file) {
+        // https://github.com/sannies/mp4parser/blob/master/examples/src/main/java/org/mp4parser/examples/metadata/MetaDataRead.java
+        List<Box> resultBoxes = new ArrayList<>();
+        try (FileInputStream fileInputStream = new FileInputStream(file.toFile())) {
+            IsoFile isoFile = new IsoFile(fileInputStream.getChannel());
+            Queue<Box> boxes = new LinkedList<>(isoFile.getBoxes());
+            while (!boxes.isEmpty()) {
+                Box box = boxes.remove();
+                if (box instanceof AbstractContainerBox container) {
+                    boxes.addAll(container.getBoxes());
+                }
+                if (box instanceof AbstractBox abstractBox) {
+                    abstractBox.parseDetails();
+                }
+                resultBoxes.add(box);
+            }
         }
-        Map<String, String> tags = new HashMap<>();
-        String[] names = metadata.names();
-        for (String name : names) {
-            tags.put(name, metadata.get(name));
-        }
-        return tags;
+
+        return resultBoxes
+                .stream()
+                .filter(rb -> !(rb instanceof FreeBox))
+                .filter(rb -> !(rb instanceof UnknownBox))
+                .collect(Collectors.toMap(
+                        rb -> switch (rb) {
+                            case HandlerBox handlerBox -> rb.getClass().getName() + "[" + handlerBox.getHandlerType() + "]";
+                            default -> rb.getClass().getName();
+                        },
+                        rb -> switch (rb) {
+                            case Utf8AppleDataBox utf8AppleDataBox -> utf8AppleDataBox.getValue();
+                            default -> rb.toString();
+                        }
+                ));
+
     }
+
+
 }
