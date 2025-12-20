@@ -11,7 +11,7 @@ plugins {
     id 'idea'
     id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'application'
-    id "org.jooq.jooq-codegen-gradle" version "3.20.10"
+    id "org.jooq.jooq-codegen-gradle" version "3.19.28"
     id "org.flywaydb.flyway" version "11.19.1"
 }
 
@@ -108,7 +108,7 @@ jooq {
 jooqCodegen.dependsOn flywayMigrate
 
 dependencies {
-    runtimeOnly "org.jooq:jooq-codegen:3.18.7"
+    runtimeOnly "org.jooq:jooq-codegen"
     runtimeOnly 'com.h2database:h2'
 
     implementation 'org.springframework.boot:spring-boot-h2console'
