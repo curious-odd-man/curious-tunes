@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes.controller;
 import com.github.curiousoddman.curious_tunes.backend.AlbumsRepository;
 import com.github.curiousoddman.curious_tunes.backend.ArtistRepository;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
+import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
 import com.github.curiousoddman.curious_tunes.event.PlayNextEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
@@ -12,13 +13,18 @@ import com.github.curiousoddman.curious_tunes.model.Album;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
+import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.context.ApplicationEventPublisher;
@@ -80,7 +86,7 @@ public class LibraryController implements Initializable {
         List<String> artists = artistRepository.getArtists();
         for (String artist : artists) {
             LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
-                    ".\\fxml\\library-artist.fxml",
+                    FxmlView.LIBRARY_ARTIST_ITEM,
                     new ArtistItemBundle(artist, "C:\\Users\\curious\\Pictures\\Desktop Backgrounds\\Image 17.jpg")
             );
             Parent parent = loadedFxml.parent();
@@ -97,7 +103,7 @@ public class LibraryController implements Initializable {
         List<Album> albums = albumsRepository.getAlbumsForArtist(artist);
         for (Album album : albums) {
             LoadedFxml<LibraryArtistAlbumController> loadedFxml = fxmlLoader.load(
-                    ".\\fxml\\library-artist-album.fxml",
+                    FxmlView.LIBRARY_ARTIST_ALBUM,
                     new ArtistAlbumBundle(artist, album)
             );
             artistAlbumsView.getChildren().add(loadedFxml.parent());
@@ -122,5 +128,17 @@ public class LibraryController implements Initializable {
     @FXML
     public void onShuffleButtonClick(ActionEvent actionEvent) {
         eventPublisher.publishEvent(new PlayNextEvent(this, shuffleButton.isSelected()));
+    }
+
+    @FXML
+    @SneakyThrows
+    public void onRescanMenuClicked(ActionEvent actionEvent) {
+        Stage stage = new Stage();
+        Parent root = fxmlLoader.load(FxmlView.RESCAN_MODAL, new RescanBundle("D:\\iTunes\\iTunes 1\\iTunes Media\\Music")).parent();
+        stage.setScene(new Scene(root));
+        stage.setTitle("Rescan library");
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initOwner(buttonPrevious.getScene().getWindow());
+        stage.showAndWait();
     }
 }

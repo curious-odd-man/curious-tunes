@@ -20,7 +20,7 @@ public class StageManager {
         primaryStage.setTitle(applicationTitle);
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 
-        Parent rootNode = loadRootNode(view.getFxmlPath());
+        Parent rootNode = loadRootNode(view);
         Scene scene = new Scene(rootNode);
 
         scene.widthProperty().addListener((observableValue, oldSceneWidth, newSceneWidth) -> {
@@ -32,7 +32,7 @@ public class StageManager {
         primaryStage.show();
     }
 
-    private Parent loadRootNode(String fxmlPath) {
+    private Parent loadRootNode(FxmlView fxmlPath) {
         Parent rootNode;
         try {
             rootNode = fxmlLoader.load(fxmlPath, null).parent();

@@ -16,10 +16,10 @@ import java.util.ResourceBundle;
 public class FxmlLoader {
     private final ApplicationContext context;
 
-    public <T> LoadedFxml<T> load(String fxmlPath, ResourceBundle resourceBundle) throws IOException {
+    public <T> LoadedFxml<T> load(FxmlView fxmlPath, ResourceBundle resourceBundle) throws IOException {
         FXMLLoader loader = new FXMLLoader();
         loader.setControllerFactory(context::getBean);
-        URL resource = getClass().getClassLoader().getResource(fxmlPath);
+        URL resource = getClass().getClassLoader().getResource(fxmlPath.getFxmlPath());
         loader.setLocation(resource);
         loader.setResources(resourceBundle);
         loader.setClassLoader(context.getClassLoader());
