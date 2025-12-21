@@ -4,10 +4,10 @@ import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEndedEvent;
 import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.RescanLibraryEvent;
+import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
 import com.github.curiousoddman.curious_tunes.model.TrackStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -38,6 +38,7 @@ import java.util.Queue;
 @RequiredArgsConstructor
 public class FilesScanningService {
     private static final int APPROXIMATE_SIZE_OF_MY_LIBRARY = 5000;
+    private static final String LIBRARY_SCAN = "Library Scan";
     private final ApplicationEventPublisher applicationEventPublisher;
     private final DataAccess dataAccess;
 
@@ -50,26 +51,57 @@ public class FilesScanningService {
         log.info("Received rescan library event...");
         Runnable rescanRunnable = () -> {
             log.info("Starting scanning: discover files...");
-            applicationEventPublisher.publishEvent(new BackgroundProcessEvent(this, "Discovering files...", 0, -1));
+            applicationEventPublisher.publishEvent(
+                    getBackgroundProcessEventBuilder()
+                            .eventType(BackgroundProcessEventType.STARTED)
+                            .description("Discovering files...")
+                            .maxProgress(-1)
+                            .build());
             List<Path> paths = doScan(Path.of(libraryRoot));
             log.info("Discovered {} files. Started processing", paths.size());
-            applicationEventPublisher.publishEvent(new BackgroundProcessEvent(this, "Processing files...", 0, paths.size()));
+            applicationEventPublisher.publishEvent(
+                    getBackgroundProcessEventBuilder()
+                            .eventType(BackgroundProcessEventType.IN_PROGRESS)
+                            .maxProgress(paths.size())
+                            .description("Fetching metadata...")
+                            .build());
             for (int i = 0; i < paths.size(); i++) {
                 Path file = paths.get(i);
                 if (shouldInterrupt) {
                     log.info("Scanning interrupted");
-                    applicationEventPublisher.publishEvent(new BackgroundProcessEndedEvent(this, "Scanning interrupted", null));
+                    applicationEventPublisher.publishEvent(
+                            getBackgroundProcessEventBuilder()
+                                    .eventType(BackgroundProcessEventType.INTERRUPTED)
+                                    .description("Interrupted")
+                                    .build());
                     return;
                 }
 
                 extractMetadataAndUpdateDatabase(file);
-                applicationEventPublisher.publishEvent(new BackgroundProcessEvent(this, "Processing files...", i + 1, paths.size()));
+                applicationEventPublisher.publishEvent(
+                        getBackgroundProcessEventBuilder()
+                                .eventType(BackgroundProcessEventType.IN_PROGRESS)
+                                .progress(i + 1)
+                                .maxProgress(paths.size())
+                                .description("Fetching metadata...")
+                                .build());
             }
-            applicationEventPublisher.publishEvent(new BackgroundProcessEndedEvent(this, "Scanning interrupted", null));
+            applicationEventPublisher.publishEvent(
+                    getBackgroundProcessEventBuilder()
+                            .eventType(BackgroundProcessEventType.ENDED)
+                            .description("Interrupted")
+                            .build());
             log.info("Scanning completed...");
         };
         Thread rescanThread = new Thread(rescanRunnable, "rescan");
         rescanThread.start();
+    }
+
+    private BackgroundProcessEvent.BackgroundProcessEventBuilder getBackgroundProcessEventBuilder() {
+        return BackgroundProcessEvent
+                .builder()
+                .source(this)
+                .processName(LIBRARY_SCAN);
     }
 
     private void extractMetadataAndUpdateDatabase(Path file) {

@@ -1,18 +1,29 @@
 package com.github.curiousoddman.curious_tunes.event;
 
+import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
+import lombok.Builder;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 @Getter
+@Builder
 public class BackgroundProcessEvent extends ApplicationEvent {
+    private final Object source;        // Duplicate this for @Builder to work
+    private final String processName;
     private final String description;
     private final int progress;
     private final int maxProgress;
+    private final Exception error;
+    private final BackgroundProcessEventType eventType;
 
-    public BackgroundProcessEvent(Object source, String description, int progress, int maxProgress) {
+    public BackgroundProcessEvent(Object source, String processName, String description, int progress, int maxProgress, Exception error, BackgroundProcessEventType eventType) {
         super(source);
+        this.source = source;
+        this.processName = processName;
         this.description = description;
         this.progress = progress;
         this.maxProgress = maxProgress;
+        this.error = error;
+        this.eventType = eventType;
     }
 }
