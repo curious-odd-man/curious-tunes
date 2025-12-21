@@ -1,15 +1,12 @@
 package com.github.curiousoddman.curious_tunes.controller;
 
-import com.github.curiousoddman.curious_tunes.backend.AlbumsRepository;
-import com.github.curiousoddman.curious_tunes.backend.ArtistRepository;
+import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
-import com.github.curiousoddman.curious_tunes.event.PlayNextEvent;
-import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
-import com.github.curiousoddman.curious_tunes.event.PlayPreviousEvent;
-import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
-import com.github.curiousoddman.curious_tunes.model.Album;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
+import com.github.curiousoddman.curious_tunes.event.*;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
@@ -17,7 +14,6 @@ import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -36,16 +32,17 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import static com.github.curiousoddman.curious_tunes.backend.tags.FilesScanningService.LIBRARY_SCAN;
+import static javafx.application.Platform.runLater;
+
 @Lazy
 @Component
 @RequiredArgsConstructor
 public class LibraryController implements Initializable {
     private final StageManager stageManager;
     private final ApplicationEventPublisher eventPublisher;
-    private final ArtistRepository artistRepository;
-    private final AlbumsRepository albumsRepository;
     private final FxmlLoader fxmlLoader;
-
+    private final DataAccess dataAccess;
 
     @FXML
     public Button buttonPrevious;
@@ -83,30 +80,56 @@ public class LibraryController implements Initializable {
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
-        List<String> artists = artistRepository.getArtists();
-        for (String artist : artists) {
-            LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
-                    FxmlView.LIBRARY_ARTIST_ITEM,
-                    new ArtistItemBundle(artist, "C:\\Users\\curious\\Pictures\\Desktop Backgrounds\\Image 17.jpg")
-            );
-            Parent parent = loadedFxml.parent();
-            artistList.getChildren().add(parent);
-        }
+        onLibraryDataUpdated();
     }
 
     @EventListener
     @SneakyThrows
     public void onShowArtistAlbumEvent(ShowArtistAlbums showArtistAlbums) {
-        String artist = showArtistAlbums.getArtist();
-        artistTitle.setText(artist);
+        int artistId = showArtistAlbums.getArtistRecord().getId();
+        String artistName = showArtistAlbums.getArtistRecord().getName();
+        artistTitle.setText(artistName);
         artistAlbumsView.getChildren().remove(1, artistAlbumsView.getChildren().size());
-        List<Album> albums = albumsRepository.getAlbumsForArtist(artist);
-        for (Album album : albums) {
+        List<AlbumRecord> albums = dataAccess.getArtistAlbums(artistId);
+        for (AlbumRecord album : albums) {
             LoadedFxml<LibraryArtistAlbumController> loadedFxml = fxmlLoader.load(
                     FxmlView.LIBRARY_ARTIST_ALBUM,
-                    new ArtistAlbumBundle(artist, album)
+                    new ArtistAlbumBundle(artistName, album)
             );
             artistAlbumsView.getChildren().add(loadedFxml.parent());
+        }
+    }
+
+    @EventListener
+    public void onBackgroundProcessEvent(BackgroundProcessEvent event) {
+        runLater(() -> {
+            if (event.getMaxProgress() > 0) {
+                currentTrackProgress.setProgress((double) event.getProgress() / event.getMaxProgress());
+            } else {
+                currentTrackProgress.setProgress(0);
+            }
+
+            currentTrackName.setText(event.getProcessName());
+            currentTrackAlbum.setText(event.getDescription());
+            currentTrackName.setText("");
+
+            if (event.getProcessName().equals(LIBRARY_SCAN)
+                    && event.getEventType().isTerminal()) {
+                onLibraryDataUpdated();
+            }
+        });
+    }
+
+    @SneakyThrows
+    private void onLibraryDataUpdated() {
+        artistList.getChildren().clear();
+        for (ArtistRecord artist : dataAccess.getAllArtists()) {
+            LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
+                    FxmlView.LIBRARY_ARTIST_ITEM,
+                    new ArtistItemBundle(artist)
+            );
+            Parent parent = loadedFxml.parent();
+            artistList.getChildren().add(parent);
         }
     }
 

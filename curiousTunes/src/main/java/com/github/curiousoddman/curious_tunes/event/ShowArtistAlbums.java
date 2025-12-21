@@ -1,14 +1,15 @@
 package com.github.curiousoddman.curious_tunes.event;
 
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 @Getter
 public class ShowArtistAlbums extends ApplicationEvent {
-    private final String artist;
+    private final ArtistRecord artistRecord;
 
-    public ShowArtistAlbums(Object source, String artist) {
+    public ShowArtistAlbums(Object source, ArtistRecord artistRecord) {
         super(source);
-        this.artist = artist;
+        this.artistRecord = artistRecord;
     }
 }

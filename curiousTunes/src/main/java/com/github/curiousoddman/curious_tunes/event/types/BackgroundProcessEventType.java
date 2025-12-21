@@ -1,9 +1,16 @@
 package com.github.curiousoddman.curious_tunes.event.types;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum BackgroundProcessEventType {
-    STARTED,
-    IN_PROGRESS,
-    INTERRUPTED,
-    FAILED,
-    ENDED
+    STARTED(false),
+    IN_PROGRESS(false),
+    INTERRUPTED(true),
+    FAILED(true),
+    ENDED(true);
+
+    private final boolean isTerminal;
 }

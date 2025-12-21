@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.controller;
 
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import javafx.fxml.Initializable;
@@ -30,18 +31,21 @@ public class LibraryArtistController implements Initializable {
     public ImageView artistImageView;
     public Label artistNameLabel;
 
+    private ArtistRecord artistRecord;
+
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
         if (resources instanceof ArtistItemBundle bundle) {
-            String artist = bundle.getArtist();
-            String icon = bundle.getIcon();
-            artistImageView.setImage(new Image(Path.of(icon).toUri().toString()));
-            artistNameLabel.setText(artist);
+            ArtistRecord artist = bundle.getArtist();
+            //String icon = bundle.getIcon(); // FIXME:
+            //artistImageView.setImage(new Image(Path.of(icon).toUri().toString()));
+            artistNameLabel.setText(artist.getName());
+            this.artistRecord = artist;
         }
     }
 
     public void onArtistClicked(MouseEvent mouseEvent) {
-        eventPublisher.publishEvent(new ShowArtistAlbums(this, artistNameLabel.getText()));
+        eventPublisher.publishEvent(new ShowArtistAlbums(this, artistRecord));
     }
 }

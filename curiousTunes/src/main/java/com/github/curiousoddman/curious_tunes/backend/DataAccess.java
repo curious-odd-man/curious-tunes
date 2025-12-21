@@ -8,6 +8,8 @@ import org.jooq.impl.DefaultDSLContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Album.ALBUM;
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Artist.ARTIST;
@@ -34,7 +36,8 @@ public class DataAccess {
 
         return dsl
                 .insertInto(ARTIST)
-                .values(ARTIST.NAME.eq(artist))
+                .columns(ARTIST.NAME)
+                .values(artist)
                 .returning()
                 .fetchOne();
     }
@@ -53,7 +56,8 @@ public class DataAccess {
 
         return dsl
                 .insertInto(ALBUM)
-                .values(ALBUM.FK_ARTIST.eq(artistId), ALBUM.NAME.eq(album))
+                .columns(ALBUM.FK_ARTIST, ALBUM.NAME)
+                .values(artistId, album)
                 .returning()
                 .fetchOne();
     }
@@ -72,5 +76,28 @@ public class DataAccess {
                 .insertInto(TRACK)
                 .set(newTrackRecord)
                 .execute();
+    }
+
+    public List<ArtistRecord> getAllArtists() {
+        return dsl
+                .selectFrom(ARTIST)
+                .stream()
+                .toList();
+    }
+
+    public List<AlbumRecord> getArtistAlbums(int artistFk) {
+        return dsl
+                .selectFrom(ALBUM)
+                .where(ALBUM.FK_ARTIST.eq(artistFk))
+                .stream()
+                .toList();
+    }
+
+    public List<TrackRecord> getAlbumsTracks(List<Integer> albumFk) {
+        return dsl
+                .selectFrom(TRACK)
+                .where(TRACK.FK_ALBUM.in(albumFk))
+                .stream()
+                .toList();
     }
 }
