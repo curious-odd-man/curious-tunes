@@ -22,7 +22,7 @@ description = 'An audio player resembling iTunes'
 def javafxVersion = '25.0.1'
 def testfxVersion = '4.0.18'
 
-def flywayAndJooqDatabase ='jdbc:h2:file:~/test;DB_CLOSE_ON_EXIT=FALSE'
+def flywayAndJooqDatabase ='jdbc:h2:file:~/ctunes/test;DB_CLOSE_ON_EXIT=FALSE'
 
 idea {
     module {

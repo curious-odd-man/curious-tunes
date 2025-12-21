@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Lazy;
 public class ApplicationConfig {
 
     private final FxmlLoader fxmlLoader;
-    @Value("${application.title}")
+    @Value("${spring.title}")
     private final String applicationTitle;
     private final ApplicationEventPublisher eventPublisher;
 
