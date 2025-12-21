@@ -18,6 +18,7 @@ import org.mp4parser.boxes.UnknownBox;
 import org.mp4parser.boxes.iso14496.part12.FreeBox;
 import org.mp4parser.support.AbstractBox;
 import org.mp4parser.support.AbstractContainerBox;
+import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -38,7 +39,7 @@ import java.util.Queue;
 @RequiredArgsConstructor
 public class FilesScanningService {
     private static final int APPROXIMATE_SIZE_OF_MY_LIBRARY = 5000;
-    private static final String LIBRARY_SCAN = "Library Scan";
+    public static final String LIBRARY_SCAN = "Library Scan";
     private final ApplicationEventPublisher applicationEventPublisher;
     private final DataAccess dataAccess;
 
@@ -57,41 +58,53 @@ public class FilesScanningService {
                             .description("Discovering files...")
                             .maxProgress(-1)
                             .build());
-            List<Path> paths = doScan(Path.of(libraryRoot));
-            log.info("Discovered {} files. Started processing", paths.size());
-            applicationEventPublisher.publishEvent(
-                    getBackgroundProcessEventBuilder()
-                            .eventType(BackgroundProcessEventType.IN_PROGRESS)
-                            .maxProgress(paths.size())
-                            .description("Fetching metadata...")
-                            .build());
-            for (int i = 0; i < paths.size(); i++) {
-                Path file = paths.get(i);
-                if (shouldInterrupt) {
-                    log.info("Scanning interrupted");
-                    applicationEventPublisher.publishEvent(
-                            getBackgroundProcessEventBuilder()
-                                    .eventType(BackgroundProcessEventType.INTERRUPTED)
-                                    .description("Interrupted")
-                                    .build());
-                    return;
-                }
-
-                extractMetadataAndUpdateDatabase(file);
+            try {
+                List<Path> paths = doScan(Path.of(libraryRoot));
+                log.info("Discovered {} files. Started processing", paths.size());
                 applicationEventPublisher.publishEvent(
                         getBackgroundProcessEventBuilder()
                                 .eventType(BackgroundProcessEventType.IN_PROGRESS)
-                                .progress(i + 1)
                                 .maxProgress(paths.size())
                                 .description("Fetching metadata...")
                                 .build());
+                for (int i = 0; i < paths.size(); i++) {
+                    Path file = paths.get(i);
+                    MDC.put("file", String.valueOf(i));
+                    log.info("\t{}", file);
+                    if (shouldInterrupt) {
+                        log.info("Scanning interrupted");
+                        applicationEventPublisher.publishEvent(
+                                getBackgroundProcessEventBuilder()
+                                        .eventType(BackgroundProcessEventType.INTERRUPTED)
+                                        .description("Interrupted")
+                                        .build());
+                        return;
+                    }
+
+                    extractMetadataAndUpdateDatabase(file);
+                    applicationEventPublisher.publishEvent(
+                            getBackgroundProcessEventBuilder()
+                                    .eventType(BackgroundProcessEventType.IN_PROGRESS)
+                                    .progress(i + 1)
+                                    .maxProgress(paths.size())
+                                    .description("Fetching metadata...")
+                                    .build());
+                }
+                applicationEventPublisher.publishEvent(
+                        getBackgroundProcessEventBuilder()
+                                .eventType(BackgroundProcessEventType.ENDED)
+                                .description("Interrupted")
+                                .build());
+                log.info("Scanning completed...");
+            } catch (Exception e) {
+                MDC.remove("file");
+                applicationEventPublisher.publishEvent(
+                        getBackgroundProcessEventBuilder()
+                                .eventType(BackgroundProcessEventType.FAILED)
+                                .description("Failed...")
+                                .error(e)
+                                .build());
             }
-            applicationEventPublisher.publishEvent(
-                    getBackgroundProcessEventBuilder()
-                            .eventType(BackgroundProcessEventType.ENDED)
-                            .description("Interrupted")
-                            .build());
-            log.info("Scanning completed...");
         };
         Thread rescanThread = new Thread(rescanRunnable, "rescan");
         rescanThread.start();

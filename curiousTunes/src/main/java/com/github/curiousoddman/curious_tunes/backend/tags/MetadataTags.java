@@ -38,29 +38,29 @@ public class MetadataTags {
 
         for (Box box : allBoxes) {
             switch (box) {
-                case AppleNameBox appleNameBox -> title = validate(title, appleNameBox.getValue());
-                case AppleLyricsBox appleLyricsBox -> lyrics = validate(lyrics, appleLyricsBox.getValue());
+                case AppleNameBox appleNameBox -> title = validate("title", title, appleNameBox.getValue());
+                case AppleLyricsBox appleLyricsBox -> lyrics = validate("lyrics", lyrics, appleLyricsBox.getValue());
                 case AppleTrackNumberBox appleTrackNumberBox ->
-                        trackNumber = validate(trackNumber, appleTrackNumberBox.getA());
-                case AppleArtist2Box appleArtist2Box -> artist = validate(artist, appleArtist2Box.getValue());
+                        trackNumber = validate("trackNumber 1", trackNumber, appleTrackNumberBox.getA());
+                case AppleArtist2Box appleArtist2Box -> artist = validate("artist", artist, appleArtist2Box.getValue());
                 case AppleCoverBox appleCoverBox ->
-                        albumCover = validate(albumCover, new AlbumCover(appleCoverBox.getCoverData(), coverDataType(appleCoverBox)));
+                        albumCover = validate("albumCover", albumCover, new AlbumCover(appleCoverBox.getCoverData(), coverDataType(appleCoverBox)));
                 case AppleTrackAuthorBox appleTrackAuthorBox ->
-                        composer = validate(composer, appleTrackAuthorBox.getValue());
+                        composer = validate("composer", composer, appleTrackAuthorBox.getValue());
                 case AppleDiskNumberBox appleDiskNumberBox ->
-                        diskNumber = validate(diskNumber, appleDiskNumberBox.getA());
+                        diskNumber = validate("diskNumber", diskNumber, appleDiskNumberBox.getA());
                 case TrackHeaderBox trackHeaderBox -> {
-                    duration = validate(duration, trackHeaderBox.getDuration());
-                    trackNumber = validate(trackNumber, (int) trackHeaderBox.getTrackId());
+                    duration = validate("duration 1", duration, trackHeaderBox.getDuration());
+                    trackNumber = validate("trackNumber 2", trackNumber, (int) trackHeaderBox.getTrackId());
                 }
-                case AppleGenreBox appleGenreBox -> genre = validate(genre, appleGenreBox.getValue());
-                case AppleAlbumBox appleAlbumBox -> album = validate(album, appleAlbumBox.getValue());
+                case AppleGenreBox appleGenreBox -> genre = validate("genre", genre, appleGenreBox.getValue());
+                case AppleAlbumBox appleAlbumBox -> album = validate("album", album, appleAlbumBox.getValue());
                 case MediaHeaderBox mediaHeaderBox -> {
-                    sampleRate = validate(sampleRate, (int) mediaHeaderBox.getTimescale());
-                    duration = validate(duration, mediaHeaderBox.getDuration());
+                    sampleRate = validate("sampleRate", sampleRate, (int) mediaHeaderBox.getTimescale());
+                    duration = validate("duration 2", duration, mediaHeaderBox.getDuration());
                 }
                 case AppleRecordingYear2Box appleRecordingYear2Box ->
-                        releaseDate = validate(releaseDate, appleRecordingYear2Box.getValue());
+                        releaseDate = validate("releaseDate", releaseDate, appleRecordingYear2Box.getValue());
                 default -> {
                 }
             }
@@ -78,12 +78,12 @@ public class MetadataTags {
         };
     }
 
-    public <T> T validate(T field, T newValue) {
+    public <T> T validate(String description, T field, T newValue) {
         if (field == null) {
             return newValue;
         }
-        if (Objects.equals(field, newValue)) {
-            log.info("Different value duplicate box detected {}:{}", field, newValue);
+        if (!Objects.equals(field, newValue)) {
+            log.info("Different value duplicate box detected {} --> {}:{}", description, field, newValue);
         }
         return newValue;
     }
