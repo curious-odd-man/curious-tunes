@@ -9,7 +9,6 @@ import com.github.curiousoddman.curious_tunes.dbobj.Keys;
 import com.github.curiousoddman.curious_tunes.dbobj.Public;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -121,14 +120,19 @@ public class Track extends TableImpl<TrackRecord> {
     public final TableField<TrackRecord, String> FILE_LOCATION = createField(DSL.name("FILE_LOCATION"), SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column <code>public.TRACK.DURATION_SECONDS</code>.
+     * The column <code>public.TRACK.DURATION</code>.
      */
-    public final TableField<TrackRecord, BigDecimal> DURATION_SECONDS = createField(DSL.name("DURATION_SECONDS"), SQLDataType.DECIMAL(20, 14), this, "");
+    public final TableField<TrackRecord, Long> DURATION = createField(DSL.name("DURATION"), SQLDataType.BIGINT, this, "");
 
     /**
      * The column <code>public.TRACK.STATUS</code>.
      */
     public final TableField<TrackRecord, String> STATUS = createField(DSL.name("STATUS"), SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>public.TRACK.LYRICS</code>.
+     */
+    public final TableField<TrackRecord, String> LYRICS = createField(DSL.name("LYRICS"), SQLDataType.VARCHAR, this, "");
 
     private Track(Name alias, Table<TrackRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);

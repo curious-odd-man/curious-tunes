@@ -84,6 +84,20 @@ public class AlbumRecord extends UpdatableRecordImpl<AlbumRecord> {
         return (byte[]) get(3);
     }
 
+    /**
+     * Setter for <code>public.ALBUM.IMAGE_TYPE</code>.
+     */
+    public void setImageType(Byte value) {
+        set(4, value);
+    }
+
+    /**
+     * Getter for <code>public.ALBUM.IMAGE_TYPE</code>.
+     */
+    public Byte getImageType() {
+        return (Byte) get(4);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -107,13 +121,14 @@ public class AlbumRecord extends UpdatableRecordImpl<AlbumRecord> {
     /**
      * Create a detached, initialised AlbumRecord
      */
-    public AlbumRecord(Integer id, Integer fkArtist, String name, byte[] image) {
+    public AlbumRecord(Integer id, Integer fkArtist, String name, byte[] image, Byte imageType) {
         super(Album.ALBUM);
 
         setId(id);
         setFkArtist(fkArtist);
         setName(name);
         setImage(image);
+        setImageType(imageType);
         resetChangedOnNotNull();
     }
 }

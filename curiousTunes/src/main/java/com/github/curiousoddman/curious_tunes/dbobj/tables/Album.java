@@ -84,6 +84,11 @@ public class Album extends TableImpl<AlbumRecord> {
      */
     public final TableField<AlbumRecord, byte[]> IMAGE = createField(DSL.name("IMAGE"), SQLDataType.VARBINARY, this, "");
 
+    /**
+     * The column <code>public.ALBUM.IMAGE_TYPE</code>.
+     */
+    public final TableField<AlbumRecord, Byte> IMAGE_TYPE = createField(DSL.name("IMAGE_TYPE"), SQLDataType.TINYINT, this, "");
+
     private Album(Name alias, Table<AlbumRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

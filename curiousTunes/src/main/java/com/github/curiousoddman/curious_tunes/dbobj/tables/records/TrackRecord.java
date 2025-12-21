@@ -6,8 +6,6 @@ package com.github.curiousoddman.curious_tunes.dbobj.tables.records;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 
-import java.math.BigDecimal;
-
 import javax.annotation.processing.Generated;
 
 import org.jooq.Record1;
@@ -185,17 +183,17 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
     }
 
     /**
-     * Setter for <code>public.TRACK.DURATION_SECONDS</code>.
+     * Setter for <code>public.TRACK.DURATION</code>.
      */
-    public void setDurationSeconds(BigDecimal value) {
+    public void setDuration(Long value) {
         set(11, value);
     }
 
     /**
-     * Getter for <code>public.TRACK.DURATION_SECONDS</code>.
+     * Getter for <code>public.TRACK.DURATION</code>.
      */
-    public BigDecimal getDurationSeconds() {
-        return (BigDecimal) get(11);
+    public Long getDuration() {
+        return (Long) get(11);
     }
 
     /**
@@ -210,6 +208,20 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
      */
     public String getStatus() {
         return (String) get(12);
+    }
+
+    /**
+     * Setter for <code>public.TRACK.LYRICS</code>.
+     */
+    public void setLyrics(String value) {
+        set(13, value);
+    }
+
+    /**
+     * Getter for <code>public.TRACK.LYRICS</code>.
+     */
+    public String getLyrics() {
+        return (String) get(13);
     }
 
     // -------------------------------------------------------------------------
@@ -235,7 +247,7 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
     /**
      * Create a detached, initialised TrackRecord
      */
-    public TrackRecord(Integer id, Integer fkAlbum, String title, Integer trackNumber, String releaseDate, Integer diskNumber, String creator, Integer audioSampleRate, String genre, String composer, String fileLocation, BigDecimal durationSeconds, String status) {
+    public TrackRecord(Integer id, Integer fkAlbum, String title, Integer trackNumber, String releaseDate, Integer diskNumber, String creator, Integer audioSampleRate, String genre, String composer, String fileLocation, Long duration, String status, String lyrics) {
         super(Track.TRACK);
 
         setId(id);
@@ -249,8 +261,9 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
         setGenre(genre);
         setComposer(composer);
         setFileLocation(fileLocation);
-        setDurationSeconds(durationSeconds);
+        setDuration(duration);
         setStatus(status);
+        setLyrics(lyrics);
         resetChangedOnNotNull();
     }
 }

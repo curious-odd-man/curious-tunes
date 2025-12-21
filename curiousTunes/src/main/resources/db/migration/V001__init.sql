@@ -12,7 +12,8 @@ CREATE TABLE album
     id        INTEGER auto_increment PRIMARY KEY,
     fk_artist INTEGER,
     name      VARCHAR,
-    image     VARBINARY
+    image     VARBINARY,
+    image_type TINYINT
 );
 
 CREATE INDEX album_name_index ON album (name);
@@ -31,8 +32,9 @@ CREATE TABLE track
     genre             VARCHAR,
     composer          VARCHAR,
     file_location     VARCHAR,
-    duration_seconds  NUMERIC(20, 14),
-    status            VARCHAR
+    duration          BIGINT,
+    status            VARCHAR,
+    lyrics            VARCHAR
 );
 
 CREATE INDEX track_title_index ON track (title);
