@@ -27,7 +27,6 @@ CREATE TABLE track
     track_number      INTEGER,
     release_date      VARCHAR,
     disk_number       INTEGER,
-    creator           VARCHAR,
     audio_sample_rate INTEGER,
     genre             VARCHAR,
     composer          VARCHAR,

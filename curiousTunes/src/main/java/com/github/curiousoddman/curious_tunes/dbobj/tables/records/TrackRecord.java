@@ -113,115 +113,101 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
     }
 
     /**
-     * Setter for <code>public.TRACK.CREATOR</code>.
-     */
-    public void setCreator(String value) {
-        set(6, value);
-    }
-
-    /**
-     * Getter for <code>public.TRACK.CREATOR</code>.
-     */
-    public String getCreator() {
-        return (String) get(6);
-    }
-
-    /**
      * Setter for <code>public.TRACK.AUDIO_SAMPLE_RATE</code>.
      */
     public void setAudioSampleRate(Integer value) {
-        set(7, value);
+        set(6, value);
     }
 
     /**
      * Getter for <code>public.TRACK.AUDIO_SAMPLE_RATE</code>.
      */
     public Integer getAudioSampleRate() {
-        return (Integer) get(7);
+        return (Integer) get(6);
     }
 
     /**
      * Setter for <code>public.TRACK.GENRE</code>.
      */
     public void setGenre(String value) {
-        set(8, value);
+        set(7, value);
     }
 
     /**
      * Getter for <code>public.TRACK.GENRE</code>.
      */
     public String getGenre() {
-        return (String) get(8);
+        return (String) get(7);
     }
 
     /**
      * Setter for <code>public.TRACK.COMPOSER</code>.
      */
     public void setComposer(String value) {
-        set(9, value);
+        set(8, value);
     }
 
     /**
      * Getter for <code>public.TRACK.COMPOSER</code>.
      */
     public String getComposer() {
-        return (String) get(9);
+        return (String) get(8);
     }
 
     /**
      * Setter for <code>public.TRACK.FILE_LOCATION</code>.
      */
     public void setFileLocation(String value) {
-        set(10, value);
+        set(9, value);
     }
 
     /**
      * Getter for <code>public.TRACK.FILE_LOCATION</code>.
      */
     public String getFileLocation() {
-        return (String) get(10);
+        return (String) get(9);
     }
 
     /**
      * Setter for <code>public.TRACK.DURATION</code>.
      */
     public void setDuration(Long value) {
-        set(11, value);
+        set(10, value);
     }
 
     /**
      * Getter for <code>public.TRACK.DURATION</code>.
      */
     public Long getDuration() {
-        return (Long) get(11);
+        return (Long) get(10);
     }
 
     /**
      * Setter for <code>public.TRACK.STATUS</code>.
      */
     public void setStatus(String value) {
-        set(12, value);
+        set(11, value);
     }
 
     /**
      * Getter for <code>public.TRACK.STATUS</code>.
      */
     public String getStatus() {
-        return (String) get(12);
+        return (String) get(11);
     }
 
     /**
      * Setter for <code>public.TRACK.LYRICS</code>.
      */
     public void setLyrics(String value) {
-        set(13, value);
+        set(12, value);
     }
 
     /**
      * Getter for <code>public.TRACK.LYRICS</code>.
      */
     public String getLyrics() {
-        return (String) get(13);
+        return (String) get(12);
     }
 
     // -------------------------------------------------------------------------
@@ -247,7 +233,7 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
     /**
      * Create a detached, initialised TrackRecord
      */
-    public TrackRecord(Integer id, Integer fkAlbum, String title, Integer trackNumber, String releaseDate, Integer diskNumber, String creator, Integer audioSampleRate, String genre, String composer, String fileLocation, Long duration, String status, String lyrics) {
+    public TrackRecord(Integer id, Integer fkAlbum, String title, Integer trackNumber, String releaseDate, Integer diskNumber, Integer audioSampleRate, String genre, String composer, String fileLocation, Long duration, String status, String lyrics) {
         super(Track.TRACK);
 
         setId(id);
@@ -256,7 +242,6 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
         setTrackNumber(trackNumber);
         setReleaseDate(releaseDate);
         setDiskNumber(diskNumber);
-        setCreator(creator);
         setAudioSampleRate(audioSampleRate);
         setGenre(genre);
         setComposer(composer);

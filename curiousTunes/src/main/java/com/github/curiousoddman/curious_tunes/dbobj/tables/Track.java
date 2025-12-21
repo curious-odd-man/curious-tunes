@@ -95,11 +95,6 @@ public class Track extends TableImpl<TrackRecord> {
     public final TableField<TrackRecord, Integer> DISK_NUMBER = createField(DSL.name("DISK_NUMBER"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>public.TRACK.CREATOR</code>.
-     */
-    public final TableField<TrackRecord, String> CREATOR = createField(DSL.name("CREATOR"), SQLDataType.VARCHAR, this, "");
-
-    /**
      * The column <code>public.TRACK.AUDIO_SAMPLE_RATE</code>.
      */
     public final TableField<TrackRecord, Integer> AUDIO_SAMPLE_RATE = createField(DSL.name("AUDIO_SAMPLE_RATE"), SQLDataType.INTEGER, this, "");

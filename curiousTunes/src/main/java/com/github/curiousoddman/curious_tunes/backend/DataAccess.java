@@ -66,4 +66,11 @@ public class DataAccess {
                         TRACK.TITLE.eq(title)
                 ).fetchOne();
     }
+
+    public void insertTrack(TrackRecord newTrackRecord) {
+        dsl
+                .insertInto(TRACK)
+                .set(newTrackRecord)
+                .execute();
+    }
 }
