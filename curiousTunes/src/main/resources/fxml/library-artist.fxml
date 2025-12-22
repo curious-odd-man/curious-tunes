@@ -12,16 +12,16 @@
 
 <HBox alignment="CENTER_LEFT" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#onArtistClicked" spacing="2.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryArtistController">
     <children>
-        <ImageView fx:id="artistImageView" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+        <ImageView fx:id="artistImageView" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true" HBox.hgrow="NEVER">
          <HBox.margin>
             <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
          </HBox.margin></ImageView>
-        <Label fx:id="artistNameLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Red Hot Chile Peppers">
+        <Label fx:id="artistNameLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Red Hot Chile Peppers" HBox.hgrow="ALWAYS">
             <font>
                 <Font name="Consolas Bold" size="14.0" />
             </font>
         </Label>
-      <GridPane alignment="CENTER" hgap="2.0" vgap="2.0" HBox.hgrow="NEVER">
+      <GridPane alignment="CENTER_RIGHT" hgap="2.0" vgap="2.0" HBox.hgrow="NEVER">
         <columnConstraints>
           <ColumnConstraints halignment="CENTER" hgrow="NEVER" />
           <ColumnConstraints hgrow="NEVER" />

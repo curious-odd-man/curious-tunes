@@ -7,6 +7,7 @@ import com.github.curiousoddman.curious_tunes.config.StageManager;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.event.*;
+import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
@@ -29,6 +30,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -77,9 +79,13 @@ public class LibraryController implements Initializable {
     @FXML
     public Label artistTitle;
 
+    private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
+    public ArtistSelectionModel artistSelectionModel;
+
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
+        artistSelectionModel = new ArtistSelectionModel(artistsControllers);
         onLibraryDataUpdated();
     }
 
@@ -122,13 +128,15 @@ public class LibraryController implements Initializable {
 
     @SneakyThrows
     private void onLibraryDataUpdated() {
+        artistsControllers.clear();
         artistList.getChildren().clear();
         for (ArtistRecord artist : dataAccess.getAllArtists()) {
             LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
                     FxmlView.LIBRARY_ARTIST_ITEM,
-                    new ArtistItemBundle(artist)
+                    new ArtistItemBundle(artist, artistSelectionModel)
             );
             Parent parent = loadedFxml.parent();
+            artistsControllers.add(loadedFxml.controller());
             artistList.getChildren().add(parent);
         }
     }
