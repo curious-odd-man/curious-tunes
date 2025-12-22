@@ -119,6 +119,8 @@ dependencies {
     implementation "org.openjfx:javafx-controls:${javafxVersion}"
     implementation "org.openjfx:javafx-fxml:${javafxVersion}"
 
+    implementation 'com.mpatric:mp3agic:0.9.1'      // NOTE: it is no longer supported
+
     compileOnly 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
 

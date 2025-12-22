@@ -2,6 +2,9 @@ package com.github.curiousoddman.curious_tunes.backend.tags;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.util.JooqUtils;
+import com.mpatric.mp3agic.ID3v1;
+import com.mpatric.mp3agic.ID3v2;
+import com.mpatric.mp3agic.Mp3File;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.mp4parser.Box;
@@ -10,6 +13,7 @@ import org.mp4parser.boxes.iso14496.part12.MediaHeaderBox;
 import org.mp4parser.boxes.iso14496.part12.TrackHeaderBox;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,14 +39,46 @@ public class MetadataTags {
 
     public MetadataTags(List<Box> allBoxes, Path path) {
         fileLocation = path.toAbsolutePath().toString();
+        extractM4aTags(allBoxes);
+        verifyRequiredValuesPresent();
+    }
 
+    public MetadataTags(Mp3File mp3file, Path path) {
+        fileLocation = path.toAbsolutePath().toString();
+        duration = mp3file.getLengthInSeconds();
+
+        if (mp3file.hasId3v2Tag()) {
+            ID3v2 tag = mp3file.getId3v2Tag();
+            artist = tag.getArtist();
+            album = tag.getAlbum();
+            title = tag.getTitle();
+            trackNumber = Integer.valueOf(tag.getTrack());
+            genre = tag.getGenreDescription();
+            lyrics = tag.getLyrics();
+            albumCover = new AlbumCover(tag.getAlbumImage(), tag.getAlbumImageMimeType());
+        } else if (mp3file.hasId3v1Tag()) {
+            ID3v1 tag = mp3file.getId3v1Tag();
+            artist = tag.getArtist();
+            album = tag.getAlbum();
+            title = tag.getTitle();
+            trackNumber = Integer.valueOf(tag.getTrack());
+            genre = tag.getGenreDescription();
+        }
+
+        verifyRequiredValuesPresent();
+    }
+
+    private void extractM4aTags(List<Box> allBoxes) {
         for (Box box : allBoxes) {
             switch (box) {
                 case AppleNameBox appleNameBox -> title = validate("title", title, appleNameBox.getValue());
                 case AppleLyricsBox appleLyricsBox -> lyrics = validate("lyrics", lyrics, appleLyricsBox.getValue());
                 case AppleTrackNumberBox appleTrackNumberBox ->
                         trackNumber = validate("trackNumber 1", trackNumber, appleTrackNumberBox.getA());
-                case AppleArtist2Box appleArtist2Box -> artist = validate("artist", artist, appleArtist2Box.getValue());
+                case AppleArtistBox appleArtistBox -> artist = validate("artist", artist, appleArtistBox.getValue());
+                case AppleArtist2Box appleArtist2Box -> {
+                    //Album artist, if I ever need it
+                }
                 case AppleCoverBox appleCoverBox ->
                         albumCover = validate("albumCover", albumCover, new AlbumCover(appleCoverBox.getCoverData(), coverDataType(appleCoverBox)));
                 case AppleTrackAuthorBox appleTrackAuthorBox ->
@@ -50,14 +86,14 @@ public class MetadataTags {
                 case AppleDiskNumberBox appleDiskNumberBox ->
                         diskNumber = validate("diskNumber", diskNumber, appleDiskNumberBox.getA());
                 case TrackHeaderBox trackHeaderBox -> {
-                    duration = validate("duration 1", duration, trackHeaderBox.getDuration());
-                    trackNumber = validate("trackNumber 2", trackNumber, (int) trackHeaderBox.getTrackId());
+                    //  duration = validate("duration 1", duration, trackHeaderBox.getDuration());      // SO suggests that duration can be calculated from MediaHeaderBox
+                    // trackNumber = validate("trackNumber 2", trackNumber, (int) trackHeaderBox.getTrackId()); // This is not valid value, as we have found in Apple files
                 }
                 case AppleGenreBox appleGenreBox -> genre = validate("genre", genre, appleGenreBox.getValue());
                 case AppleAlbumBox appleAlbumBox -> album = validate("album", album, appleAlbumBox.getValue());
                 case MediaHeaderBox mediaHeaderBox -> {
                     sampleRate = validate("sampleRate", sampleRate, (int) mediaHeaderBox.getTimescale());
-                    duration = validate("duration 2", duration, mediaHeaderBox.getDuration());
+                    duration = validate("duration 2", duration, mediaHeaderBox.getDuration() / mediaHeaderBox.getTimescale());
                 }
                 case AppleRecordingYear2Box appleRecordingYear2Box ->
                         releaseDate = validate("releaseDate", releaseDate, appleRecordingYear2Box.getValue());
@@ -67,8 +103,27 @@ public class MetadataTags {
         }
     }
 
-    private static AlbumCover.DataType coverDataType(AppleCoverBox appleCoverBox) {
-        return switch (appleCoverBox.getDataType()) {
+    private void verifyRequiredValuesPresent() {
+        List<String> missingFields = new ArrayList<>();
+
+        verifyField(artist, () -> missingFields.add("artist"));
+        verifyField(album, () -> missingFields.add("album"));
+        verifyField(title, () -> missingFields.add("title"));
+        verifyField(trackNumber, () -> missingFields.add("trackNumber"));
+        verifyField(duration, () -> missingFields.add("duration"));
+        if (!missingFields.isEmpty()) {
+            log.error("Following fields are not set: {}", missingFields);
+        }
+    }
+
+    private static void verifyField(Object o, Runnable onNull) {
+        if (o == null) {
+            onNull.run();
+        }
+    }
+
+    private static String coverDataType(AppleCoverBox appleCoverBox) {
+        AlbumCover.DataType dataType = switch (appleCoverBox.getDataType()) {
             case 13 -> AlbumCover.DataType.JPG;
             case 14 -> AlbumCover.DataType.PNG;
             default -> {
@@ -76,6 +131,7 @@ public class MetadataTags {
                 yield null;
             }
         };
+        return dataType == null ? null : dataType.toString();
     }
 
     public <T> T validate(String description, T field, T newValue) {

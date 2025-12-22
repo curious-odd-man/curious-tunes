@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AlbumCover {
     private byte[] data;
-    private DataType type;
+    private String type;
 
     public enum DataType {
         PNG, JPG

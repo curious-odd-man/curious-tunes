@@ -9,6 +9,7 @@ import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEv
 import com.github.curiousoddman.curious_tunes.event.RescanLibraryEvent;
 import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
 import com.github.curiousoddman.curious_tunes.model.TrackStatus;
+import com.mpatric.mp3agic.Mp3File;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -118,7 +119,16 @@ public class FilesScanningService {
     }
 
     private void extractMetadataAndUpdateDatabase(Path file) {
-        MetadataTags metadata = extractMetadata(file);
+        String pathString = file.toString();
+        MetadataTags metadata;
+        if (pathString.endsWith("m4a")) {
+            metadata = extractM4aMetadata(file);
+        } else if (pathString.endsWith("mp3")) {
+            metadata = extractMp3Tags(file);
+        } else {
+            log.error("Unsupported extension: {}", pathString);
+            return;
+        }
         ArtistRecord artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
         AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum());
         TrackRecord trackRecord = dataAccess.getTrack(albumRecord.getId(), metadata.getTitle());
@@ -147,7 +157,6 @@ public class FilesScanningService {
         }
     }
 
-
     @EventListener
     public void onInterruptBackgroundProcess(InterruptBackgroundProcessEvent event) {
         shouldInterrupt = true;
@@ -169,7 +178,13 @@ public class FilesScanningService {
     }
 
     @SneakyThrows
-    private static MetadataTags extractMetadata(Path file) {
+    private MetadataTags extractMp3Tags(Path file) {
+        Mp3File mp3file = new Mp3File(file);
+        return new MetadataTags(mp3file, file);
+    }
+
+    @SneakyThrows
+    private static MetadataTags extractM4aMetadata(Path file) {
         List<Box> resultBoxes = new ArrayList<>();
         try (FileInputStream fileInputStream = new FileInputStream(file.toFile())) {
             IsoFile isoFile = new IsoFile(fileInputStream.getChannel());

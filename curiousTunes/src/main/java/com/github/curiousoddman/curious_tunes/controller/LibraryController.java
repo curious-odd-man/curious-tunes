@@ -118,6 +118,8 @@ public class LibraryController implements Initializable {
             currentTrackName.setText(event.getProcessName());
             currentTrackAlbum.setText(event.getDescription());
             currentTrackName.setText("");
+            timeSinceStart.setText(String.valueOf(event.getProgress()));
+            timeRemaining.setText(String.valueOf(event.getMaxProgress() - event.getProgress()));
 
             if (event.getProcessName().equals(LIBRARY_SCAN)
                     && event.getEventType().isTerminal()) {
