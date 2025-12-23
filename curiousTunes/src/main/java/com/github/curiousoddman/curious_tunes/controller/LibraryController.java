@@ -1,20 +1,25 @@
 package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
+import com.github.curiousoddman.curious_tunes.backend.player.CurrentPlaylistService;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.*;
 import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
+import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -78,8 +83,11 @@ public class LibraryController implements Initializable {
     public VBox artistAlbumsView;
     @FXML
     public Label artistTitle;
+    @FXML
+    public VBox playlistVbox;
 
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
+    private final CurrentPlaylistService currentPlaylistService;
     public ArtistSelectionModel artistSelectionModel;
 
     @Override
@@ -87,6 +95,18 @@ public class LibraryController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         artistSelectionModel = new ArtistSelectionModel(artistsControllers);
         onLibraryDataUpdated();
+    }
+
+    @EventListener
+    public void onPlaylistUpdatedEvent(PlaylistUpdatedEvent playlistUpdatedEvent) {
+        Platform.runLater(() -> {
+            List<TrackRecord> tracks = currentPlaylistService.getTracks();
+            ObservableList<Node> playlist = playlistVbox.getChildren();
+            playlist.clear();
+            for (TrackRecord track : tracks) {
+                playlist.add(new Label(track.getTrackNumber() + ". " + track.getTitle() + " --> " + track.getDuration()));
+            }
+        });
     }
 
     @EventListener

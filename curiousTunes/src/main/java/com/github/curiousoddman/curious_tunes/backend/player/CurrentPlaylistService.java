@@ -4,11 +4,13 @@ import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.ClearPlaylistEvent;
+import com.github.curiousoddman.curious_tunes.event.PlaylistUpdatedEvent;
 import com.github.curiousoddman.curious_tunes.event.RemoveFromPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.model.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -20,12 +22,15 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class CurrentPlaylistService {
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final DataAccess dataAccess;
+    @lombok.Getter
     private final List<TrackRecord> tracks;
 
     @EventListener
     public void onClearPlaylist(ClearPlaylistEvent clearPlaylistEvent) {
         tracks.clear();
+        applicationEventPublisher.publishEvent(new PlaylistUpdatedEvent(this));
     }
 
     @EventListener
@@ -58,11 +63,13 @@ public class CurrentPlaylistService {
             log.error("Unknown type of shuffle {}", shuffle);
             tracks.addAll(tracksToAdd);
         }
+        applicationEventPublisher.publishEvent(new PlaylistUpdatedEvent(this));
     }
 
     @EventListener
     public void onRemoveFromPlaylist(RemoveFromPlaylistEvent removeFromPlaylistEvent) {
         tracks.removeAll(removeFromPlaylistEvent.getTracks());
+        applicationEventPublisher.publishEvent(new PlaylistUpdatedEvent(this));
     }
 
     public TrackRecord getCurrentTrack() {

@@ -97,7 +97,7 @@
                 </BorderPane>
             </top>
             <center>
-                <SplitPane dividerPositions="0.25585284280936454" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
+                <SplitPane dividerPositions="0.2559, 0.8" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
                     <items>
                         <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
                             <children>
@@ -110,7 +110,7 @@
                         </AnchorPane>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="334.0" prefWidth="314.0">
                             <children>
-                        <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <ScrollPane fitToWidth="true" layoutX="-133.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="978.0" prefWidth="561.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <content>
                                       <VBox fx:id="artistAlbumsView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                           <children>
@@ -128,6 +128,7 @@
                         </ScrollPane>
                             </children>
                         </AnchorPane>
+                  <VBox fx:id="playlistVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
                     </items>
                 </SplitPane>
             </center>
