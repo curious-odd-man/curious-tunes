@@ -9,6 +9,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Album.ALBUM;
@@ -93,11 +95,27 @@ public class DataAccess {
                 .toList();
     }
 
-    public List<TrackRecord> getAlbumsTracks(List<Integer> albumFk) {
+    public List<TrackRecord> getAlbumsTracks(List<AlbumRecord> albums) {
+        Set<Integer> albumFks = albums.stream().map(AlbumRecord::getId).collect(Collectors.toSet());
         return dsl
                 .selectFrom(TRACK)
-                .where(TRACK.FK_ALBUM.in(albumFk))
+                .where(TRACK.FK_ALBUM.in(albumFks))
                 .stream()
                 .toList();
     }
+
+
+    public List<TrackRecord> getAlbumTracks(int albumFk) {
+        return dsl
+                .selectFrom(TRACK)
+                .where(TRACK.FK_ALBUM.eq(albumFk))
+                .stream()
+                .toList();
+    }
+
+    public List<TrackRecord> getArtistTracks(ArtistRecord artistRecord) {
+        List<AlbumRecord> artistAlbums = getArtistAlbums(artistRecord.getId());
+        return getAlbumsTracks(artistAlbums);
+    }
+
 }

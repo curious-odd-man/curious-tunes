@@ -55,7 +55,7 @@ public class LibraryArtistAlbumController implements Initializable {
 
             albumTitle.setText(albumRecord.getName());
             albumDetails.setText("empty details..."); // FIXME
-            List<TrackRecord> albumsTracks = dataAccess.getAlbumsTracks(List.of(albumRecord.getId()));
+            List<TrackRecord> albumsTracks = dataAccess.getAlbumTracks(albumRecord.getId());
             int tracksPerColumn = albumsTracks.size() <= 10
                     ? albumsTracks.size()
                     : (albumsTracks.size() / 2);

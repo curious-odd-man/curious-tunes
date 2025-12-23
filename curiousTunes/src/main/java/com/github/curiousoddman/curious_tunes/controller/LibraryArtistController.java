@@ -1,8 +1,11 @@
 package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
+import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
 import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
+import com.github.curiousoddman.curious_tunes.model.PlaylistAddMode;
+import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -49,6 +52,7 @@ public class LibraryArtistController implements Initializable {
         }
     }
 
+    @FXML
     public void onArtistClicked(MouseEvent mouseEvent) {
         artistSelectionModel.getOptionalSelectedItem().ifPresent(LibraryArtistController::clearSelection);
         artistSelectionModel.select(this);
@@ -57,6 +61,7 @@ public class LibraryArtistController implements Initializable {
         eventPublisher.publishEvent(new ShowArtistAlbums(this, artistRecord));
     }
 
+    @FXML
     public void clearSelection() {
         artistNameLabel.getParent().setStyle("");
         artistNameLabel.setStyle("");
@@ -64,21 +69,49 @@ public class LibraryArtistController implements Initializable {
 
     @FXML
     public void onPlayClicked(ActionEvent actionEvent) {
-        //TODO:
+        AddToPlaylistEvent event = AddToPlaylistEvent
+                .builder()
+                .source(this)
+                .artistRecord(artistRecord)
+                .shuffle(Shuffle.SKIP)
+                .playlistAddMode(PlaylistAddMode.REPLACE)
+                .build();
+        eventPublisher.publishEvent(event);
     }
 
     @FXML
     public void onAddPlayClicked(ActionEvent actionEvent) {
-//TODO:
+        AddToPlaylistEvent event = AddToPlaylistEvent
+                .builder()
+                .source(this)
+                .artistRecord(artistRecord)
+                .shuffle(Shuffle.SKIP)
+                .playlistAddMode(PlaylistAddMode.APPEND)
+                .build();
+        eventPublisher.publishEvent(event);
     }
 
     @FXML
     public void onShuffleClicked(ActionEvent actionEvent) {
-//TODO:
+        AddToPlaylistEvent event = AddToPlaylistEvent
+                .builder()
+                .source(this)
+                .artistRecord(artistRecord)
+                .shuffle(Shuffle.AFTER_ADDING_TO_PLAYLIST)
+                .playlistAddMode(PlaylistAddMode.REPLACE)
+                .build();
+        eventPublisher.publishEvent(event);
     }
 
     @FXML
     public void onAddShuffledClicked(ActionEvent actionEvent) {
-//TODO:
+        AddToPlaylistEvent event = AddToPlaylistEvent
+                .builder()
+                .source(this)
+                .artistRecord(artistRecord)
+                .shuffle(Shuffle.BEFORE_ADDING_TO_PLAYLIST)
+                .playlistAddMode(PlaylistAddMode.APPEND)
+                .build();
+        eventPublisher.publishEvent(event);
     }
 }
