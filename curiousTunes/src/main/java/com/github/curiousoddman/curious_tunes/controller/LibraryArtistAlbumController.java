@@ -43,6 +43,8 @@ public class LibraryArtistAlbumController implements Initializable {
             if (albumRecord.getImage() != null) {
                 try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(albumRecord.getImage())) {
                     albumImage.setImage(new Image(byteArrayInputStream));
+                } catch (Exception e) {
+                    log.error("Unable to display image", e);
                 }
             }
 

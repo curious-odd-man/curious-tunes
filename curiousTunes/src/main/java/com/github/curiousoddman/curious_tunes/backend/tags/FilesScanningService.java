@@ -98,7 +98,6 @@ public class FilesScanningService {
                                 .build());
                 log.info("Scanning completed...");
             } catch (Exception e) {
-                MDC.remove("file");
                 applicationEventPublisher.publishEvent(
                         getBackgroundProcessEventBuilder()
                                 .eventType(BackgroundProcessEventType.FAILED)
@@ -106,6 +105,7 @@ public class FilesScanningService {
                                 .error(e)
                                 .build());
                 log.error("Failed parsing files...", e);
+                MDC.remove("file");
             }
         };
         Thread rescanThread = new Thread(rescanRunnable, "rescan");
@@ -200,6 +200,9 @@ public class FilesScanningService {
                 }
                 resultBoxes.add(box);
             }
+        } catch (Exception e) {
+            log.error("Failed to parse file {}", file, e);
+            return new MetadataTags(List.of(), file);
         }
 
         List<Box> allBoxes = resultBoxes

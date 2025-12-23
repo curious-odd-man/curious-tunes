@@ -128,7 +128,7 @@ public class MetadataTags {
             case 13 -> AlbumCover.DataType.JPG;
             case 14 -> AlbumCover.DataType.PNG;
             default -> {
-                log.error("Unkonwn data type: {}", appleCoverBox.getDataType());
+                log.error("Unknown image data type: {}", appleCoverBox.getDataType());
                 yield null;
             }
         };
