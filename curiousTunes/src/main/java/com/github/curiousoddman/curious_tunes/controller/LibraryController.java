@@ -25,8 +25,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.context.ApplicationEventPublisher;
@@ -34,7 +36,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -89,6 +93,60 @@ public class LibraryController implements Initializable {
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
     private final CurrentPlaylistService currentPlaylistService;
     public ArtistSelectionModel artistSelectionModel;
+
+    private boolean isPlaying = false;
+    private javafx.scene.media.Media media;
+    private MediaPlayer player;
+
+    @EventListener
+    public void onPlayPause(PlayPauseEvent playPauseEvent) {
+        TrackRecord trackRecord = currentPlaylistService.getCurrentTrack();
+        if (!isPlaying) {
+            buttonPlayPause.setText("⏸");
+            String fileLocation = trackRecord.getFileLocation();
+            URI fileUri = Path.of(fileLocation).toUri();
+            media = new javafx.scene.media.Media(fileUri.toString());
+            player = new MediaPlayer(media);
+
+            currentTrackName.setText(trackRecord.getTitle());
+            currentTrackAlbum.setText(trackRecord.getFkAlbum().toString());
+            currentTrackArtist.setText("");
+            currentTrackProgress.setProgress(0);
+            timeSinceStart.setText(String.valueOf(0));
+            timeRemaining.setText(String.valueOf(trackRecord.getDuration()));
+
+            // Providing functionality to time slider
+            player.currentTimeProperty().addListener(ov -> {
+                Duration currentTime = player.getCurrentTime();
+                timeSinceStart.setText(String.valueOf(currentTime.toSeconds()));
+                timeRemaining.setText(String.valueOf(trackRecord.getDuration() - currentTime.toSeconds()));
+                currentTrackProgress.setProgress(currentTime.toSeconds() / trackRecord.getDuration());
+            });
+
+            volumeControl.valueProperty().addListener(ov -> {
+                if (volumeControl.isPressed()) {
+                    player.setVolume(volumeControl.getValue() / 100);
+                }
+            });
+
+            player.play();
+        } else {
+            buttonPlayPause.setText("▶");
+            player.pause();
+        }
+    }
+
+    @EventListener
+    public void onNextEvent(PlayNextEvent playNextEvent) {
+        TrackRecord trackRecord = currentPlaylistService.getNextTrack();
+        // TODO
+    }
+
+    @EventListener
+    public void onPreviousEvent(PlayPreviousEvent playPreviousEvent) {
+        TrackRecord trackRecord = currentPlaylistService.getPreviousTrack();
+        // TODO
+    }
 
     @Override
     @SneakyThrows

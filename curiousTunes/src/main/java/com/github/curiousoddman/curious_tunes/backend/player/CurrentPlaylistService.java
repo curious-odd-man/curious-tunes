@@ -73,7 +73,7 @@ public class CurrentPlaylistService {
     }
 
     public TrackRecord getCurrentTrack() {
-        return null;    // TODO
+        return tracks.getFirst();    // TODO
     }
 
     public TrackRecord getNextTrack() {
