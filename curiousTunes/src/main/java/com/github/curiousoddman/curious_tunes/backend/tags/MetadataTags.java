@@ -1,6 +1,7 @@
 package com.github.curiousoddman.curious_tunes.backend.tags;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.util.ConversionUtils;
 import com.github.curiousoddman.curious_tunes.util.JooqUtils;
 import com.mpatric.mp3agic.ID3v1;
 import com.mpatric.mp3agic.ID3v2;
@@ -52,7 +53,7 @@ public class MetadataTags {
             artist = tag.getArtist();
             album = tag.getAlbum();
             title = tag.getTitle();
-            trackNumber = Integer.valueOf(tag.getTrack());
+            trackNumber = ConversionUtils.asInteger(tag.getTrack());
             genre = tag.getGenreDescription();
             lyrics = tag.getLyrics();
             albumCover = new AlbumCover(tag.getAlbumImage(), tag.getAlbumImageMimeType());
@@ -61,7 +62,7 @@ public class MetadataTags {
             artist = tag.getArtist();
             album = tag.getAlbum();
             title = tag.getTitle();
-            trackNumber = Integer.valueOf(tag.getTrack());
+            trackNumber = ConversionUtils.asInteger(tag.getTrack());
             genre = tag.getGenreDescription();
         }
 

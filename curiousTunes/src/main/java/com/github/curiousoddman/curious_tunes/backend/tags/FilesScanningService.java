@@ -105,6 +105,7 @@ public class FilesScanningService {
                                 .description("Failed...")
                                 .error(e)
                                 .build());
+                log.error("Failed parsing files...", e);
             }
         };
         Thread rescanThread = new Thread(rescanRunnable, "rescan");
@@ -178,13 +179,13 @@ public class FilesScanningService {
     }
 
     @SneakyThrows
-    private MetadataTags extractMp3Tags(Path file) {
+    MetadataTags extractMp3Tags(Path file) {
         Mp3File mp3file = new Mp3File(file);
         return new MetadataTags(mp3file, file);
     }
 
     @SneakyThrows
-    private static MetadataTags extractM4aMetadata(Path file) {
+    static MetadataTags extractM4aMetadata(Path file) {
         List<Box> resultBoxes = new ArrayList<>();
         try (FileInputStream fileInputStream = new FileInputStream(file.toFile())) {
             IsoFile isoFile = new IsoFile(fileInputStream.getChannel());
