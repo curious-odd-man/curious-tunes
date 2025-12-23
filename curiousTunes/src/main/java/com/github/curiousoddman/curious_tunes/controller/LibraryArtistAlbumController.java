@@ -61,7 +61,7 @@ public class LibraryArtistAlbumController implements Initializable {
                 Label child = new Label(trackRecord.getTrackNumber() + ": " + trackRecord.getTitle() + " :: " + trackRecord.getDuration());
                 albumTracksGrid.add(child, col, row);
                 if (row + 1 == tracksPerColumn) {
-                    col++;
+                    col = Math.max(1, col + 1);
                     row = 0;
                 } else {
                     row++;
