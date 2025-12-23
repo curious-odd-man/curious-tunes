@@ -1,47 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
 <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryArtistAlbumController">
     <left>
-        <ImageView fx:id="albumImage" fitHeight="350.0" fitWidth="350.0" onMouseEntered="#onAlbumImageHover" onMouseExited="#onAlbumImageUnhover" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
+        <ImageView fx:id="albumImage" fitHeight="350.0" fitWidth="350.0" onMouseEntered="#onAlbumImageHover" onMouseExited="#onAlbumImageUnhover" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+         <image>
+            <Image url="@../img/noimage.png" />
+         </image></ImageView>
     </left>
-    <center>
-        <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
-            <top>
-                <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
-                    <children>
-                        <Label fx:id="albumTitle" text="Red Hot Chile Peppers">
-                            <font>
-                                <Font size="24.0" />
-                            </font>
-                        </Label>
-                        <Label fx:id="albumDetails" layoutX="10.0" layoutY="10.0" text="Pop/Rock   2000">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                    </children>
-                </VBox>
-            </top>
-            <center>
-                <GridPane fx:id="albumTracksGrid" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
-                    <columnConstraints>
-                        <ColumnConstraints fillWidth="false" hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" />
-                  <ColumnConstraints fillWidth="false" hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" />
-                    </columnConstraints>
-                    <rowConstraints>
-                        <RowConstraints fillHeight="false" maxHeight="1.7976931348623157E308" valignment="TOP" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                </GridPane>
-            </center>
-        </BorderPane>
-    </center>
+   <center>
+          <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="TOP_LEFT">
+              <children>
+                  <Label fx:id="albumTitle" text="Red Hot Chile Peppers" VBox.vgrow="NEVER">
+                      <font>
+                          <Font size="24.0" />
+                      </font>
+                  </Label>
+                  <Label fx:id="albumDetails" layoutX="10.0" layoutY="10.0" text="Pop/Rock   2000" VBox.vgrow="NEVER">
+                      <font>
+                          <Font size="14.0" />
+                      </font>
+                  </Label>
+            <HBox prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+               <children>
+                  <VBox fx:id="tracksLeftColumnVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="2.0" HBox.hgrow="ALWAYS">
+                     <padding>
+                        <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+                     </padding>
+                  </VBox>
+                  <VBox fx:id="tracksRightColumnVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="2.0" HBox.hgrow="ALWAYS">
+                     <padding>
+                        <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+                     </padding>
+                  </VBox>
+               </children>
+            </HBox>
+              </children>
+          </VBox>
+   </center>
 </BorderPane>

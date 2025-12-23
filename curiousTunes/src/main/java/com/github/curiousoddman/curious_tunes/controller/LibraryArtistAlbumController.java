@@ -9,9 +9,10 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,7 @@ import java.util.ResourceBundle;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Lazy
+@Slf4j
 @Component
 @Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
@@ -33,7 +35,8 @@ public class LibraryArtistAlbumController implements Initializable {
     public ImageView albumImage;
     public Label albumTitle;
     public Label albumDetails;
-    public GridPane albumTracksGrid;
+    public VBox tracksLeftColumnVbox;
+    public VBox tracksRightColumnVbox;
 
     @Override
     @SneakyThrows
@@ -57,13 +60,13 @@ public class LibraryArtistAlbumController implements Initializable {
 
             Iterator<TrackRecord> iterator = albumsTracks.iterator();
             int row = 0;
-            int col = 0;
+            VBox col = tracksLeftColumnVbox;
             while (iterator.hasNext()) {
                 TrackRecord trackRecord = iterator.next();
                 Label child = new Label(trackRecord.getTrackNumber() + ": " + trackRecord.getTitle() + " :: " + trackRecord.getDuration());
-                albumTracksGrid.add(child, col, row);
+                col.getChildren().add(child);
                 if (row + 1 == tracksPerColumn) {
-                    col = Math.max(1, col + 1);
+                    col = tracksRightColumnVbox;
                     row = 0;
                 } else {
                     row++;
