@@ -132,7 +132,7 @@ public class FilesScanningService {
                 return;
             }
             ArtistRecord artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
-            AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum());
+            AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum(), metadata.getAlbumCover().getData());
             TrackRecord trackRecord = dataAccess.getTrack(albumRecord.getId(), metadata.getTitle());
 
             if (trackRecord == null) {

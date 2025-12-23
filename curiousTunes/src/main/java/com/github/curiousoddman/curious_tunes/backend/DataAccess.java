@@ -45,7 +45,7 @@ public class DataAccess {
     }
 
     @Cacheable(Caches.ALBUMS)
-    public AlbumRecord getOrInsertAlbum(Integer artistId, String album) {
+    public AlbumRecord getOrInsertAlbum(Integer artistId, String album, byte[] image) {
         AlbumRecord albumRecord = dsl.selectFrom(ALBUM)
                 .where(
                         ALBUM.FK_ARTIST.eq(artistId),
@@ -58,8 +58,8 @@ public class DataAccess {
 
         return dsl
                 .insertInto(ALBUM)
-                .columns(ALBUM.FK_ARTIST, ALBUM.NAME)
-                .values(artistId, album)
+                .columns(ALBUM.FK_ARTIST, ALBUM.NAME, ALBUM.IMAGE)
+                .values(artistId, album, image)
                 .returning()
                 .fetchOne();
     }
