@@ -120,41 +120,45 @@ public class FilesScanningService {
     }
 
     private void extractMetadataAndUpdateDatabase(Path file) {
-        String pathString = file.toString();
-        MetadataTags metadata;
-        if (pathString.endsWith("m4a")) {
-            metadata = extractM4aMetadata(file);
-        } else if (pathString.endsWith("mp3")) {
-            metadata = extractMp3Tags(file);
-        } else {
-            log.error("Unsupported extension: {}", pathString);
-            return;
-        }
-        ArtistRecord artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
-        AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum());
-        TrackRecord trackRecord = dataAccess.getTrack(albumRecord.getId(), metadata.getTitle());
-
-        if (trackRecord == null) {
-            TrackRecord mewTrackRecord = new TrackRecord(
-                    null,
-                    albumRecord.getId(),
-                    metadata.getTitle(),
-                    metadata.getTrackNumber(),
-                    metadata.getReleaseDate(),
-                    metadata.getDiskNumber(),
-                    metadata.getSampleRate(),
-                    metadata.getGenre(),
-                    metadata.getComposer(),
-                    metadata.getFileLocation(),
-                    metadata.getDuration(),
-                    TrackStatus.ACTIVE.name(),
-                    metadata.getLyrics()
-            );
-            dataAccess.insertTrack(mewTrackRecord);
-        } else {
-            if (metadata.updateTrackIfChanged(trackRecord)) {
-                trackRecord.update();
+        try {
+            String pathString = file.toString();
+            MetadataTags metadata;
+            if (pathString.endsWith("m4a")) {
+                metadata = extractM4aMetadata(file);
+            } else if (pathString.endsWith("mp3")) {
+                metadata = extractMp3Tags(file);
+            } else {
+                log.error("Unsupported extension: {}", pathString);
+                return;
             }
+            ArtistRecord artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
+            AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum());
+            TrackRecord trackRecord = dataAccess.getTrack(albumRecord.getId(), metadata.getTitle());
+
+            if (trackRecord == null) {
+                TrackRecord mewTrackRecord = new TrackRecord(
+                        null,
+                        albumRecord.getId(),
+                        metadata.getTitle(),
+                        metadata.getTrackNumber(),
+                        metadata.getReleaseDate(),
+                        metadata.getDiskNumber(),
+                        metadata.getSampleRate(),
+                        metadata.getGenre(),
+                        metadata.getComposer(),
+                        metadata.getFileLocation(),
+                        metadata.getDuration(),
+                        TrackStatus.ACTIVE.name(),
+                        metadata.getLyrics()
+                );
+                dataAccess.insertTrack(mewTrackRecord);
+            } else {
+                if (metadata.updateTrackIfChanged(trackRecord)) {
+                    trackRecord.update();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to parse file {}", file, e);
         }
     }
 
@@ -200,9 +204,6 @@ public class FilesScanningService {
                 }
                 resultBoxes.add(box);
             }
-        } catch (Exception e) {
-            log.error("Failed to parse file {}", file, e);
-            return new MetadataTags(List.of(), file);
         }
 
         List<Box> allBoxes = resultBoxes
