@@ -31,6 +31,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
@@ -47,6 +48,7 @@ import static com.github.curiousoddman.curious_tunes.backend.tags.FilesScanningS
 import static javafx.application.Platform.runLater;
 
 @Lazy
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class LibraryController implements Initializable {
@@ -128,6 +130,9 @@ public class LibraryController implements Initializable {
                     player.setVolume(volumeControl.getValue() / 100);
                 }
             });
+
+            player.onErrorProperty().addListener(observable -> log.error("Failed playback", player.getError()));
+            player.onStalledProperty().addListener(observable -> log.error("Stalled {}", observable));
 
             player.play();
         } else {
