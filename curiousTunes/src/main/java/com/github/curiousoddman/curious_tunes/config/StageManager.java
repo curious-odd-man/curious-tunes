@@ -7,8 +7,6 @@ import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.io.IOException;
-
 @RequiredArgsConstructor
 public class StageManager {
     private final FxmlLoader fxmlLoader;
@@ -33,13 +31,7 @@ public class StageManager {
     }
 
     private Parent loadRootNode(FxmlView fxmlPath) {
-        Parent rootNode;
-        try {
-            rootNode = fxmlLoader.load(fxmlPath, null).parent();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return rootNode;
+        return fxmlLoader.load(fxmlPath, null).parent();
     }
 
     public void switchToFullScreenMode() {

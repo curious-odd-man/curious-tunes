@@ -4,10 +4,10 @@ import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -16,7 +16,8 @@ import java.util.ResourceBundle;
 public class FxmlLoader {
     private final ApplicationContext context;
 
-    public <T> LoadedFxml<T> load(FxmlView fxmlPath, ResourceBundle resourceBundle) throws IOException {
+    @SneakyThrows
+    public <T> LoadedFxml<T> load(FxmlView fxmlPath, ResourceBundle resourceBundle) {
         FXMLLoader loader = new FXMLLoader();
         loader.setControllerFactory(context::getBean);
         URL resource = getClass().getClassLoader().getResource(fxmlPath.getFxmlPath());

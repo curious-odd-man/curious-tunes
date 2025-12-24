@@ -9,7 +9,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
@@ -117,5 +119,35 @@ public class DataAccess {
         List<AlbumRecord> artistAlbums = getArtistAlbums(artistRecord.getId());
         return getAlbumsTracks(artistAlbums);
     }
+
+    public Map<TrackRecord, Map.Entry<AlbumRecord, ArtistRecord>> getArtistAlbumForTracks(List<TrackRecord> tracks) {
+        Set<Integer> albumFks = tracks.stream().map(TrackRecord::getFkAlbum).collect(Collectors.toSet());
+        Map<Integer, AlbumRecord> albumIdToRecord = dsl
+                .selectFrom(ALBUM)
+                .where(ALBUM.ID.in(albumFks))
+                .fetch()
+                .intoMap(AlbumRecord::getId);
+        Set<Integer> artistFks = albumIdToRecord.values().stream().map(AlbumRecord::getFkArtist).collect(Collectors.toSet());
+        Map<Integer, ArtistRecord> artistIdToRecord = dsl
+                .selectFrom(ARTIST)
+                .where(ARTIST.ID.in(artistFks))
+                .fetch()
+                .intoMap(ArtistRecord::getId);
+
+        return tracks
+                .stream()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        tr -> {
+                            AlbumRecord albumRecord = albumIdToRecord.get(tr.getFkAlbum());
+                            ArtistRecord artistRecord = artistIdToRecord.get(albumRecord.getFkArtist());
+                            return Map.entry(
+                                    albumRecord,
+                                    artistRecord
+                            );
+                        }
+                ));
+    }
+
 
 }

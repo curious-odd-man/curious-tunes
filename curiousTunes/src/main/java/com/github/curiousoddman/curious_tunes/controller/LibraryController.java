@@ -13,6 +13,7 @@ import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
+import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -42,6 +43,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import static com.github.curiousoddman.curious_tunes.backend.tags.FilesScanningService.LIBRARY_SCAN;
@@ -166,8 +168,21 @@ public class LibraryController implements Initializable {
             List<TrackRecord> tracks = currentPlaylistService.getTracks();
             ObservableList<Node> playlist = playlistVbox.getChildren();
             playlist.clear();
-            for (TrackRecord track : tracks) {
-                playlist.add(new Label(track.getTrackNumber() + ". " + track.getTitle() + " --> " + track.getDuration()));
+            Map<TrackRecord, Map.Entry<AlbumRecord, ArtistRecord>> tracksInfo = dataAccess.getArtistAlbumForTracks(tracks);
+
+            for (Map.Entry<TrackRecord, Map.Entry<AlbumRecord, ArtistRecord>> entry : tracksInfo.entrySet()) {
+                TrackRecord trackRecord = entry.getKey();
+                AlbumRecord albumRecord = entry.getValue().getKey();
+                ArtistRecord artistRecord = entry.getValue().getValue();
+                LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
+                        FxmlView.PLAYLIST_ITEM,
+                        new PlaylistItemResourceBundle(
+                                artistRecord.getName(),
+                                albumRecord,
+                                trackRecord
+                        )
+                );
+                playlist.add(loadedFxml.parent());
             }
         });
     }

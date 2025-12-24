@@ -4,6 +4,7 @@ import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
+import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -43,14 +44,7 @@ public class LibraryArtistAlbumController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         if (resources instanceof ArtistAlbumBundle albumBundle) {
             AlbumRecord albumRecord = albumBundle.getAlbumRecord();
-            if (albumRecord.getImage() != null) {
-                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(albumRecord.getImage())) {
-                    Image value = new Image(byteArrayInputStream, 350., 350., true, true);
-                    albumImage.setImage(value);
-                } catch (Exception e) {
-                    log.error("Unable to display image", e);
-                }
-            }
+            ImageUtils.setImageIfPresent(albumRecord, albumImage);
 
             albumTitle.setText(albumRecord.getName());
             albumDetails.setText("empty details..."); // FIXME
