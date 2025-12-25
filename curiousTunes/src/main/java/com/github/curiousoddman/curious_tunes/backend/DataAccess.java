@@ -8,6 +8,7 @@ import org.jooq.impl.DefaultDSLContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -145,7 +146,11 @@ public class DataAccess {
                                     albumRecord,
                                     artistRecord
                             );
-                        }
+                        },
+                        (r1, r2) -> {
+                            throw new IllegalArgumentException();
+                        },
+                        LinkedHashMap::new
                 ));
     }
 
