@@ -13,6 +13,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.context.ApplicationEventPublisher;
@@ -34,6 +35,7 @@ public class LibraryArtistController implements Initializable {
 
     public ImageView artistImageView;
     public Label artistNameLabel;
+    public HBox pane;
 
     private ArtistRecord artistRecord;
     private ArtistSelectionModel artistSelectionModel;
@@ -42,6 +44,7 @@ public class LibraryArtistController implements Initializable {
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
+        pane.setStyle("-fx-border-width: 1px; -fx-border-color: rgb(204,190,255);");
         if (resources instanceof ArtistItemBundle bundle) {
             ArtistRecord artist = bundle.getArtist();
             //String icon = bundle.getIcon(); // FIXME:

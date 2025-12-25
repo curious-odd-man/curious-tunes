@@ -10,6 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -38,10 +39,12 @@ public class LibraryArtistAlbumController implements Initializable {
     public Label albumDetails;
     public VBox tracksLeftColumnVbox;
     public VBox tracksRightColumnVbox;
+    public BorderPane pane;
 
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
+        pane.setStyle("-fx-border-width: 1px;  -fx-border-color: rgb(204,190,255);");
         if (resources instanceof ArtistAlbumBundle albumBundle) {
             AlbumRecord albumRecord = albumBundle.getAlbumRecord();
             ImageUtils.setImageIfPresent(albumRecord, albumImage);

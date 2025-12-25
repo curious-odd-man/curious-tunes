@@ -39,6 +39,7 @@ public class PlaylistItemController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        pane.setStyle("-fx-border-width: 1px;  -fx-border-color: rgb(204,190,255);");
         contextMenu = new ContextMenu();
         MenuItem remove = new MenuItem("Remove");
         MenuItem moveToEnd = new MenuItem("Move to end");
