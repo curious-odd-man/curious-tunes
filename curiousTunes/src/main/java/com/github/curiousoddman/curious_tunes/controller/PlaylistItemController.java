@@ -5,6 +5,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.model.PlaylistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
+import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ContextMenu;
@@ -59,7 +60,7 @@ public class PlaylistItemController implements Initializable {
             AlbumRecord albumRecord = playlistItemResourceBundle.getAlbumRecord();
             ImageUtils.setImageIfPresent(albumRecord, image);
             TrackRecord trackRecord = playlistItemResourceBundle.getTrackRecord();
-            rightText.setText(String.valueOf(trackRecord.getDuration()));
+            rightText.setText(TimeUtils.secondsToHumanTime(trackRecord.getDuration()));
             topText.setText(trackRecord.getTitle());
             bottomText.setText(playlistItemResourceBundle.getArtist() + "  ---  " + albumRecord.getName());
             playlistSelectionModel = playlistItemResourceBundle.getPlaylistSelectionModel();

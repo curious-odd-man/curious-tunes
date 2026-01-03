@@ -8,6 +8,7 @@ import com.github.curiousoddman.curious_tunes.model.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
+import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import javafx.animation.FadeTransition;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -70,7 +71,7 @@ public class LibraryArtistAlbumController implements Initializable {
             VBox col = tracksLeftColumnVbox;
             while (iterator.hasNext()) {
                 TrackRecord trackRecord = iterator.next();
-                Label child = new Label(trackRecord.getTrackNumber() + ": " + trackRecord.getTitle() + " :: " + trackRecord.getDuration());
+                Label child = new Label(trackRecord.getTrackNumber() + ": " + trackRecord.getTitle() + " :: " + TimeUtils.secondsToHumanTime(trackRecord.getDuration()));
                 col.getChildren().add(child);
                 if (row + 1 == tracksPerColumn) {
                     col = tracksRightColumnVbox;

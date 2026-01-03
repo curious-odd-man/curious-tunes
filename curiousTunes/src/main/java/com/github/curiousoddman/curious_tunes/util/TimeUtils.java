@@ -1,6 +1,10 @@
 package com.github.curiousoddman.curious_tunes.util;
 
 public class TimeUtils {
+    public static String secondsToHumanTime(long seconds) {
+        return secondsToHumanTime((int) seconds);
+    }
+
     public static String secondsToHumanTime(int seconds) {
         int h = seconds / 3600;
         int remainder = seconds - h * 3600;
