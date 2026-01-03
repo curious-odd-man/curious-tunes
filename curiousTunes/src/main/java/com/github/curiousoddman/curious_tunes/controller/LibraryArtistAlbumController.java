@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import static com.github.curiousoddman.curious_tunes.util.GlobalStyleClasses.BORDERED_ITEM;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Lazy
@@ -52,7 +53,7 @@ public class LibraryArtistAlbumController implements Initializable {
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
-        pane.setStyle("-fx-border-width: 1px;  -fx-border-color: rgb(204,190,255);");
+        pane.getStyleClass().add(BORDERED_ITEM);
         if (resources instanceof ArtistAlbumBundle albumBundle) {
             albumRecord = albumBundle.getAlbumRecord();
             ImageUtils.setImageIfPresent(albumRecord, albumImage);

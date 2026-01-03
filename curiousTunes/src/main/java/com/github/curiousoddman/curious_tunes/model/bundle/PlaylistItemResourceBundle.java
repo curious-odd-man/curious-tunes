@@ -2,6 +2,7 @@ package com.github.curiousoddman.curious_tunes.model.bundle;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.model.PlaylistSelectionModel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -13,6 +14,7 @@ public class PlaylistItemResourceBundle extends ListResourceBundle {
     private final String artist;
     private final AlbumRecord albumRecord;
     private final TrackRecord trackRecord;
+    private final PlaylistSelectionModel playlistSelectionModel;
 
     @Override
     protected Object[][] getContents() {
@@ -20,6 +22,7 @@ public class PlaylistItemResourceBundle extends ListResourceBundle {
                 {"artist", artist},
                 {"albumRecord", albumRecord},
                 {"trackRecord", trackRecord},
+                {"playlistSelectionModel", playlistSelectionModel}
         };
     }
 }

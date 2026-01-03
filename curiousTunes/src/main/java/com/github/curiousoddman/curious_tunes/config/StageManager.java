@@ -20,6 +20,7 @@ public class StageManager {
 
         Parent rootNode = loadRootNode(view);
         Scene scene = new Scene(rootNode);
+        scene.getStylesheets().add("styles/global.css");
 
         scene.widthProperty().addListener((observableValue, oldSceneWidth, newSceneWidth) -> {
 

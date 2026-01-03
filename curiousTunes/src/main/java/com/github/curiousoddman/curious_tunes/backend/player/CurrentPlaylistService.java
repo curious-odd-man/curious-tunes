@@ -26,7 +26,7 @@ public class CurrentPlaylistService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final DataAccess dataAccess;
     @lombok.Getter
-    private final List<TrackRecord> tracks;
+    private final List<TrackRecord> tracks = new ArrayList<>();
 
     private ListIteratorWrapper<TrackRecord> tracksIterator;
 

@@ -24,6 +24,8 @@ import org.springframework.stereotype.Component;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import static com.github.curiousoddman.curious_tunes.util.GlobalStyleClasses.BORDERED_ITEM;
+import static com.github.curiousoddman.curious_tunes.util.GlobalStyleClasses.SELECTED_ITEM;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Lazy
@@ -44,7 +46,7 @@ public class LibraryArtistController implements Initializable {
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
-        pane.setStyle("-fx-border-width: 1px; -fx-border-color: rgb(204,190,255);");
+        pane.getStyleClass().add(BORDERED_ITEM);
         if (resources instanceof ArtistItemBundle bundle) {
             ArtistRecord artist = bundle.getArtist();
             //String icon = bundle.getIcon(); // FIXME:
@@ -59,15 +61,12 @@ public class LibraryArtistController implements Initializable {
     public void onArtistClicked(MouseEvent mouseEvent) {
         artistSelectionModel.getOptionalSelectedItem().ifPresent(LibraryArtistController::clearSelection);
         artistSelectionModel.select(this);
-        artistNameLabel.getParent().setStyle("-fx-background-color: #00F;");
-        artistNameLabel.setStyle("-fx-text-fill: #FFF");
+        artistNameLabel.getParent().getStyleClass().add(SELECTED_ITEM);
         eventPublisher.publishEvent(new ShowArtistAlbums(this, artistRecord));
     }
 
-    @FXML
     public void clearSelection() {
-        artistNameLabel.getParent().setStyle("");
-        artistNameLabel.setStyle("");
+        artistNameLabel.getParent().getStyleClass().remove(SELECTED_ITEM);
     }
 
     @FXML

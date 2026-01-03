@@ -12,6 +12,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.*;
 import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
+import com.github.curiousoddman.curious_tunes.model.PlaylistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
@@ -100,6 +101,7 @@ public class LibraryController implements Initializable {
     private final CurrentPlaylistService currentPlaylistService;
     private final MediaProvider mediaProvider;
     public ArtistSelectionModel artistSelectionModel;
+    public PlaylistSelectionModel playlistSelectionModel;
 
     private boolean isPlaying = false;
     private Media media;
@@ -177,12 +179,14 @@ public class LibraryController implements Initializable {
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
         artistSelectionModel = new ArtistSelectionModel(artistsControllers);
+        playlistSelectionModel = new PlaylistSelectionModel(new ArrayList<>());
         onLibraryDataUpdated();
     }
 
     @EventListener
     public void onPlaylistUpdatedEvent(PlaylistUpdatedEvent playlistUpdatedEvent) {
         Platform.runLater(() -> {
+            playlistSelectionModel.clear();
             List<TrackRecord> tracks = currentPlaylistService.getTracks();
             ObservableList<Node> playlist = playlistVbox.getChildren();
             playlist.clear();
@@ -192,14 +196,16 @@ public class LibraryController implements Initializable {
                 TrackRecord trackRecord = entry.getKey();
                 AlbumRecord albumRecord = entry.getValue().getKey();
                 ArtistRecord artistRecord = entry.getValue().getValue();
-                LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
+                LoadedFxml<PlaylistItemController> loadedFxml = fxmlLoader.load(
                         FxmlView.PLAYLIST_ITEM,
                         new PlaylistItemResourceBundle(
                                 artistRecord.getName(),
                                 albumRecord,
-                                trackRecord
+                                trackRecord,
+                                playlistSelectionModel
                         )
                 );
+                playlistSelectionModel.getPlaylistItems().add(loadedFxml.controller());
                 playlist.add(loadedFxml.parent());
             }
         });

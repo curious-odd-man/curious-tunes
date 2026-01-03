@@ -2,6 +2,7 @@ package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.model.PlaylistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import javafx.fxml.FXML;
@@ -15,14 +16,20 @@ import javafx.scene.layout.AnchorPane;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import static com.github.curiousoddman.curious_tunes.util.GlobalStyleClasses.BORDERED_ITEM;
+import static com.github.curiousoddman.curious_tunes.util.GlobalStyleClasses.SELECTED_ITEM;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
 @Lazy
 @Slf4j
 @Component
+@Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class PlaylistItemController implements Initializable {
     @FXML
@@ -36,10 +43,11 @@ public class PlaylistItemController implements Initializable {
     @FXML
     public AnchorPane pane;
     private ContextMenu contextMenu;
+    private PlaylistSelectionModel playlistSelectionModel;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        pane.setStyle("-fx-border-width: 1px;  -fx-border-color: rgb(204,190,255);");
+        pane.getStyleClass().add(BORDERED_ITEM);
         contextMenu = new ContextMenu();
         MenuItem remove = new MenuItem("Remove");
         MenuItem moveToEnd = new MenuItem("Move to end");
@@ -54,7 +62,12 @@ public class PlaylistItemController implements Initializable {
             rightText.setText(String.valueOf(trackRecord.getDuration()));
             topText.setText(trackRecord.getTitle());
             bottomText.setText(playlistItemResourceBundle.getArtist() + "  ---  " + albumRecord.getName());
+            playlistSelectionModel = playlistItemResourceBundle.getPlaylistSelectionModel();
         }
+    }
+
+    public void clearSelection() {
+        pane.getStyleClass().remove(SELECTED_ITEM);
     }
 
     @FXML
@@ -62,5 +75,8 @@ public class PlaylistItemController implements Initializable {
         if (mouseEvent.isSecondaryButtonDown()) {
             contextMenu.show(pane, mouseEvent.getScreenX(), mouseEvent.getScreenY());
         }
+        playlistSelectionModel.getOptionalSelectedItem().ifPresent(PlaylistItemController::clearSelection);
+        playlistSelectionModel.select(this);
+        pane.getStyleClass().add(SELECTED_ITEM);
     }
 }

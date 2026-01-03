@@ -1,4 +1,4 @@
-package com.github.curiousoddman.curious_tunes.server;
+package com.github.curiousoddman.curious_tunes.web;
 
 import com.github.curiousoddman.alacdecoder.AlacDecoder;
 import com.github.curiousoddman.alacdecoder.data.WavFormat;
