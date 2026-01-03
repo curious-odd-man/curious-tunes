@@ -1,8 +1,7 @@
 package com.github.curiousoddman.curious_tunes.controller;
 
-import com.github.curiousoddman.alacdecoder.AlacDecoder;
-import com.github.curiousoddman.alacdecoder.data.WavFormat;
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
+import com.github.curiousoddman.curious_tunes.backend.MediaProvider;
 import com.github.curiousoddman.curious_tunes.backend.player.CurrentPlaylistService;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
@@ -17,6 +16,7 @@ import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
+import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -41,12 +41,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.io.OutputStream;
-import java.net.URI;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +97,7 @@ public class LibraryController implements Initializable {
 
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
     private final CurrentPlaylistService currentPlaylistService;
+    private final MediaProvider mediaProvider;
     public ArtistSelectionModel artistSelectionModel;
 
     private boolean isPlaying = false;
@@ -114,22 +110,7 @@ public class LibraryController implements Initializable {
         TrackRecord trackRecord = currentPlaylistService.getCurrentTrack();
         if (!isPlaying) {
             buttonPlayPause.setText("⏸");
-            String fileLocation = trackRecord.getFileLocation();
-            Path path = Path.of(fileLocation);
-            URI fileUri = path.toUri();
-            // FIXME:
-            // https://stackoverflow.com/questions/78908102/how-can-i-create-a-media-object-in-javafx-from-a-byte-array
-            if (path.toString().endsWith("m4a")) {
-                Path tempFile = Files.createTempFile("curious-tunes", ".wav");
-                OutputStream outputStream = Files.newOutputStream(tempFile, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
-                AlacDecoder
-                        .decode(WavFormat.RAW_PCM)
-                        .fromFile(path)
-                        .toStream(outputStream)
-                        .execute();
-                fileUri = tempFile.toUri();
-            }
-            media = new Media(fileUri.toString());
+            media = mediaProvider.getMedia(trackRecord);
             player = new MediaPlayer(media);
 
             currentTrackName.setText(trackRecord.getTitle());
@@ -142,8 +123,8 @@ public class LibraryController implements Initializable {
             // Providing functionality to time slider
             player.currentTimeProperty().addListener(ov -> {
                 Duration currentTime = player.getCurrentTime();
-                timeSinceStart.setText(String.valueOf(currentTime.toSeconds()));
-                timeRemaining.setText(String.valueOf(trackRecord.getDuration() - currentTime.toSeconds()));
+                timeSinceStart.setText(TimeUtils.secondsToHumanTime((int) currentTime.toSeconds()));
+                timeRemaining.setText(TimeUtils.secondsToHumanTime((int) (trackRecord.getDuration() - currentTime.toSeconds())));
                 currentTrackProgress.setProgress(currentTime.toSeconds() / trackRecord.getDuration());
             });
 

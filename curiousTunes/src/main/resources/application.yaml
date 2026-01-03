@@ -1,6 +1,6 @@
 spring:
   main:
-    web-application-type: none
+    web-application-type: servlet
   application:
     name: curious-tunes
   datasource:
@@ -14,3 +14,10 @@ spring:
   h2:
     console:
       enabled: true
+  cache:
+    caffeine:
+      spec: "maximumSize=5,expireAfterAccess=600s"
+
+server:
+  port: 7777
+
