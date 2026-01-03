@@ -6,15 +6,26 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
 <BorderPane fx:id="pane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryArtistAlbumController">
     <left>
-        <ImageView fx:id="albumImage" fitHeight="350.0" fitWidth="350.0" onMouseEntered="#onAlbumImageHover" onMouseExited="#onAlbumImageUnhover" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
-         <image>
-            <Image url="@../img/noimage.png" />
-         </image></ImageView>
+      <StackPane onMouseEntered="#onAlbumImageHover" onMouseExited="#onAlbumImageUnhover" BorderPane.alignment="CENTER">
+         <children>
+              <ImageView fx:id="albumImage" fitHeight="350.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@img/noimage.png" />
+               </image>
+            </ImageView>
+            <ImageView fx:id="playImageButton" fitHeight="200.0" fitWidth="200.0" onMouseClicked="#onPlayImageClicked" opacity="0.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@img/album-play-button.png" />
+               </image>
+            </ImageView>
+         </children>
+      </StackPane>
     </left>
    <center>
           <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="TOP_LEFT">
