@@ -82,20 +82,11 @@ public class LibraryArtistAlbumController implements Initializable {
     }
 
     public void onAlbumImageHover(MouseEvent mouseEvent) {
-        log.info("Mouse entered");
-        fade(1);
-    }
-
-    private void fade(int value) {
-        FadeTransition ft = new FadeTransition(Duration.millis(250), playImageButton);
-        ft.setFromValue(playImageButton.getOpacity());
-        ft.setToValue(value);
-        ft.play();
+        fadePlayImageButtonTo(1);
     }
 
     public void onAlbumImageUnhover(MouseEvent mouseEvent) {
-        log.info("Mouse exited");
-        fade(0);
+        fadePlayImageButtonTo(0);
     }
 
     public void onPlayImageClicked(MouseEvent mouseEvent) {
@@ -107,5 +98,12 @@ public class LibraryArtistAlbumController implements Initializable {
                 .playlistAddMode(PlaylistAddMode.REPLACE)
                 .build();
         applicationEventPublisher.publishEvent(event);
+    }
+
+    private void fadePlayImageButtonTo(int value) {
+        FadeTransition ft = new FadeTransition(Duration.millis(250), playImageButton);
+        ft.setFromValue(playImageButton.getOpacity());
+        ft.setToValue(value);
+        ft.play();
     }
 }
