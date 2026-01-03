@@ -8,6 +8,7 @@ import com.github.curiousoddman.curious_tunes.event.PlaylistUpdatedEvent;
 import com.github.curiousoddman.curious_tunes.event.RemoveFromPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.model.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
+import com.github.curiousoddman.curious_tunes.util.ListIteratorWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,10 +28,24 @@ public class CurrentPlaylistService {
     @lombok.Getter
     private final List<TrackRecord> tracks;
 
+    private ListIteratorWrapper<TrackRecord> tracksIterator;
+
     @EventListener
     public void onClearPlaylist(ClearPlaylistEvent clearPlaylistEvent) {
         tracks.clear();
+        tracksIterator = null;
         applicationEventPublisher.publishEvent(new PlaylistUpdatedEvent(this));
+    }
+
+    private void initIterator() {
+        if (tracksIterator == null) {
+            tracksIterator = new ListIteratorWrapper<>(tracks.listIterator());
+            if (tracksIterator.hasNext()) {
+                tracksIterator.next();
+            } else {
+                log.error("Empty list - no next in iterator...");
+            }
+        }
     }
 
     @EventListener
@@ -49,6 +64,7 @@ public class CurrentPlaylistService {
         }
         if (addToPlaylistEvent.getPlaylistAddMode() == PlaylistAddMode.REPLACE) {
             tracks.clear();
+            tracksIterator = null;
         }
         Shuffle shuffle = addToPlaylistEvent.getShuffle();
         if (shuffle == Shuffle.SKIP) {
@@ -63,6 +79,7 @@ public class CurrentPlaylistService {
             log.error("Unknown type of shuffle {}", shuffle);
             tracks.addAll(tracksToAdd);
         }
+        initIterator();
         applicationEventPublisher.publishEvent(new PlaylistUpdatedEvent(this));
     }
 
@@ -73,14 +90,18 @@ public class CurrentPlaylistService {
     }
 
     public TrackRecord getCurrentTrack() {
-        return tracks.getFirst();    // TODO
+        return tracksIterator.getLast();
     }
 
-    public TrackRecord getNextTrack() {
-        return null; // TODO
+    public void nextTrack() {
+        if (tracksIterator.hasNext()) {
+            tracksIterator.next();
+        }
     }
 
-    public TrackRecord getPreviousTrack() {
-        return null; // TODO
+    public void previousTrack() {
+        if (tracksIterator.hasPrevious()) {
+            tracksIterator.previous();
+        }
     }
 }

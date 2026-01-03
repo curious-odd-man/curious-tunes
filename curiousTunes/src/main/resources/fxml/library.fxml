@@ -64,7 +64,7 @@
                                 </HBox>
                             </center>
                             <bottom>
-                                <ProgressBar fx:id="currentTrackProgress" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" progress="0.0" BorderPane.alignment="CENTER" />
+                                <ProgressBar fx:id="currentTrackProgress" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#onProgressClicked" progress="0.0" BorderPane.alignment="CENTER" />
                             </bottom>
                             <left>
                                   <Label fx:id="timeSinceStart" alignment="BOTTOM_LEFT" text="Label" BorderPane.alignment="BOTTOM_LEFT" />

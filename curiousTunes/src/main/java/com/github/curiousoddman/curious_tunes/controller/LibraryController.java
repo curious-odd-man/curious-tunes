@@ -27,6 +27,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -107,8 +108,8 @@ public class LibraryController implements Initializable {
     @EventListener
     @SneakyThrows
     public void onPlayPause(PlayPauseEvent playPauseEvent) {
-        TrackRecord trackRecord = currentPlaylistService.getCurrentTrack();
         if (!isPlaying) {
+            TrackRecord trackRecord = currentPlaylistService.getCurrentTrack();
             buttonPlayPause.setText("⏸");
             media = mediaProvider.getMedia(trackRecord);
             player = new MediaPlayer(media);
@@ -134,18 +135,14 @@ public class LibraryController implements Initializable {
                 }
             });
 
-            player.onErrorProperty().addListener(observable -> log.error("Failed playback", player.getError()));
-            player.onStalledProperty().addListener(observable -> log.error("Stalled {}", observable));
+            loggingOnErrors();
 
-            player.statusProperty().addListener((observable, oldValue, newValue) -> {
-                log.info("playback status: {} ", newValue);
+            player.setOnEndOfMedia(() -> {
+                isPlaying = false;
+                currentPlaylistService.nextTrack();
+                eventPublisher.publishEvent(new PlayPauseEvent(this));
             });
 
-            player.errorProperty().addListener((observable, oldValue, newValue) -> {
-                log.error("error", newValue);
-            });
-
-            player.setVolume(0.5);
             player.play();
         } else {
             buttonPlayPause.setText("▶");
@@ -153,16 +150,27 @@ public class LibraryController implements Initializable {
         }
     }
 
+    private void loggingOnErrors() {
+        player.onErrorProperty().addListener(observable -> log.error("Failed playback", player.getError()));
+        player.onStalledProperty().addListener(observable -> log.error("Stalled {}", observable));
+
+        player.statusProperty().addListener((observable, oldValue, newValue) -> {
+            log.info("playback status: {} ", newValue);
+        });
+
+        player.errorProperty().addListener((observable, oldValue, newValue) -> {
+            log.error("error", newValue);
+        });
+    }
+
     @EventListener
     public void onNextEvent(PlayNextEvent playNextEvent) {
-        TrackRecord trackRecord = currentPlaylistService.getNextTrack();
-        // TODO
+        currentPlaylistService.nextTrack();
     }
 
     @EventListener
     public void onPreviousEvent(PlayPreviousEvent playPreviousEvent) {
-        TrackRecord trackRecord = currentPlaylistService.getPreviousTrack();
-        // TODO
+        currentPlaylistService.previousTrack();
     }
 
     @Override
@@ -281,5 +289,15 @@ public class LibraryController implements Initializable {
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.initOwner(buttonPrevious.getScene().getWindow());
         stage.showAndWait();
+    }
+
+    @FXML
+    public void onProgressClicked(MouseEvent mouseEvent) {
+        double seekTo = (mouseEvent.getX() - currentTrackProgress.getLayoutX()) / currentTrackProgress.getWidth();
+
+        TrackRecord currentTrack = currentPlaylistService.getCurrentTrack();
+        Long duration = currentTrack.getDuration();
+        log.info("Seek to {} : {}", seekTo, duration * seekTo);
+        player.seek(Duration.seconds(duration * seekTo));
     }
 }
