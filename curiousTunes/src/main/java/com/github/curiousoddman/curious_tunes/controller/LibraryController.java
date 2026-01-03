@@ -1,5 +1,7 @@
 package com.github.curiousoddman.curious_tunes.controller;
 
+import com.github.curiousoddman.alacdecoder.AlacDecoder;
+import com.github.curiousoddman.alacdecoder.data.WavFormat;
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.backend.player.CurrentPlaylistService;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
@@ -26,6 +28,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -38,9 +41,12 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -99,17 +105,31 @@ public class LibraryController implements Initializable {
     public ArtistSelectionModel artistSelectionModel;
 
     private boolean isPlaying = false;
-    private javafx.scene.media.Media media;
+    private Media media;
     private MediaPlayer player;
 
     @EventListener
+    @SneakyThrows
     public void onPlayPause(PlayPauseEvent playPauseEvent) {
         TrackRecord trackRecord = currentPlaylistService.getCurrentTrack();
         if (!isPlaying) {
             buttonPlayPause.setText("⏸");
             String fileLocation = trackRecord.getFileLocation();
-            URI fileUri = Path.of(fileLocation).toUri();
-            media = new javafx.scene.media.Media(fileUri.toString());
+            Path path = Path.of(fileLocation);
+            URI fileUri = path.toUri();
+            // FIXME:
+            // https://stackoverflow.com/questions/78908102/how-can-i-create-a-media-object-in-javafx-from-a-byte-array
+            if (path.toString().endsWith("m4a")) {
+                Path tempFile = Files.createTempFile("curious-tunes", ".wav");
+                OutputStream outputStream = Files.newOutputStream(tempFile, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+                AlacDecoder
+                        .decode(WavFormat.RAW_PCM)
+                        .fromFile(path)
+                        .toStream(outputStream)
+                        .execute();
+                fileUri = tempFile.toUri();
+            }
+            media = new Media(fileUri.toString());
             player = new MediaPlayer(media);
 
             currentTrackName.setText(trackRecord.getTitle());
@@ -136,6 +156,15 @@ public class LibraryController implements Initializable {
             player.onErrorProperty().addListener(observable -> log.error("Failed playback", player.getError()));
             player.onStalledProperty().addListener(observable -> log.error("Stalled {}", observable));
 
+            player.statusProperty().addListener((observable, oldValue, newValue) -> {
+                log.info("playback status: {} ", newValue);
+            });
+
+            player.errorProperty().addListener((observable, oldValue, newValue) -> {
+                log.error("error", newValue);
+            });
+
+            player.setVolume(0.5);
             player.play();
         } else {
             buttonPlayPause.setText("▶");

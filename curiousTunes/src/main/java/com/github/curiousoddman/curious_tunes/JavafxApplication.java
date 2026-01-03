@@ -9,7 +9,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 
 public class JavafxApplication extends Application {
-    private static Stage stage;
+    private Stage stage;
 
     private ConfigurableApplicationContext applicationContext;
     private StageManager stageManager;
