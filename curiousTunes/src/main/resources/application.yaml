@@ -21,3 +21,6 @@ spring:
 server:
   port: 7777
 
+
+logging.level.org.jooq.Constants: off
+
