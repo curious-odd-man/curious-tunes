@@ -180,16 +180,6 @@ public class LibraryController implements Initializable {
     }
 
     @EventListener
-    public void onNextEvent(PlayNextEvent playNextEvent) {
-        currentPlaylistService.nextTrack();
-    }
-
-    @EventListener
-    public void onPreviousEvent(PlayPreviousEvent playPreviousEvent) {
-        currentPlaylistService.previousTrack();
-    }
-
-    @EventListener
     @SneakyThrows
     public void onShowArtistAlbumEvent(ShowArtistAlbums showArtistAlbums) {
         int artistId = showArtistAlbums.getArtistRecord().getId();
@@ -244,23 +234,8 @@ public class LibraryController implements Initializable {
     }
 
     @FXML
-    public void onPreviousClick(ActionEvent actionEvent) {
-        eventPublisher.publishEvent(new PlayPreviousEvent(this));
-    }
-
-    @FXML
     public void onPlayPauseClick(ActionEvent actionEvent) {
         eventPublisher.publishEvent(new PlayPauseEvent(this));
-    }
-
-    @FXML
-    public void onNextClick(ActionEvent actionEvent) {
-        eventPublisher.publishEvent(new PlayNextEvent(this, shuffleButton.isSelected()));
-    }
-
-    @FXML
-    public void onShuffleButtonClick(ActionEvent actionEvent) {
-        eventPublisher.publishEvent(new PlayNextEvent(this, shuffleButton.isSelected()));
     }
 
     @FXML

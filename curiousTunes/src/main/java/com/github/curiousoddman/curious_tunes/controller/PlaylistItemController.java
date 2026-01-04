@@ -23,8 +23,7 @@ import org.springframework.stereotype.Component;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import static com.github.curiousoddman.curious_tunes.util.GlobalStyleClasses.BORDERED_ITEM;
-import static com.github.curiousoddman.curious_tunes.util.GlobalStyleClasses.SELECTED_ITEM;
+import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.*;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Lazy

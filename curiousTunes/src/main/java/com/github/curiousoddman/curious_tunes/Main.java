@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableTransactionManagement
 public class Main {
+    // TODO: Custom preloader: https://docs.oracle.com/javafx/2/best_practices/jfxpub-best_practices.htm
     public static void main(String[] args) {
         Application.launch(JavafxApplication.class, args);
     }
