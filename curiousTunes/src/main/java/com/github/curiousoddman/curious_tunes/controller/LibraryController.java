@@ -2,16 +2,18 @@ package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.backend.MediaProvider;
-import com.github.curiousoddman.curious_tunes.backend.player.CurrentPlaylistService;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.event.*;
-import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
-import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
+import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
+import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
+import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
+import com.github.curiousoddman.curious_tunes.event.player.PlayedThirdOfTrackEvent;
+import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
+import com.github.curiousoddman.curious_tunes.model.*;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
@@ -42,6 +44,7 @@ import org.springframework.stereotype.Component;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import static com.github.curiousoddman.curious_tunes.backend.tags.FilesScanningService.LIBRARY_SCAN;
@@ -93,14 +96,14 @@ public class LibraryController implements Initializable {
     private AnchorPane playlistAnchorPane;
 
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
-    private final CurrentPlaylistService currentPlaylistService;
+    private final PlaylistModel playlistModel;
     private final MediaProvider mediaProvider;
 
     private LibraryPlaylistController libraryPlaylistController;
     private ArtistSelectionModel artistSelectionModel;
 
-
     private boolean isPlaying = false;
+    private boolean notifiedPlayedThird = false;
     private MediaPlayer player;
 
     @Override
@@ -124,11 +127,20 @@ public class LibraryController implements Initializable {
     @EventListener
     @SneakyThrows
     public void onPlayPause(PlayPauseEvent playPauseEvent) {
+        log.info("onPlayPause: Currently {}", isPlaying ? "playing" : "paused");
         if (!isPlaying) {
-            TrackRecord trackRecord = currentPlaylistService.getCurrentTrack();
+            Optional<PlaylistItem> optionalNext = playlistModel.getNextForPlayback();
+            if (optionalNext.isEmpty()) {
+                log.info("No items to play");
+                return;
+            }
+            PlaylistItem playlistItem = optionalNext.get();
+            eventPublisher.publishEvent(new PlayerStatusEvent(this, PlaybackTrackStatus.LAUNCHING, playlistItem));
+            TrackRecord trackRecord = playlistItem.getTrackRecord();
             buttonPlayPause.setText("⏸");
-            media = mediaProvider.getMedia(trackRecord);
+            Media media = mediaProvider.getMedia(trackRecord);
             player = new MediaPlayer(media);
+            notifiedPlayedThird = false;
 
             currentTrackName.setText(trackRecord.getTitle());
             currentTrackAlbum.setText(trackRecord.getFkAlbum().toString());
@@ -142,7 +154,14 @@ public class LibraryController implements Initializable {
                 Duration currentTime = player.getCurrentTime();
                 timeSinceStart.setText(TimeUtils.secondsToHumanTime((int) currentTime.toSeconds()));
                 timeRemaining.setText(TimeUtils.secondsToHumanTime((int) (trackRecord.getDuration() - currentTime.toSeconds())));
-                currentTrackProgress.setProgress(currentTime.toSeconds() / trackRecord.getDuration());
+                double progress = currentTime.toSeconds() / trackRecord.getDuration();
+                // FIXME: This also works when you seek...
+                if (progress > 0.3 && !notifiedPlayedThird) {
+                    // TODO: Handle event
+                    eventPublisher.publishEvent(new PlayedThirdOfTrackEvent(this, trackRecord));
+                    notifiedPlayedThird = true;
+                }
+                currentTrackProgress.setProgress(progress);
             });
 
             volumeControl.valueProperty().addListener(ov -> {
@@ -151,27 +170,30 @@ public class LibraryController implements Initializable {
                 }
             });
 
-            loggingOnErrors();
+            loggingOnErrors(playlistItem);
 
             player.setOnEndOfMedia(() -> {
                 isPlaying = false;
-                currentPlaylistService.nextTrack();
+                eventPublisher.publishEvent(new PlayerStatusEvent(this, PlaybackTrackStatus.ENDED, playlistItem));
                 eventPublisher.publishEvent(new PlayPauseEvent(this));
             });
 
+            player.setVolume(volumeControl.getValue());
             player.play();
         } else {
+            log.info("Pausing...");
             buttonPlayPause.setText("▶");
             player.pause();
         }
     }
 
-    private void loggingOnErrors() {
+    private void loggingOnErrors(PlaylistItem playlistItem) {
         player.onErrorProperty().addListener(observable -> log.error("Failed playback", player.getError()));
         player.onStalledProperty().addListener(observable -> log.error("Stalled {}", observable));
 
         player.statusProperty().addListener((observable, oldValue, newValue) -> {
             log.info("playback status: {} ", newValue);
+            eventPublisher.publishEvent(new PlayerStatusEvent(this, PlaybackTrackStatus.map(newValue), playlistItem));
         });
 
         player.errorProperty().addListener((observable, oldValue, newValue) -> {
@@ -254,7 +276,7 @@ public class LibraryController implements Initializable {
     public void onProgressClicked(MouseEvent mouseEvent) {
         double seekTo = (mouseEvent.getX() - currentTrackProgress.getLayoutX()) / currentTrackProgress.getWidth();
 
-        TrackRecord currentTrack = currentPlaylistService.getCurrentTrack();
+        TrackRecord currentTrack = playlistModel.getCurrentlyPlaying().get().getTrackRecord();
         Long duration = currentTrack.getDuration();
         log.info("Seek to {} : {}", seekTo, duration * seekTo);
         player.seek(Duration.seconds(duration * seekTo));

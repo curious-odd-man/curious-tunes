@@ -2,12 +2,15 @@ package com.github.curiousoddman.curious_tunes.web;
 
 import com.github.curiousoddman.alacdecoder.AlacDecoder;
 import com.github.curiousoddman.alacdecoder.data.WavFormat;
-import com.github.curiousoddman.curious_tunes.backend.player.CurrentPlaylistService;
+import com.github.curiousoddman.curious_tunes.model.PlaylistModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,7 +20,7 @@ import java.nio.file.Path;
 @RestController
 @RequiredArgsConstructor
 public class HttpRestController {
-    private final CurrentPlaylistService currentPlaylistService;
+    private final PlaylistModel playlistModel;
 
     @GetMapping(
             value = "/current/track",
@@ -26,12 +29,15 @@ public class HttpRestController {
     @Cacheable(value = "media", key = "#name")
     public @ResponseBody byte[] get(@RequestParam("name") String name) throws IOException {
         log.info("Requested {}", name);
-        String fileLocation = currentPlaylistService.getCurrentTrack().getFileLocation();
+        String fileLocation = playlistModel
+                .getCurrentlyPlaying()
+                .get()
+                .getTrackRecord()
+                .getFileLocation();
         if (!fileLocation.equals(name)) {
             log.error("Requested and served files are different");
         }
         Path path = Path.of(fileLocation).toAbsolutePath().normalize();
-        log.info("Serving {}", path);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         AlacDecoder
                 .decode(WavFormat.RAW_PCM)

@@ -1,6 +1,5 @@
 package com.github.curiousoddman.curious_tunes.model;
 
-import com.github.curiousoddman.curious_tunes.controller.PlaylistItemController;
 import javafx.scene.control.SingleSelectionModel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -9,12 +8,15 @@ import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
-public class PlaylistSelectionModel extends SingleSelectionModel<PlaylistItemController> {
+public class PlaylistSelectionModel extends SingleSelectionModel<PlaylistItem> {
     @Getter
-    private final List<PlaylistItemController> playlistItems;
+    private final List<PlaylistItem> playlistItems;
 
     @Override
-    protected PlaylistItemController getModelItem(int index) {
+    protected PlaylistItem getModelItem(int index) {
+        if (index < 0 || index >= playlistItems.size()) {
+            return null;
+        }
         return playlistItems.get(index);
     }
 
@@ -23,7 +25,7 @@ public class PlaylistSelectionModel extends SingleSelectionModel<PlaylistItemCon
         return playlistItems.size();
     }
 
-    public Optional<PlaylistItemController> getOptionalSelectedItem() {
+    public Optional<PlaylistItem> getOptionalSelectedItem() {
         return Optional.ofNullable(getSelectedItem());
     }
 

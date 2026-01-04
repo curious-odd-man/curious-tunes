@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes.backend;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
 import lombok.RequiredArgsConstructor;
 import org.jooq.impl.DefaultDSLContext;
 import org.springframework.cache.annotation.Cacheable;
@@ -121,8 +122,11 @@ public class DataAccess {
         return getAlbumsTracks(artistAlbums);
     }
 
-    public Map<TrackRecord, Map.Entry<AlbumRecord, ArtistRecord>> getArtistAlbumForTracks(List<TrackRecord> tracks) {
-        Set<Integer> albumFks = tracks.stream().map(TrackRecord::getFkAlbum).collect(Collectors.toSet());
+    public Map<PlaylistItem, Map.Entry<AlbumRecord, ArtistRecord>> getArtistAlbumForTracks(List<PlaylistItem> playlistItems) {
+        if (playlistItems.isEmpty()) {
+            return Map.of();
+        }
+        Set<Integer> albumFks = playlistItems.stream().map(PlaylistItem::getTrackRecord).map(TrackRecord::getFkAlbum).collect(Collectors.toSet());
         Map<Integer, AlbumRecord> albumIdToRecord = dsl
                 .selectFrom(ALBUM)
                 .where(ALBUM.ID.in(albumFks))
@@ -135,12 +139,12 @@ public class DataAccess {
                 .fetch()
                 .intoMap(ArtistRecord::getId);
 
-        return tracks
+        return playlistItems
                 .stream()
                 .collect(Collectors.toMap(
                         Function.identity(),
                         tr -> {
-                            AlbumRecord albumRecord = albumIdToRecord.get(tr.getFkAlbum());
+                            AlbumRecord albumRecord = albumIdToRecord.get(tr.getTrackRecord().getFkAlbum());
                             ArtistRecord artistRecord = artistIdToRecord.get(albumRecord.getFkArtist());
                             return Map.entry(
                                     albumRecord,

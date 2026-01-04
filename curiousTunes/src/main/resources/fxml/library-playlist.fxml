@@ -32,7 +32,15 @@
                         <Font size="14.0" />
                     </font>
                 </Button>
+            <Button mnemonicParsing="false" onAction="#onClearPlaylistClicked" text="❌" textFill="RED">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Button>
             </items>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
         </ToolBar>
     </top>
     <center>

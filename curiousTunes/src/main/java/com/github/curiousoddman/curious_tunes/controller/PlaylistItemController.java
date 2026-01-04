@@ -2,10 +2,12 @@ package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.model.PlaylistSelectionModel;
+import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ContextMenu;
@@ -21,7 +23,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.*;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
@@ -43,7 +47,8 @@ public class PlaylistItemController implements Initializable {
     @FXML
     public AnchorPane pane;
     private ContextMenu contextMenu;
-    private PlaylistSelectionModel playlistSelectionModel;
+    private PlaylistItem playlistItem;
+    private PlaylistModel playlistSelectionModel;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -58,16 +63,24 @@ public class PlaylistItemController implements Initializable {
         if (resources instanceof PlaylistItemResourceBundle playlistItemResourceBundle) {
             AlbumRecord albumRecord = playlistItemResourceBundle.getAlbumRecord();
             ImageUtils.setImageIfPresent(albumRecord, image);
-            TrackRecord trackRecord = playlistItemResourceBundle.getTrackRecord();
+            playlistItem = playlistItemResourceBundle.getPlaylistItem();
+            TrackRecord trackRecord = playlistItem.getTrackRecord();
             rightText.setText(TimeUtils.secondsToHumanTime(trackRecord.getDuration()));
             topText.setText(trackRecord.getTitle());
             bottomText.setText(playlistItemResourceBundle.getArtist() + "  ---  " + albumRecord.getName());
-            playlistSelectionModel = playlistItemResourceBundle.getPlaylistSelectionModel();
+            playlistSelectionModel = playlistItemResourceBundle.getPlaylistModel();
+            playlistSelectionModel
+                    .getSelectedProperty()
+                    .addListener(this::onPlaylistSelectionChanged);
         }
     }
 
-    public void clearSelection() {
-        pane.getStyleClass().remove(SELECTED_ITEM);
+    private void onPlaylistSelectionChanged(Object observable, PlaylistItem oldValue, PlaylistItem newValue) {
+        if (Objects.equals(oldValue, playlistItem)) {
+            pane.getStyleClass().remove(SELECTED_ITEM);
+        } else if (Objects.equals(newValue, playlistItem)) {
+            pane.getStyleClass().add(SELECTED_ITEM);
+        }
     }
 
     @FXML
@@ -75,8 +88,19 @@ public class PlaylistItemController implements Initializable {
         if (mouseEvent.isSecondaryButtonDown()) {
             contextMenu.show(pane, mouseEvent.getScreenX(), mouseEvent.getScreenY());
         }
-        playlistSelectionModel.getOptionalSelectedItem().ifPresent(PlaylistItemController::clearSelection);
-        playlistSelectionModel.select(this);
-        pane.getStyleClass().add(SELECTED_ITEM);
+        playlistSelectionModel.select(playlistItem);
+    }
+
+    public void updateStyle() {
+        String styleClass = switch (playlistItem.getPlaylistItemStatus()) {
+            case PLAYING -> PLAYLIST_ITEM_PLAYING;
+            case SKIPPED, QUEUED, FILE_NOT_FOUND, TO_BE_SKIPPED -> null;
+            case PLAYED -> PLAYLIST_ITEM_PLAYED;
+        };
+        if (styleClass != null) {
+            ObservableList<String> styleClassList = pane.getStyleClass();
+            styleClassList.removeAll(Set.of(PLAYLIST_ITEM_PLAYING, PLAYLIST_ITEM_PLAYED));     // FIXME
+            styleClassList.add(styleClass);
+        }
     }
 }
