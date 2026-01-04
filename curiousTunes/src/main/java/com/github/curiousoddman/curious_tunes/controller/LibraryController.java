@@ -12,23 +12,19 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.*;
 import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
-import com.github.curiousoddman.curious_tunes.model.PlaylistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
-import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
-import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -46,7 +42,6 @@ import org.springframework.stereotype.Component;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import static com.github.curiousoddman.curious_tunes.backend.tags.FilesScanningService.LIBRARY_SCAN;
@@ -95,17 +90,36 @@ public class LibraryController implements Initializable {
     @FXML
     public Label artistTitle;
     @FXML
-    public VBox playlistVbox;
+    private AnchorPane playlistAnchorPane;
 
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
     private final CurrentPlaylistService currentPlaylistService;
     private final MediaProvider mediaProvider;
-    public ArtistSelectionModel artistSelectionModel;
-    public PlaylistSelectionModel playlistSelectionModel;
+
+    private LibraryPlaylistController libraryPlaylistController;
+    private ArtistSelectionModel artistSelectionModel;
+
 
     private boolean isPlaying = false;
-    private Media media;
     private MediaPlayer player;
+
+    @Override
+    @SneakyThrows
+    public void initialize(URL location, ResourceBundle resources) {
+        artistSelectionModel = new ArtistSelectionModel(artistsControllers);
+        LoadedFxml<LibraryPlaylistController> loadedFxml = fxmlLoader.load(
+                FxmlView.LIBRARY_PLAYLIST,
+                null
+        );
+        libraryPlaylistController = loadedFxml.controller();
+        Parent parent = loadedFxml.parent();
+        playlistAnchorPane.getChildren().add(parent);
+        AnchorPane.setTopAnchor(parent, .0);
+        AnchorPane.setBottomAnchor(parent, .0);
+        AnchorPane.setLeftAnchor(parent, .0);
+        AnchorPane.setRightAnchor(parent, .0);
+        onLibraryDataUpdated();
+    }
 
     @EventListener
     @SneakyThrows
@@ -173,42 +187,6 @@ public class LibraryController implements Initializable {
     @EventListener
     public void onPreviousEvent(PlayPreviousEvent playPreviousEvent) {
         currentPlaylistService.previousTrack();
-    }
-
-    @Override
-    @SneakyThrows
-    public void initialize(URL location, ResourceBundle resources) {
-        artistSelectionModel = new ArtistSelectionModel(artistsControllers);
-        playlistSelectionModel = new PlaylistSelectionModel(new ArrayList<>());
-        onLibraryDataUpdated();
-    }
-
-    @EventListener
-    public void onPlaylistUpdatedEvent(PlaylistUpdatedEvent playlistUpdatedEvent) {
-        Platform.runLater(() -> {
-            playlistSelectionModel.clear();
-            List<TrackRecord> tracks = currentPlaylistService.getTracks();
-            ObservableList<Node> playlist = playlistVbox.getChildren();
-            playlist.clear();
-            Map<TrackRecord, Map.Entry<AlbumRecord, ArtistRecord>> tracksInfo = dataAccess.getArtistAlbumForTracks(tracks);
-
-            for (Map.Entry<TrackRecord, Map.Entry<AlbumRecord, ArtistRecord>> entry : tracksInfo.entrySet()) {
-                TrackRecord trackRecord = entry.getKey();
-                AlbumRecord albumRecord = entry.getValue().getKey();
-                ArtistRecord artistRecord = entry.getValue().getValue();
-                LoadedFxml<PlaylistItemController> loadedFxml = fxmlLoader.load(
-                        FxmlView.PLAYLIST_ITEM,
-                        new PlaylistItemResourceBundle(
-                                artistRecord.getName(),
-                                albumRecord,
-                                trackRecord,
-                                playlistSelectionModel
-                        )
-                );
-                playlistSelectionModel.getPlaylistItems().add(loadedFxml.controller());
-                playlist.add(loadedFxml.parent());
-            }
-        });
     }
 
     @EventListener

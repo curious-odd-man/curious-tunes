@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryPlaylistController">
+    <top>
+        <ToolBar maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER_RIGHT">
+            <items>
+                <Button mnemonicParsing="false" onAction="#onUpButtonClick" text="⬆" textFill="#2200ff">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+                <Button mnemonicParsing="false" onAction="#onDownButtonClick" text="⬇" textFill="#2200ff">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+                <Button mnemonicParsing="false" onAction="#onDeleteClick" text="➖" textFill="RED">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+                <Button mnemonicParsing="false" onAction="#onShuffleClicked" text="🔀" textFill="#2200ff">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+            </items>
+        </ToolBar>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" vbarPolicy="ALWAYS" BorderPane.alignment="CENTER">
+            <content>
+                <VBox fx:id="playlistVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" spacing="2.0" />
+            </content>
+            <padding>
+                <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+            </padding>
+        </ScrollPane>
+    </center>
+</BorderPane>
