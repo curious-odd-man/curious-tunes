@@ -178,7 +178,7 @@ public class LibraryController implements Initializable {
                 eventPublisher.publishEvent(new PlayPauseEvent(this));
             });
 
-            player.setVolume(volumeControl.getValue());
+            player.setVolume(volumeControl.getValue() / 100);
             player.play();
         } else {
             log.info("Pausing...");
