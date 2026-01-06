@@ -9,6 +9,7 @@ import org.jooq.impl.DefaultDSLContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.github.curiousoddman.curious_tunes.dbobj.Tables.PLAYBACK_HISTORY;
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Album.ALBUM;
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Artist.ARTIST;
@@ -108,7 +110,6 @@ public class DataAccess {
                 .toList();
     }
 
-
     public List<TrackRecord> getAlbumTracks(int albumFk) {
         return dsl
                 .selectFrom(TRACK)
@@ -158,5 +159,11 @@ public class DataAccess {
                 ));
     }
 
-
+    public void insertIntoHistory(TrackRecord trackRecord) {
+        dsl
+                .insertInto(PLAYBACK_HISTORY)
+                .columns(PLAYBACK_HISTORY.DATETIME, PLAYBACK_HISTORY.FK_TRACK)
+                .values(OffsetDateTime.now(), trackRecord.getId())
+                .execute();
+    }
 }

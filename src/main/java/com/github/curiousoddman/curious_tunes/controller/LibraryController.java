@@ -2,6 +2,7 @@ package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.backend.MediaProvider;
+import com.github.curiousoddman.curious_tunes.backend.PlaybackHistoryService;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
@@ -61,11 +62,7 @@ public class LibraryController implements Initializable {
     private final DataAccess dataAccess;
 
     @FXML
-    public Button buttonPrevious;
-    @FXML
     public Button buttonPlayPause;
-    @FXML
-    public Button buttonNext;
     @FXML
     public Slider volumeControl;
     @FXML
@@ -79,8 +76,6 @@ public class LibraryController implements Initializable {
     @FXML
     public ProgressBar currentTrackProgress;
     @FXML
-    public ToggleButton shuffleButton;
-    @FXML
     public Label timeSinceStart;
     @FXML
     public TextField searchField;
@@ -92,14 +87,18 @@ public class LibraryController implements Initializable {
     public VBox artistAlbumsView;
     @FXML
     public Label artistTitle;
+    public TabPane tabPane;
+    public Tab albumsTab;
+    public Tab tagsTab;
+    public Tab historyTab;
     @FXML
     private AnchorPane playlistAnchorPane;
 
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
     private final PlaylistModel playlistModel;
     private final MediaProvider mediaProvider;
+    private final PlaybackHistoryService playbackHistoryService;
 
-    private LibraryPlaylistController libraryPlaylistController;
     private ArtistSelectionModel artistSelectionModel;
 
     private boolean isPlaying = false;
@@ -114,7 +113,6 @@ public class LibraryController implements Initializable {
                 FxmlView.LIBRARY_PLAYLIST,
                 null
         );
-        libraryPlaylistController = loadedFxml.controller();
         Parent parent = loadedFxml.parent();
         playlistAnchorPane.getChildren().add(parent);
         AnchorPane.setTopAnchor(parent, .0);
@@ -268,7 +266,7 @@ public class LibraryController implements Initializable {
         stage.setScene(new Scene(root));
         stage.setTitle("Rescan library");
         stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initOwner(buttonPrevious.getScene().getWindow());
+        stage.initOwner(buttonPlayPause.getScene().getWindow());
         stage.showAndWait();
     }
 

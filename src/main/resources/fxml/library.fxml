@@ -10,6 +10,8 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -90,20 +92,38 @@
                         </AnchorPane>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="334.0" prefWidth="314.0">
                             <children>
-                        <ScrollPane fitToWidth="true" layoutX="-133.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="978.0" prefWidth="561.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <ScrollPane fitToWidth="true" layoutX="-133.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <content>
-                                      <VBox fx:id="artistAlbumsView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
-                                          <children>
-                                              <Label fx:id="artistTitle" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Red Hot Chile Peppers">
-                                                  <font>
-                                                      <Font name="System Bold" size="24.0" />
-                                                  </font>
-                                              </Label>
-                                          </children>
-                                          <padding>
-                                              <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                                          </padding>
-                                      </VBox>
+                              <TabPane fx:id="tabPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" tabClosingPolicy="UNAVAILABLE">
+                                 <tabs>
+                                    <Tab fx:id="albumsTab" closable="false" text="Albums">
+                                       <content>
+                                                  <VBox fx:id="artistAlbumsView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                                      <children>
+                                                          <Label fx:id="artistTitle" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Red Hot Chile Peppers">
+                                                              <font>
+                                                                  <Font name="System Bold" size="24.0" />
+                                                              </font>
+                                                          </Label>
+                                                      </children>
+                                                      <padding>
+                                                          <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                                      </padding>
+                                                  </VBox>
+                                       </content>
+                                    </Tab>
+                                    <Tab fx:id="tagsTab" closable="false" text="Tags">
+                                      <content>
+                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                                      </content>
+                                    </Tab>
+                                    <Tab fx:id="historyTab" closable="false" text="History">
+                                      <content>
+                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                                      </content>
+                                    </Tab>
+                                 </tabs>
+                              </TabPane>
                            </content>
                         </ScrollPane>
                             </children>
