@@ -119,10 +119,7 @@
                                   <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" />
                                 </content>
                               </Tab>
-                              <Tab fx:id="historyTab" closable="false" text="History">
-                                <content>
-                                  <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" />
-                                </content>
+                              <Tab fx:id="historyTab" closable="false" onSelectionChanged="#onTabSelectionChange" text="History">
                               </Tab>
                            </tabs>
                         </TabPane>

@@ -2,6 +2,7 @@ package com.github.curiousoddman.curious_tunes.backend;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PlaybackHistoryRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
 import lombok.RequiredArgsConstructor;
@@ -165,5 +166,29 @@ public class DataAccess {
                 .columns(PLAYBACK_HISTORY.DATETIME, PLAYBACK_HISTORY.FK_TRACK)
                 .values(OffsetDateTime.now(), trackRecord.getId())
                 .execute();
+    }
+
+    public List<PlaybackHistoryRecord> getAllHistoryRecords() {
+        return dsl
+                .selectFrom(PLAYBACK_HISTORY)
+                .orderBy(PLAYBACK_HISTORY.DATETIME.desc())
+                .stream()
+                .toList();
+    }
+
+    public List<TrackRecord> getTracks(List<Integer> trackIds) {
+        return dsl
+                .selectFrom(TRACK)
+                .where(TRACK.ID.in(trackIds))
+                .stream()
+                .toList();
+    }
+
+    public AlbumRecord getAlbum(Integer id) {
+        return dsl.fetchSingle(ALBUM, ALBUM.ID.eq(id));
+    }
+
+    public ArtistRecord getArtist(Integer id) {
+        return dsl.fetchSingle(ARTIST, ARTIST.ID.eq(id));
     }
 }

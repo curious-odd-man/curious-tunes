@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryHistoryTabController">
+        <children>
+            <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <content>
+                    <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
+                        <children>
+                            <GridPane hgap="5.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="5.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
+                                </rowConstraints>
+                                <children>
+                                    <Label text="Total time listened">
+                                        <font>
+                                            <Font name="System Bold" size="12.0" />
+                                        </font>
+                                    </Label>
+                                    <Label fx:id="totalTimeListened" text="x years y monts..." GridPane.columnIndex="1" />
+                                    <Label text="Songs played" GridPane.rowIndex="1">
+                                        <font>
+                                            <Font name="System Bold" size="12.0" />
+                                        </font>
+                                    </Label>
+                                    <Label fx:id="songsPlayed" text="nnn " GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <Label text="Albums played" GridPane.rowIndex="2">
+                                        <font>
+                                            <Font name="System Bold" size="12.0" />
+                                        </font>
+                                    </Label>
+                                    <Label fx:id="albumsPlayed" text="nnn " GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Label text="Artists played" GridPane.rowIndex="3">
+                                        <font>
+                                            <Font name="System Bold" size="12.0" />
+                                        </font>
+                                    </Label>
+                                    <Label fx:id="artistsPlayed" text="nnn" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                    <TableView fx:id="latestSongsTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnSpan="9" GridPane.rowIndex="5">
+                                        <columns>
+                                            <TableColumn fx:id="dateColumn" editable="false" maxWidth="1.7976931348623157E308" sortable="false" text="Date" />
+                                            <TableColumn fx:id="timeColumn" editable="false" maxWidth="1.7976931348623157E308" sortable="false" text="Time" />
+                                            <TableColumn fx:id="songColumn" editable="false" maxWidth="1.7976931348623157E308" sortable="false" text="Song" />
+                                            <TableColumn fx:id="albumColumn" editable="false" maxWidth="1.7976931348623157E308" sortable="false" text="Album" />
+                                            <TableColumn fx:id="artistColumn" editable="false" maxWidth="1.7976931348623157E308" sortable="false" text="Artist" />
+                                        </columns>
+                                    </TableView>
+                                    <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Latest Songs History" textAlignment="CENTER" GridPane.columnSpan="9" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+                                        <font>
+                                            <Font name="System Bold" size="17.0" />
+                                        </font>
+                                    </Label>
+                                </children>
+                            </GridPane>
+                        </children>
+                    </AnchorPane>
+                </content>
+            </ScrollPane>
+        </children>
+</AnchorPane>

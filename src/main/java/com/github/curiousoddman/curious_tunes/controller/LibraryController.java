@@ -20,6 +20,7 @@ import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -99,6 +100,7 @@ public class LibraryController implements Initializable {
     private final MediaProvider mediaProvider;
     private final PlaybackHistoryService playbackHistoryService;
 
+    private LibraryHistoryTabController libraryHistoryTabController;
     private ArtistSelectionModel artistSelectionModel;
 
     private boolean isPlaying = false;
@@ -278,5 +280,18 @@ public class LibraryController implements Initializable {
         Long duration = currentTrack.getDuration();
         log.info("Seek to {} : {}", seekTo, duration * seekTo);
         player.seek(Duration.seconds(duration * seekTo));
+    }
+
+    @FXML
+    public void onTabSelectionChange(Event event) {
+        if (historyTab.isSelected()) {
+            if (libraryHistoryTabController == null) {
+                LoadedFxml<LibraryHistoryTabController> loaded = fxmlLoader.load(FxmlView.LIBRARY_TAB_HISTORY, null);
+                libraryHistoryTabController = loaded.controller();
+                historyTab.setContent(loaded.parent());
+            } else {
+                libraryHistoryTabController.renewStats();
+            }
+        }
     }
 }
