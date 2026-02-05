@@ -1,18 +1,21 @@
 package com.github.curiousoddman.curious_tunes.config;
 
+import com.github.curiousoddman.curious_tunes.controller.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum FxmlView {
-    LIBRARY(".\\fxml\\library.fxml"),
-    LIBRARY_ARTIST_ITEM(".\\fxml\\library-artist.fxml"),
-    LIBRARY_ARTIST_ALBUM(".\\fxml\\library-artist-album.fxml"),
-    RESCAN_MODAL(".\\fxml\\rescan-modal.fxml"),
-    LIBRARY_PLAYLIST(".\\fxml\\library-playlist.fxml"),
-    PLAYLIST_ITEM(".\\fxml\\playlist-item.fxml"),
-    LIBRARY_TAB_HISTORY("\\fxml\\library-tab-history.fxml");
+public class FxmlView<T> {
+    public static FxmlView<LibraryController> LIBRARY = new FxmlView<>(".\\fxml\\library.fxml", LibraryController.class);
+    public static FxmlView<LibraryArtistController> LIBRARY_ARTIST_ITEM = new FxmlView<>(".\\fxml\\library-artist.fxml", LibraryArtistController.class);
+    public static FxmlView<LibraryArtistAlbumController> LIBRARY_ARTIST_ALBUM = new FxmlView<>(".\\fxml\\library-artist-album.fxml", LibraryArtistAlbumController.class);
+    public static FxmlView<RescanLibraryController> RESCAN_MODAL = new FxmlView<>(".\\fxml\\rescan-modal.fxml", RescanLibraryController.class);
+    public static FxmlView<LibraryPlaylistController> LIBRARY_PLAYLIST = new FxmlView<>(".\\fxml\\library-playlist.fxml", LibraryPlaylistController.class);
+    public static FxmlView<PlaylistItemController> PLAYLIST_ITEM = new FxmlView<>(".\\fxml\\playlist-item.fxml", PlaylistItemController.class);
+    public static FxmlView<LibraryHistoryTabController> LIBRARY_TAB_HISTORY = new FxmlView<>("\\fxml\\library-tab-history.fxml", LibraryHistoryTabController.class);
+    public static FxmlView<LibraryLyricsTabController> LIBRARY_TAB_LYRICS = new FxmlView<>("\\fxml\\library-tab-lyrics.fxml", LibraryLyricsTabController.class);
 
     private final String fxmlPath;
+    private final Class<T> controllerClass;
 }

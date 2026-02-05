@@ -17,7 +17,7 @@ public class FxmlLoader {
     private final ApplicationContext context;
 
     @SneakyThrows
-    public <T> LoadedFxml<T> load(FxmlView fxmlPath, ResourceBundle resourceBundle) {
+    public <T> LoadedFxml<T> load(FxmlView<T> fxmlPath, ResourceBundle resourceBundle) {
         FXMLLoader loader = new FXMLLoader();
         loader.setControllerFactory(context::getBean);
         URL resource = getClass().getClassLoader().getResource(fxmlPath.getFxmlPath());

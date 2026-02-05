@@ -149,12 +149,12 @@ public class PlaylistModel {
 
     private void logPlaylistItems() {
         MDC.put(".", "PLAYLIST");
-        log.info("Dumping playlist -------------------- {} items", playlistItems.size());
+        log.debug("Dumping playlist -------------------- {} items", playlistItems.size());
         int selectedIndex = selectionModel.getSelectedIndex();
         int playingIndex = currentlyPlayingModel.getSelectedIndex();
         for (int i = 0; i < playlistItems.size(); i++) {
             PlaylistItem playlistItem = playlistItems.get(i);
-            log.info(
+            log.debug(
                     "\t {}{} {} {}",
                     selectedIndex == i ? "S" : " ",
                     playingIndex == i ? "P" : " ",
