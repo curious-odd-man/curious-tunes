@@ -94,7 +94,7 @@
                             <children>
                         <TabPane fx:id="tabPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <tabs>
-                              <Tab fx:id="albumsTab" closable="false" text="Albums">
+                              <Tab fx:id="albumsTab" closable="false" onSelectionChanged="#onTabSelectionChange" text="Albums">
                                  <content>
                                     <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
                                        <content>
@@ -114,7 +114,12 @@
                                     </ScrollPane>
                                  </content>
                               </Tab>
-                              <Tab fx:id="tagsTab" closable="false" text="Tags">
+                              <Tab fx:id="currentLyricsTab" onSelectionChanged="#onTabSelectionChange" text="Current Lyrics">
+                                <content>
+                                  <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" />
+                                </content>
+                              </Tab>
+                              <Tab fx:id="tagsTab" closable="false" onSelectionChanged="#onTabSelectionChange" text="Tags">
                                 <content>
                                   <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" />
                                 </content>

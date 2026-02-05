@@ -2,10 +2,8 @@ package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.backend.MediaProvider;
-import com.github.curiousoddman.curious_tunes.backend.PlaybackHistoryService;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
-import com.github.curiousoddman.curious_tunes.config.StageManager;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
@@ -19,6 +17,7 @@ import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -57,7 +56,6 @@ import static javafx.application.Platform.runLater;
 @Component
 @RequiredArgsConstructor
 public class LibraryController implements Initializable {
-    private final StageManager stageManager;
     private final ApplicationEventPublisher eventPublisher;
     private final FxmlLoader fxmlLoader;
     private final DataAccess dataAccess;
@@ -92,15 +90,17 @@ public class LibraryController implements Initializable {
     public Tab albumsTab;
     public Tab tagsTab;
     public Tab historyTab;
+    public Tab currentLyricsTab;
     @FXML
     private AnchorPane playlistAnchorPane;
 
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
+    private final SimpleObjectProperty<TrackRecord> currentTrackRecordObservable = new SimpleObjectProperty<>();
     private final PlaylistModel playlistModel;
     private final MediaProvider mediaProvider;
-    private final PlaybackHistoryService playbackHistoryService;
 
     private LibraryHistoryTabController libraryHistoryTabController;
+    private LibraryLyricsTabController libraryLyricsTabController;
     private ArtistSelectionModel artistSelectionModel;
 
     private boolean isPlaying = false;
@@ -137,6 +137,7 @@ public class LibraryController implements Initializable {
             PlaylistItem playlistItem = optionalNext.get();
             eventPublisher.publishEvent(new PlayerStatusEvent(this, PlaybackTrackStatus.LAUNCHING, playlistItem));
             TrackRecord trackRecord = playlistItem.getTrackRecord();
+            currentTrackRecordObservable.setValue(trackRecord);
             buttonPlayPause.setText("⏸");
             Media media = mediaProvider.getMedia(trackRecord);
             player = new MediaPlayer(media);
@@ -284,7 +285,7 @@ public class LibraryController implements Initializable {
 
     @FXML
     public void onTabSelectionChange(Event event) {
-        if (historyTab.isSelected()) {
+        if (historyTab != null && historyTab.isSelected()) {
             if (libraryHistoryTabController == null) {
                 LoadedFxml<LibraryHistoryTabController> loaded = fxmlLoader.load(FxmlView.LIBRARY_TAB_HISTORY, null);
                 libraryHistoryTabController = loaded.controller();
@@ -292,6 +293,13 @@ public class LibraryController implements Initializable {
             } else {
                 libraryHistoryTabController.renewStats();
             }
+        } else if (currentLyricsTab != null && currentLyricsTab.isSelected()) {
+            if (libraryLyricsTabController == null) {
+                LoadedFxml<LibraryLyricsTabController> loaded = fxmlLoader.load(FxmlView.LIBRARY_TAB_LYRICS, null);
+                libraryLyricsTabController = loaded.controller();
+                currentLyricsTab.setContent(loaded.parent());
+            }
+            libraryLyricsTabController.showLyrics(currentTrackRecordObservable);
         }
     }
 }
