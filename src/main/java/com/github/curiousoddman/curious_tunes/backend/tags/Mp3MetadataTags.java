@@ -50,7 +50,6 @@ public class Mp3MetadataTags extends MetadataTagsBase implements MetadataTags {
             Path tempFile = Files.createTempFile("tmp-file", "mp3");
             sourceFile.save(tempFile.toAbsolutePath().toString());
             Files.move(tempFile, Path.of(fileLocation), StandardCopyOption.REPLACE_EXISTING);
-            // TODO: this cannot be completed while song is playing. Do it after song is completed?
         } catch (NotSupportedException e) {
             throw new IllegalArgumentException(e);
         }
