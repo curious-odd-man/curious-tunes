@@ -181,10 +181,12 @@ public class LibraryController implements Initializable {
 
             player.setVolume(volumeControl.getValue() / 100);
             player.play();
+            isPlaying = true;
         } else {
             log.info("Pausing...");
             buttonPlayPause.setText("▶");
             player.pause();
+            isPlaying = false;
         }
     }
 
