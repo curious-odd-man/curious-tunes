@@ -1,16 +1,20 @@
 package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
+import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
+import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
+import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
+import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumTrackBundle;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
-import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import javafx.animation.FadeTransition;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -41,6 +45,7 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 public class LibraryArtistAlbumController implements Initializable {
     private final DataAccess dataAccess;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final FxmlLoader fxmlLoader;
     public ImageView albumImage;
     public Label albumTitle;
     public Label albumDetails;
@@ -71,8 +76,12 @@ public class LibraryArtistAlbumController implements Initializable {
             VBox col = tracksLeftColumnVbox;
             while (iterator.hasNext()) {
                 TrackRecord trackRecord = iterator.next();
-                Label child = new Label(trackRecord.getTrackNumber() + ": " + trackRecord.getTitle() + " :: " + TimeUtils.secondsToHumanTime(trackRecord.getDuration()));
-                col.getChildren().add(child);
+                LoadedFxml<LibraryArtistAlbumTrackController> loadedFxml = fxmlLoader.load(
+                        FxmlView.LIBRARY_ALBUM_TRACK,
+                        new ArtistAlbumTrackBundle(trackRecord)
+                );
+                Parent parent = loadedFxml.parent();
+                col.getChildren().add(parent);
                 if (row + 1 == tracksPerColumn) {
                     col = tracksRightColumnVbox;
                     row = 0;

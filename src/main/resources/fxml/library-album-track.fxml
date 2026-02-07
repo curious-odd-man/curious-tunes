@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#onMouseClicked" spacing="10.0" styleClass="library-album-track" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryArtistAlbumTrackController">
+   <children>
+      <Label fx:id="warningLabel" text="⚠" textFill="RED" visible="false" HBox.hgrow="NEVER">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <Label fx:id="trackNumberLabel" text="#" HBox.hgrow="NEVER">
+         <font>
+            <Font size="14.0" />
+         </font></Label>
+      <Label fx:id="trackTitleLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Track Title" HBox.hgrow="ALWAYS">
+         <font>
+            <Font size="14.0" />
+         </font></Label>
+      <Label fx:id="trackTimeLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Time" HBox.hgrow="NEVER">
+         <font>
+            <Font size="14.0" />
+         </font></Label>
+   </children>
+   <padding>
+      <Insets left="10.0" right="10.0" top="2.0" />
+   </padding>
+</HBox>
