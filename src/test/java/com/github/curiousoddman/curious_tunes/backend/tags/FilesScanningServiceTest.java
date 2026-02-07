@@ -4,14 +4,12 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class FilesScanningServiceTest {
 
     @Test
     void mp3Test() {
-        FilesScanningService filesScanningService = new FilesScanningService(null, null);
-        MetadataTags metadataTags = filesScanningService.extractMp3Tags(Path.of("D:\\iTunes\\iTunes 1\\iTunes Media\\Music\\deti-online.com\\Логоритмика\\Вот мы в автобусе сидим.mp3"));
+        MetadataManager filesScanningService = new MetadataManager();
+        MetadataTags metadataTags = filesScanningService.getMetadata(Path.of("D:\\iTunes\\iTunes 1\\iTunes Media\\Music\\deti-online.com\\Логоритмика\\Вот мы в автобусе сидим.mp3"));
         System.out.println(metadataTags);
     }
 

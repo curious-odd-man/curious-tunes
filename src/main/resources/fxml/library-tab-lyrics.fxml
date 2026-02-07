@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.ToggleButton?>
@@ -11,8 +13,13 @@
                 <content>
                     <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
                <children>
-                  <ToggleButton fx:id="editSaveButton" mnemonicParsing="false" onAction="#onEditSaveButtonClick" text="Enable Edit" textAlignment="CENTER" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
                   <TextArea fx:id="lyricsTextArea" editable="false" layoutY="33.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="45.0" />
+                  <ButtonBar buttonMinWidth="20.0" buttonOrder="" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
+                    <buttons>
+                        <ToggleButton fx:id="editButton" mnemonicParsing="false" onAction="#onEditButtonClick" text="🖊 Enable Edit" textAlignment="CENTER" />
+                      <Button fx:id="saveButton" mnemonicParsing="false" onAction="#onSaveButtonClick" text="💾 Save" />
+                    </buttons>
+                  </ButtonBar>
                </children>
                     </AnchorPane>
                 </content>
