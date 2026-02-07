@@ -7,6 +7,7 @@ package com.github.curiousoddman.curious_tunes.dbobj;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Album;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Artist;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingActions;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 
@@ -41,6 +42,11 @@ public class Tables {
      * The table <code>public.flyway_schema_history</code>.
      */
     public static final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY;
+
+    /**
+     * The table <code>public.PENDING_ACTIONS</code>.
+     */
+    public static final PendingActions PENDING_ACTIONS = PendingActions.PENDING_ACTIONS;
 
     /**
      * The table <code>public.PLAYBACK_HISTORY</code>.

@@ -7,11 +7,13 @@ package com.github.curiousoddman.curious_tunes.dbobj;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Album;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Artist;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingActions;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.FlywaySchemaHistoryRecord;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PendingActionsRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PlaybackHistoryRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 
@@ -45,6 +47,7 @@ public class Keys {
     public static final UniqueKey<AlbumRecord> CONSTRAINT_3 = Internal.createUniqueKey(Album.ALBUM, DSL.name("CONSTRAINT_3"), new TableField[] { Album.ALBUM.ID }, true);
     public static final UniqueKey<ArtistRecord> CONSTRAINT_7 = Internal.createUniqueKey(Artist.ARTIST, DSL.name("CONSTRAINT_7"), new TableField[] { Artist.ARTIST.ID }, true);
     public static final UniqueKey<FlywaySchemaHistoryRecord> FLYWAY_SCHEMA_HISTORY_PK = Internal.createUniqueKey(FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, DSL.name("flyway_schema_history_pk"), new TableField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK }, true);
+    public static final UniqueKey<PendingActionsRecord> CONSTRAINT_2 = Internal.createUniqueKey(PendingActions.PENDING_ACTIONS, DSL.name("CONSTRAINT_2"), new TableField[] { PendingActions.PENDING_ACTIONS.ID }, true);
     public static final UniqueKey<PlaybackHistoryRecord> CONSTRAINT_8 = Internal.createUniqueKey(PlaybackHistory.PLAYBACK_HISTORY, DSL.name("CONSTRAINT_8"), new TableField[] { PlaybackHistory.PLAYBACK_HISTORY.ID }, true);
     public static final UniqueKey<TrackRecord> CONSTRAINT_4 = Internal.createUniqueKey(Track.TRACK, DSL.name("CONSTRAINT_4"), new TableField[] { Track.TRACK.ID }, true);
 }

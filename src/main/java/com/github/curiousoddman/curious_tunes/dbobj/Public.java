@@ -7,6 +7,7 @@ package com.github.curiousoddman.curious_tunes.dbobj;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Album;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Artist;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingActions;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 
@@ -57,6 +58,11 @@ public class Public extends SchemaImpl {
     public final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY;
 
     /**
+     * The table <code>public.PENDING_ACTIONS</code>.
+     */
+    public final PendingActions PENDING_ACTIONS = PendingActions.PENDING_ACTIONS;
+
+    /**
      * The table <code>public.PLAYBACK_HISTORY</code>.
      */
     public final PlaybackHistory PLAYBACK_HISTORY = PlaybackHistory.PLAYBACK_HISTORY;
@@ -85,6 +91,7 @@ public class Public extends SchemaImpl {
             Album.ALBUM,
             Artist.ARTIST,
             FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY,
+            PendingActions.PENDING_ACTIONS,
             PlaybackHistory.PLAYBACK_HISTORY,
             Track.TRACK
         );
