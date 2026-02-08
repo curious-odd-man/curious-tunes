@@ -18,6 +18,7 @@
                     <buttons>
                         <ToggleButton fx:id="editButton" mnemonicParsing="false" onAction="#onEditButtonClick" text="🖊 Enable Edit" textAlignment="CENTER" />
                       <Button fx:id="saveButton" mnemonicParsing="false" onAction="#onSaveButtonClick" text="💾 Save" />
+                        <Button fx:id="searchLyricsButton" mnemonicParsing="false" onAction="#onFindLyrics" text="🔍 Find lyrics" />
                     </buttons>
                   </ButtonBar>
                </children>

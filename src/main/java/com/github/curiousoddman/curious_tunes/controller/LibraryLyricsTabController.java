@@ -1,9 +1,11 @@
 package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.actions.services.PendingActionService;
+import com.github.curiousoddman.curious_tunes.backend.lyrics.LyricsService;
 import com.github.curiousoddman.curious_tunes.backend.tags.MetadataManager;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
@@ -27,10 +30,16 @@ import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 public class LibraryLyricsTabController implements Initializable {
     private final MetadataManager metadataManager;
     private final PendingActionService pendingActionService;
+    private final LyricsService lyricsService;
 
+    @FXML
     public ToggleButton editButton;
+    @FXML
     public Button saveButton;
+    @FXML
     public TextArea lyricsTextArea;
+    @FXML
+    public Button searchLyricsButton;
 
     private ReadOnlyObjectProperty<PlaylistItem> trackRecordObservable;
 
@@ -78,6 +87,30 @@ public class LibraryLyricsTabController implements Initializable {
             pendingActionService.updateLyrics(lyricsTextArea.getText(), Path.of(trackRecord.getFileLocation()));
             log.info("Update completed...");
         }, "Update metadata");
+        t.start();
+    }
+
+    @FXML
+    public void onFindLyrics(ActionEvent actionEvent) {
+        Thread t = new Thread(() -> {
+            PlaylistItem playlistItem = trackRecordObservable.get();
+            Optional<String> lyrics = lyricsService.findLyrics(
+                    playlistItem.getTrackArtist().getName(),
+                    playlistItem.getTrackAlbum().getName(),
+                    playlistItem.getTrackRecord().getTitle()
+            );
+
+            if (lyrics.isEmpty()) {
+                log.warn("Unable to find lyrics...");
+                return;
+            }
+
+            Platform.runLater(() -> {
+                saveButton.setDisable(false);
+                editButton.setSelected(true);
+                lyricsTextArea.setText(lyrics.get());
+            });
+        }, "Find lyrics online");
         t.start();
     }
 }
