@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes.controller;
 import com.github.curiousoddman.curious_tunes.actions.services.PendingActionService;
 import com.github.curiousoddman.curious_tunes.backend.tags.MetadataManager;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -31,15 +32,16 @@ public class LibraryLyricsTabController implements Initializable {
     public Button saveButton;
     public TextArea lyricsTextArea;
 
-    private ReadOnlyObjectProperty<TrackRecord> trackRecordObservable;
+    private ReadOnlyObjectProperty<PlaylistItem> trackRecordObservable;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         editButton.setDisable(true);
     }
 
-    public void showLyrics(ReadOnlyObjectProperty<TrackRecord> observable) {
-        TrackRecord trackRecord = observable.getValue();
+    public void showLyrics(ReadOnlyObjectProperty<PlaylistItem> observable) {
+        PlaylistItem playlistItem = observable.getValue();
+        TrackRecord trackRecord = playlistItem.getTrackRecord();
         String lyrics = trackRecord.getLyrics();
         lyricsTextArea.setText(lyrics);
         editButton.setSelected(false);
@@ -47,7 +49,7 @@ public class LibraryLyricsTabController implements Initializable {
             trackRecordObservable = observable;
             trackRecordObservable.addListener((observable1, oldValue, newValue) -> {
                 if (newValue != null) {
-                    lyricsTextArea.setText(newValue.getLyrics());
+                    lyricsTextArea.setText(newValue.getTrackRecord().getLyrics());
                     editButton.setSelected(false);
                 }
             });
@@ -67,7 +69,7 @@ public class LibraryLyricsTabController implements Initializable {
         saveButton.setDisable(true);
         editButton.setSelected(false);
 
-        TrackRecord trackRecord = trackRecordObservable.get();
+        TrackRecord trackRecord = trackRecordObservable.get().getTrackRecord();
 
         Thread t = new Thread(() -> {
             log.info("Saving updated lyrics to {}", trackRecord.getFileLocation());

@@ -95,7 +95,7 @@ public class LibraryController implements Initializable {
     private AnchorPane playlistAnchorPane;
 
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
-    private final SimpleObjectProperty<TrackRecord> currentTrackRecordObservable = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<PlaylistItem> currentTrackRecordObservable = new SimpleObjectProperty<>();
     private final PlaylistModel playlistModel;
     private final MediaProvider mediaProvider;
 
@@ -137,7 +137,7 @@ public class LibraryController implements Initializable {
             PlaylistItem playlistItem = optionalNext.get();
             eventPublisher.publishEvent(new PlayerStatusEvent(this, PlaybackTrackStatus.LAUNCHING, playlistItem));
             TrackRecord trackRecord = playlistItem.getTrackRecord();
-            currentTrackRecordObservable.setValue(trackRecord);
+            currentTrackRecordObservable.setValue(playlistItem);
             buttonPlayPause.setText("⏸");
             Media media = mediaProvider.getMedia(trackRecord);
             player = new MediaPlayer(media);

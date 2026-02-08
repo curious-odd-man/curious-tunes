@@ -1,7 +1,8 @@
 package com.github.curiousoddman.curious_tunes.model;
 
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
-import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -12,6 +13,8 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.swap;
 
@@ -30,15 +33,37 @@ public class PlaylistModel {
         PlaylistItem selectedItem = currentlyPlayingModel.getSelectedItem();
         List<PlaylistItem> tracksToAdd = new ArrayList<>();
         if (addToPlaylistEvent.getTracks() != null) {
-            tracksToAdd.addAll(mapToItems(addToPlaylistEvent.getTracks()));
+            List<PlaylistItem> list = addToPlaylistEvent
+                    .getTracks()
+                    .stream()
+                    .map(tqi -> new PlaylistItem(tqi.trackRecord(), tqi.trackArtist(), tqi.trackAlbum()))
+                    .toList();
+            tracksToAdd.addAll(list);
         }
         if (addToPlaylistEvent.getArtistRecord() != null) {
-            List<TrackRecord> artistTracks = dataAccess.getArtistTracks(addToPlaylistEvent.getArtistRecord());
-            tracksToAdd.addAll(mapToItems(artistTracks));
+            List<AlbumTrackItem> artistTracks = dataAccess.getArtistTracks(addToPlaylistEvent.getArtistRecord());
+            List<PlaylistItem> list = artistTracks
+                    .stream()
+                    .map(at -> new PlaylistItem(at.trackRecord(), addToPlaylistEvent.getArtistRecord(), at.trackAlbum()))
+                    .toList();
+            tracksToAdd.addAll(list);
         }
         if (addToPlaylistEvent.getAlbums() != null) {
-            List<TrackRecord> artistTracks = dataAccess.getAlbumsTracks(addToPlaylistEvent.getAlbums());
-            tracksToAdd.addAll(mapToItems(artistTracks));
+            List<AlbumTrackItem> albumsTracks = dataAccess.getAlbumsTracks(addToPlaylistEvent.getAlbums());
+            Set<Integer> artistFks = albumsTracks
+                    .stream()
+                    .map(AlbumTrackItem::trackAlbum)
+                    .map(AlbumRecord::getFkArtist)
+                    .collect(Collectors.toSet());
+            Map<Integer, ArtistRecord> artistRecordMap = dataAccess
+                    .getArtists(artistFks)
+                    .stream()
+                    .collect(Collectors.toMap(ArtistRecord::getId, Function.identity()));
+            List<PlaylistItem> list = albumsTracks
+                    .stream()
+                    .map(at -> new PlaylistItem(at.trackRecord(), artistRecordMap.get(at.trackAlbum().getFkArtist()), at.trackAlbum()))
+                    .toList();
+            tracksToAdd.addAll(list);
         }
         boolean replacePlaylist = addToPlaylistEvent.getPlaylistAddMode() == PlaylistAddMode.REPLACE;
         if (replacePlaylist) {
@@ -72,10 +97,6 @@ public class PlaylistModel {
         selectionModel.clearSelection();
         currentlyPlayingModel.clearSelection();
         playlistItems.clear();
-    }
-
-    private static List<PlaylistItem> mapToItems(List<TrackRecord> trackRecords) {
-        return trackRecords.stream().map(PlaylistItem::new).toList();
     }
 
     public OptionalInt moveSelectedUp() {

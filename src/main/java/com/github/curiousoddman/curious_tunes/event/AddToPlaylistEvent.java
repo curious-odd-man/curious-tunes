@@ -15,13 +15,13 @@ import java.util.List;
 @Builder
 public class AddToPlaylistEvent extends ApplicationEvent {
     private final Object source;        // Duplicate this for @Builder to work
-    private final List<TrackRecord> tracks;
+    private final List<TrackQueueItem> tracks;
     private final List<AlbumRecord> albums;
     private final ArtistRecord artistRecord;
     private final Shuffle shuffle;
     private final PlaylistAddMode playlistAddMode;
 
-    public AddToPlaylistEvent(Object source, List<TrackRecord> tracks, List<AlbumRecord> albums, ArtistRecord artistRecord, Shuffle shuffle, PlaylistAddMode playlistAddMode) {
+    public AddToPlaylistEvent(Object source, List<TrackQueueItem> tracks, List<AlbumRecord> albums, ArtistRecord artistRecord, Shuffle shuffle, PlaylistAddMode playlistAddMode) {
         super(source);
         this.source = source;
         this.tracks = tracks;
@@ -29,5 +29,8 @@ public class AddToPlaylistEvent extends ApplicationEvent {
         this.artistRecord = artistRecord;
         this.shuffle = shuffle;
         this.playlistAddMode = playlistAddMode;
+    }
+
+    public record TrackQueueItem(TrackRecord trackRecord, ArtistRecord trackArtist, AlbumRecord trackAlbum) {
     }
 }

@@ -14,7 +14,7 @@ public class StageManager {
     private final String applicationTitle;
     private final ApplicationEventPublisher eventPublisher;
 
-    public void switchScene(FxmlView view) {
+    public void switchScene(FxmlView<?> view) {
         primaryStage.setTitle(applicationTitle);
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 
@@ -31,7 +31,7 @@ public class StageManager {
         primaryStage.show();
     }
 
-    private Parent loadRootNode(FxmlView fxmlPath) {
+    private Parent loadRootNode(FxmlView<?> fxmlPath) {
         return fxmlLoader.load(fxmlPath, null).parent();
     }
 

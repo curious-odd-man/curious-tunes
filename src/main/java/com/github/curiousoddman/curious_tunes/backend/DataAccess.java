@@ -4,6 +4,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PlaybackHistoryRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.model.AlbumTrackItem;
 import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
 import lombok.RequiredArgsConstructor;
 import org.jooq.impl.DefaultDSLContext;
@@ -102,12 +103,16 @@ public class DataAccess {
                 .toList();
     }
 
-    public List<TrackRecord> getAlbumsTracks(List<AlbumRecord> albums) {
-        Set<Integer> albumFks = albums.stream().map(AlbumRecord::getId).collect(Collectors.toSet());
+    public List<AlbumTrackItem> getAlbumsTracks(List<AlbumRecord> albums) {
+        Map<Integer, AlbumRecord> albumFks = albums
+                .stream()
+                .collect(Collectors.toMap(AlbumRecord::getId, Function.identity()));
+
         return dsl
                 .selectFrom(TRACK)
-                .where(TRACK.FK_ALBUM.in(albumFks))
+                .where(TRACK.FK_ALBUM.in(albumFks.keySet()))
                 .stream()
+                .map(trackRecord -> new AlbumTrackItem(trackRecord, albumFks.get(trackRecord.getFkAlbum())))
                 .toList();
     }
 
@@ -119,7 +124,7 @@ public class DataAccess {
                 .toList();
     }
 
-    public List<TrackRecord> getArtistTracks(ArtistRecord artistRecord) {
+    public List<AlbumTrackItem> getArtistTracks(ArtistRecord artistRecord) {
         List<AlbumRecord> artistAlbums = getArtistAlbums(artistRecord.getId());
         return getAlbumsTracks(artistAlbums);
     }
@@ -191,4 +196,10 @@ public class DataAccess {
     public ArtistRecord getArtist(Integer id) {
         return dsl.fetchSingle(ARTIST, ARTIST.ID.eq(id));
     }
+
+    public List<ArtistRecord> getArtists(Set<Integer> artistFks) {
+        return dsl.fetch(ARTIST, ARTIST.ID.in(artistFks));
+    }
+
+
 }
