@@ -4,8 +4,8 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PlaybackHistoryRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.model.AlbumTrackItem;
 import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.TrackInfo;
 import lombok.RequiredArgsConstructor;
 import org.jooq.impl.DefaultDSLContext;
 import org.springframework.cache.annotation.Cacheable;
@@ -103,7 +103,7 @@ public class DataAccess {
                 .toList();
     }
 
-    public List<AlbumTrackItem> getAlbumsTracks(List<AlbumRecord> albums) {
+    public List<TrackInfo> getAlbumsTracks(List<AlbumRecord> albums) {
         Map<Integer, AlbumRecord> albumFks = albums
                 .stream()
                 .collect(Collectors.toMap(AlbumRecord::getId, Function.identity()));
@@ -112,7 +112,7 @@ public class DataAccess {
                 .selectFrom(TRACK)
                 .where(TRACK.FK_ALBUM.in(albumFks.keySet()))
                 .stream()
-                .map(trackRecord -> new AlbumTrackItem(trackRecord, albumFks.get(trackRecord.getFkAlbum())))
+                .map(trackRecord -> new TrackInfo(trackRecord, null, albumFks.get(trackRecord.getFkAlbum())))
                 .toList();
     }
 
@@ -124,16 +124,20 @@ public class DataAccess {
                 .toList();
     }
 
-    public List<AlbumTrackItem> getArtistTracks(ArtistRecord artistRecord) {
+    public List<TrackInfo> getArtistTracks(ArtistRecord artistRecord) {
         List<AlbumRecord> artistAlbums = getArtistAlbums(artistRecord.getId());
         return getAlbumsTracks(artistAlbums);
     }
 
-    public Map<PlaylistItem, Map.Entry<AlbumRecord, ArtistRecord>> getArtistAlbumForTracks(List<PlaylistItem> playlistItems) {
+    public Map<TrackInfo, Map.Entry<AlbumRecord, ArtistRecord>> getArtistAlbumForTracks(List<PlaylistItem> playlistItems) {
         if (playlistItems.isEmpty()) {
             return Map.of();
         }
-        Set<Integer> albumFks = playlistItems.stream().map(PlaylistItem::getTrackRecord).map(TrackRecord::getFkAlbum).collect(Collectors.toSet());
+        Set<Integer> albumFks = playlistItems
+                .stream()
+                .map(PlaylistItem::getTrackRecord)
+                .map(TrackRecord::getFkAlbum)
+                .collect(Collectors.toSet());
         Map<Integer, AlbumRecord> albumIdToRecord = dsl
                 .selectFrom(ALBUM)
                 .where(ALBUM.ID.in(albumFks))

@@ -41,18 +41,21 @@ public class PlaylistModel {
             tracksToAdd.addAll(list);
         }
         if (addToPlaylistEvent.getArtistRecord() != null) {
-            List<AlbumTrackItem> artistTracks = dataAccess.getArtistTracks(addToPlaylistEvent.getArtistRecord());
+            List<TrackInfo> artistTracks = dataAccess.getArtistTracks(addToPlaylistEvent.getArtistRecord());
             List<PlaylistItem> list = artistTracks
                     .stream()
-                    .map(at -> new PlaylistItem(at.trackRecord(), addToPlaylistEvent.getArtistRecord(), at.trackAlbum()))
+                    .map(trackInfo -> new PlaylistItem(
+                            trackInfo.getTrackRecord(),
+                            addToPlaylistEvent.getArtistRecord(),
+                            trackInfo.getTrackAlbum()))
                     .toList();
             tracksToAdd.addAll(list);
         }
         if (addToPlaylistEvent.getAlbums() != null) {
-            List<AlbumTrackItem> albumsTracks = dataAccess.getAlbumsTracks(addToPlaylistEvent.getAlbums());
+            List<TrackInfo> albumsTracks = dataAccess.getAlbumsTracks(addToPlaylistEvent.getAlbums());
             Set<Integer> artistFks = albumsTracks
                     .stream()
-                    .map(AlbumTrackItem::trackAlbum)
+                    .map(TrackInfo::getTrackAlbum)
                     .map(AlbumRecord::getFkArtist)
                     .collect(Collectors.toSet());
             Map<Integer, ArtistRecord> artistRecordMap = dataAccess
@@ -61,7 +64,10 @@ public class PlaylistModel {
                     .collect(Collectors.toMap(ArtistRecord::getId, Function.identity()));
             List<PlaylistItem> list = albumsTracks
                     .stream()
-                    .map(at -> new PlaylistItem(at.trackRecord(), artistRecordMap.get(at.trackAlbum().getFkArtist()), at.trackAlbum()))
+                    .map(trackInfo -> new PlaylistItem(
+                            trackInfo.getTrackRecord(),
+                            artistRecordMap.get(trackInfo.getTrackAlbum().getFkArtist()),
+                            trackInfo.getTrackAlbum()))
                     .toList();
             tracksToAdd.addAll(list);
         }

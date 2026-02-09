@@ -3,19 +3,19 @@ package com.github.curiousoddman.curious_tunes.model;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Objects;
 
-@Data
-@RequiredArgsConstructor
-public class PlaylistItem {
-    private final TrackRecord trackRecord;
-    private final ArtistRecord trackArtist;
-    private final AlbumRecord trackAlbum;
-
+@Setter
+@Getter
+public class PlaylistItem extends TrackInfo {
     private PlaylistItemStatus playlistItemStatus = PlaylistItemStatus.QUEUED;
+
+    public PlaylistItem(TrackRecord trackRecord, ArtistRecord trackArtist, AlbumRecord trackAlbum) {
+        super(trackRecord, trackArtist, trackAlbum);
+    }
 
     @Override
     public final boolean equals(Object o) {

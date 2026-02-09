@@ -10,6 +10,7 @@ import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.PlaylistModel;
+import com.github.curiousoddman.curious_tunes.model.TrackInfo;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -64,7 +65,7 @@ public class LibraryPlaylistController implements Initializable {
 
     public void redrawPlaylist() {
         List<PlaylistItem> playlistItems = playlistModel.getPlaylistItems();
-        Map<PlaylistItem, Map.Entry<AlbumRecord, ArtistRecord>> tracksInfo = dataAccess.getArtistAlbumForTracks(playlistItems);
+        Map<TrackInfo, Map.Entry<AlbumRecord, ArtistRecord>> tracksInfo = dataAccess.getArtistAlbumForTracks(playlistItems);
         playlistItemControllers.clear();
 
         runLater(() -> {
@@ -75,8 +76,13 @@ public class LibraryPlaylistController implements Initializable {
                 return;
             }
 
-            for (Map.Entry<PlaylistItem, Map.Entry<AlbumRecord, ArtistRecord>> entry : tracksInfo.entrySet()) {
-                PlaylistItem playlistItem = entry.getKey();
+            for (Map.Entry<TrackInfo, Map.Entry<AlbumRecord, ArtistRecord>> entry : tracksInfo.entrySet()) {
+                TrackInfo trackInfo = entry.getKey();
+                PlaylistItem playlistItem = new PlaylistItem(
+                        trackInfo.getTrackRecord(),
+                        trackInfo.getTrackArtist(),
+                        trackInfo.getTrackAlbum()
+                );
                 Map.Entry<AlbumRecord, ArtistRecord> albumArtist = entry.getValue();
                 AlbumRecord albumRecord = albumArtist.getKey();
                 ArtistRecord artistRecord = albumArtist.getValue();
