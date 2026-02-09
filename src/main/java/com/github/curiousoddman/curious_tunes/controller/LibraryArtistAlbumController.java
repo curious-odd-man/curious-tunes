@@ -3,7 +3,6 @@ package com.github.curiousoddman.curious_tunes.controller;
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
-import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
@@ -11,6 +10,7 @@ import com.github.curiousoddman.curious_tunes.model.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumTrackBundle;
+import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import javafx.animation.FadeTransition;
 import javafx.fxml.Initializable;
@@ -54,19 +54,19 @@ public class LibraryArtistAlbumController implements Initializable {
     public BorderPane pane;
     public ImageView playImageButton;
 
-    private AlbumRecord albumRecord;
+    private AlbumInfo albumInfo;
 
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
         pane.getStyleClass().add(BORDERED_ITEM);
         if (resources instanceof ArtistAlbumBundle albumBundle) {
-            albumRecord = albumBundle.getAlbumRecord();
-            ImageUtils.setImageIfPresent(albumRecord, albumImage);
+            albumInfo = albumBundle.getAlbumInfo();
+            ImageUtils.setImageIfPresent(albumInfo, albumImage);
 
-            albumTitle.setText(albumRecord.getName());
+            albumTitle.setText(albumInfo.getName());
             albumDetails.setText("empty details..."); // FIXME
-            List<TrackRecord> albumsTracks = dataAccess.getAlbumTracks(albumRecord.getId());
+            List<TrackRecord> albumsTracks = dataAccess.getAlbumTracks(albumInfo.getId());
             int tracksPerColumn = albumsTracks.size() <= 10
                     ? albumsTracks.size()
                     : (albumsTracks.size() / 2);
@@ -78,7 +78,7 @@ public class LibraryArtistAlbumController implements Initializable {
                 TrackRecord trackRecord = iterator.next();
                 LoadedFxml<LibraryArtistAlbumTrackController> loadedFxml = fxmlLoader.load(
                         FxmlView.LIBRARY_ALBUM_TRACK,
-                        new ArtistAlbumTrackBundle(trackRecord)
+                        new ArtistAlbumTrackBundle(albumInfo.toTrackInfo(trackRecord), albumBundle.getTrackSelectionModel())
                 );
                 Parent parent = loadedFxml.parent();
                 col.getChildren().add(parent);
@@ -104,7 +104,7 @@ public class LibraryArtistAlbumController implements Initializable {
         AddToPlaylistEvent event = AddToPlaylistEvent
                 .builder()
                 .source(this)
-                .albums(List.of(albumRecord))
+                .albums(List.of(albumInfo.getAlbumRecord()))
                 .shuffle(Shuffle.SKIP)
                 .playlistAddMode(PlaylistAddMode.REPLACE)
                 .build();

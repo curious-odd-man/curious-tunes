@@ -2,12 +2,14 @@ package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.backend.MediaProvider;
+import com.github.curiousoddman.curious_tunes.backend.tags.MetadataManager;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
+import com.github.curiousoddman.curious_tunes.event.EditTagsForTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
 import com.github.curiousoddman.curious_tunes.event.player.PlayedThirdOfTrackEvent;
@@ -16,6 +18,8 @@ import com.github.curiousoddman.curious_tunes.model.*;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
+import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
+import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
@@ -43,6 +47,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -59,6 +64,7 @@ public class LibraryController implements Initializable {
     private final ApplicationEventPublisher eventPublisher;
     private final FxmlLoader fxmlLoader;
     private final DataAccess dataAccess;
+    private final MetadataManager metadataManager;
 
     @FXML
     public Button buttonPlayPause;
@@ -106,6 +112,7 @@ public class LibraryController implements Initializable {
 
     private LibraryHistoryTabController libraryHistoryTabController;
     private LibraryLyricsTabController libraryLyricsTabController;
+    private LibraryTagEditTabController libraryTagEditTabController;
     private ArtistSelectionModel artistSelectionModel;
 
     private boolean isPlaying = false;
@@ -127,6 +134,10 @@ public class LibraryController implements Initializable {
         AnchorPane.setLeftAnchor(parent, .0);
         AnchorPane.setRightAnchor(parent, .0);
         onLibraryDataUpdated();
+
+        LoadedFxml<LibraryTagEditTabController> loaded = fxmlLoader.load(FxmlView.LIBRARY_TAB_TAGS_EDIT, null);
+        libraryTagEditTabController = loaded.controller();
+        editTagsTab.setContent(loaded.parent());
     }
 
     @EventListener
@@ -212,15 +223,17 @@ public class LibraryController implements Initializable {
     @EventListener
     @SneakyThrows
     public void onShowArtistAlbumEvent(ShowArtistAlbums showArtistAlbums) {
-        int artistId = showArtistAlbums.getArtistRecord().getId();
-        String artistName = showArtistAlbums.getArtistRecord().getName();
+        ArtistRecord artistRecord = showArtistAlbums.getArtistRecord();
+        int artistId = artistRecord.getId();
+        String artistName = artistRecord.getName();
         artistTitle.setText(artistName);
         artistAlbumsView.getChildren().remove(1, artistAlbumsView.getChildren().size());
         List<AlbumRecord> albums = dataAccess.getArtistAlbums(artistId);
+        TrackSelectionModel trackSelectionModel = new TrackSelectionModel();
         for (AlbumRecord album : albums) {
             LoadedFxml<LibraryArtistAlbumController> loadedFxml = fxmlLoader.load(
                     FxmlView.LIBRARY_ARTIST_ALBUM,
-                    new ArtistAlbumBundle(artistName, album)
+                    new ArtistAlbumBundle(artistName, new AlbumInfo(artistRecord, album), trackSelectionModel)
             );
             artistAlbumsView.getChildren().add(loadedFxml.parent());
         }
@@ -246,6 +259,17 @@ public class LibraryController implements Initializable {
                 onLibraryDataUpdated();
             }
         });
+    }
+
+    @EventListener
+    public void onTagsUiUpdatedEvent(EditTagsForTrackEvent event) {
+        tabPane.getSelectionModel().select(editTagsTab);
+        TrackInfo trackInfo = event.getTrackInfo();
+        TrackRecord trackRecord = trackInfo.getTrackRecord();
+        libraryTagEditTabController.showTags(
+                metadataManager.getMetadata(Path.of(trackRecord.getFileLocation())),
+                trackInfo
+        );
     }
 
     @SneakyThrows
@@ -306,7 +330,9 @@ public class LibraryController implements Initializable {
                 libraryLyricsTabController = loaded.controller();
                 currentLyricsTab.setContent(loaded.parent());
             }
-            libraryLyricsTabController.showLyrics(currentTrackRecordObservable);
+            if (currentTrackRecordObservable.get() != null) {
+                libraryLyricsTabController.showLyrics(currentTrackRecordObservable);
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes.model;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import lombok.Getter;
 import lombok.Setter;
 

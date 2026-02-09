@@ -10,8 +10,8 @@ import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.PlaylistModel;
-import com.github.curiousoddman.curious_tunes.model.TrackInfo;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
+import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -84,13 +84,11 @@ public class LibraryPlaylistController implements Initializable {
                         trackInfo.getTrackAlbum()
                 );
                 Map.Entry<AlbumRecord, ArtistRecord> albumArtist = entry.getValue();
-                AlbumRecord albumRecord = albumArtist.getKey();
                 ArtistRecord artistRecord = albumArtist.getValue();
                 LoadedFxml<PlaylistItemController> loadedFxml = fxmlLoader.load(
                         FxmlView.PLAYLIST_ITEM,
                         new PlaylistItemResourceBundle(
                                 artistRecord.getName(),
-                                albumRecord,
                                 playlistItem,
                                 playlistModel
                         )

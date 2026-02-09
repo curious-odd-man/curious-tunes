@@ -1,6 +1,7 @@
 package com.github.curiousoddman.curious_tunes.util;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
+import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import lombok.experimental.UtilityClass;
@@ -11,9 +12,17 @@ import java.io.ByteArrayInputStream;
 @Slf4j
 @UtilityClass
 public class ImageUtils {
+    public static void setImageIfPresent(AlbumInfo albumInfo, ImageView imageView) {
+        setImageIfPresent(albumInfo.getImage(), imageView);
+    }
+
     public static void setImageIfPresent(AlbumRecord albumRecord, ImageView imageView) {
-        if (albumRecord.getImage() != null) {
-            try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(albumRecord.getImage())) {
+        setImageIfPresent(albumRecord.getImage(), imageView);
+    }
+
+    public static void setImageIfPresent(byte[] image, ImageView imageView) {
+        if (image != null) {
+            try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(image)) {
                 Image value = new Image(byteArrayInputStream);
                 imageView.setImage(value);
             } catch (Exception e) {

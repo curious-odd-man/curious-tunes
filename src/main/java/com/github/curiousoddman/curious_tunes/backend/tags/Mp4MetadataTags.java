@@ -150,6 +150,7 @@ public class Mp4MetadataTags extends MetadataTagsBase implements MetadataTags {
 
     @Override
     protected void onComposerUpdated() {
+        // FIXME: what if it is not defined????
         appleTrackAuthorBox.setValue(composer);
     }
 

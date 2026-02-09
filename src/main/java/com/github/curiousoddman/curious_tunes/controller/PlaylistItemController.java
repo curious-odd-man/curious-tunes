@@ -62,7 +62,7 @@ public class PlaylistItemController implements Initializable {
         // FIXME - implement actions
 
         if (resources instanceof PlaylistItemResourceBundle playlistItemResourceBundle) {
-            AlbumRecord albumRecord = playlistItemResourceBundle.getAlbumRecord();
+            AlbumRecord albumRecord = playlistItemResourceBundle.getPlaylistItem().getTrackAlbum();
             ImageUtils.setImageIfPresent(albumRecord, image);
             playlistItem = playlistItemResourceBundle.getPlaylistItem();
             TrackRecord trackRecord = playlistItem.getTrackRecord();
