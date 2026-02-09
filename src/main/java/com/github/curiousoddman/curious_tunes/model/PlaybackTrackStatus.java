@@ -13,9 +13,8 @@ public enum PlaybackTrackStatus {
         return switch (sts) {
             case UNKNOWN -> NONE;
             case READY, STALLED -> LAUNCHING;
-            case PAUSED -> PAUSED;
+            case PAUSED, STOPPED -> PAUSED;
             case PLAYING -> PLAYING;
-            case STOPPED -> PAUSED;
             case HALTED, DISPOSED -> ENDED;
         };
     }

@@ -217,9 +217,9 @@ public class LibraryController implements Initializable {
             eventPublisher.publishEvent(new PlayerStatusEvent(this, PlaybackTrackStatus.map(newValue), playlistItem));
         });
 
-        player.errorProperty().addListener((observable, oldValue, newValue) -> {
-            log.error("error", newValue);
-        });
+        player.errorProperty().addListener(
+                (observable, oldValue, newValue) -> log.error("error", newValue)
+        );
     }
 
     @EventListener

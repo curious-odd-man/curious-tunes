@@ -18,9 +18,8 @@ class LibraryControllerTest {
             log.info("Starting test....");
             Media media = new javafx.scene.media.Media(Path.of("D:\\iTunes\\iTunes 1\\iTunes Media\\Music\\ABBA\\ABBA\\01 Mamma Mia.m4a").toUri().toString());
             MediaPlayer player = new MediaPlayer(media);
-            player.statusProperty().addListener((observable, oldValue, newValue) -> {
-                log.info("playback status: {} ", newValue);
-            });
+            player.statusProperty().addListener((observable, oldValue, newValue) ->
+                    log.info("playback status: {} ", newValue));
             player.play();
         });
         testApp.launch();

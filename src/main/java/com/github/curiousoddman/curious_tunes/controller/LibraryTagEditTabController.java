@@ -89,6 +89,7 @@ public class LibraryTagEditTabController implements Initializable {
 
     @FXML
     public void onFindLyrics(ActionEvent actionEvent) {
+        // FIXME
     }
 
     @FXML

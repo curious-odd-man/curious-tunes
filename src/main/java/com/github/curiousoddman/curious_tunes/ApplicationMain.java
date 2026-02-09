@@ -16,7 +16,7 @@ public class ApplicationMain implements ApplicationRunner {
     private final List<StartupRunnable> startupRunnableList;
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void run(ApplicationArguments args) {
         log.info("Running startup tasks...");
         for (StartupRunnable task : startupRunnableList) {
             try {

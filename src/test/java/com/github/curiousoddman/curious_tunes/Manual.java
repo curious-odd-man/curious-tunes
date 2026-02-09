@@ -42,7 +42,7 @@ public class Manual {
                 }
                 try {
                     Map<String, String> tags = extractMp4ParserMetadata(file);
-                    if (tags == null || tags.isEmpty()) {
+                    if (tags.isEmpty()) {
                         log.warn("{} contained no metadata", file);
                         return FileVisitResult.CONTINUE;
                     }
@@ -60,9 +60,9 @@ public class Manual {
         });
 
         StringBuilder sb = new StringBuilder();
-        stats.forEach((k, v) -> {
-            sb.append(k).append('\t').append(v).append('\n');
-        });
+        stats.forEach((k, v) ->
+                sb.append(k).append('\t').append(v).append('\n')
+        );
         Files.writeString(Path.of("tag-stats.txt"), sb.toString(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
     }
 
