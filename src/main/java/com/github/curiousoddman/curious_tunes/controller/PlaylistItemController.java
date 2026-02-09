@@ -2,8 +2,8 @@ package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
-import com.github.curiousoddman.curious_tunes.model.PlaylistModel;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;

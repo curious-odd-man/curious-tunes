@@ -1,7 +1,7 @@
 package com.github.curiousoddman.curious_tunes.model.bundle;
 
-import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
-import com.github.curiousoddman.curious_tunes.model.PlaylistModel;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

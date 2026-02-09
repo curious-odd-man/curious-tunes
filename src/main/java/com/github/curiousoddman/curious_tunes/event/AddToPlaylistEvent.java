@@ -3,7 +3,7 @@ package com.github.curiousoddman.curious_tunes.event;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.model.PlaylistAddMode;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import lombok.Builder;
 import lombok.Getter;

@@ -4,7 +4,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
 import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
-import com.github.curiousoddman.curious_tunes.model.PlaylistAddMode;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import javafx.event.ActionEvent;

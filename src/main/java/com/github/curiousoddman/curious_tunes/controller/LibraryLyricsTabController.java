@@ -4,7 +4,7 @@ import com.github.curiousoddman.curious_tunes.actions.services.PendingActionServ
 import com.github.curiousoddman.curious_tunes.backend.lyrics.LyricsService;
 import com.github.curiousoddman.curious_tunes.backend.tags.MetadataManager;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.event.ActionEvent;

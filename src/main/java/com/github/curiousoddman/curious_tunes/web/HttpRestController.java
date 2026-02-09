@@ -2,7 +2,7 @@ package com.github.curiousoddman.curious_tunes.web;
 
 import com.github.curiousoddman.alacdecoder.AlacDecoder;
 import com.github.curiousoddman.alacdecoder.data.WavFormat;
-import com.github.curiousoddman.curious_tunes.model.PlaylistModel;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;

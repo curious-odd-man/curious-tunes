@@ -1,10 +1,11 @@
-package com.github.curiousoddman.curious_tunes.model;
+package com.github.curiousoddman.curious_tunes.model.playlist;
 
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
+import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;

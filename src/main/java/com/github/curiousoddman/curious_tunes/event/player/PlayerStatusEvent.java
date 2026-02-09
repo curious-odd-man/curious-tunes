@@ -1,7 +1,7 @@
 package com.github.curiousoddman.curious_tunes.event.player;
 
 import com.github.curiousoddman.curious_tunes.model.PlaybackTrackStatus;
-import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 

@@ -5,7 +5,7 @@ import com.github.curiousoddman.curious_tunes.backend.tags.MetadataTags;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.model.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

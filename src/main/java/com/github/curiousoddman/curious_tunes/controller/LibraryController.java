@@ -20,6 +20,8 @@ import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
 import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
