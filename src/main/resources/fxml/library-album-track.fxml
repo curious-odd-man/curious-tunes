@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#onMouseClicked" spacing="10.0" styleClass="library-album-track" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryArtistAlbumTrackController">
+<HBox fx:id="rootHbox" fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#onMouseClicked" spacing="10.0" styleClass="library-album-track" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryArtistAlbumTrackController">
    <children>
       <Label fx:id="warningLabel" text="⚠" textFill="RED" visible="false" HBox.hgrow="NEVER">
          <font>

@@ -14,6 +14,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import lombok.RequiredArgsConstructor;
@@ -85,7 +86,7 @@ public class PlaylistItemController implements Initializable {
 
     @FXML
     public void onPaneClicked(MouseEvent mouseEvent) {
-        if (mouseEvent.isSecondaryButtonDown()) {
+        if (mouseEvent.getButton() == MouseButton.SECONDARY) {
             contextMenu.show(pane, mouseEvent.getScreenX(), mouseEvent.getScreenY());
         }
         playlistSelectionModel.select(playlistItem);

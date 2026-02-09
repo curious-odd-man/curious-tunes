@@ -86,11 +86,16 @@ public class LibraryController implements Initializable {
     public VBox artistAlbumsView;
     @FXML
     public Label artistTitle;
+    @FXML
     public TabPane tabPane;
+    @FXML
     public Tab albumsTab;
-    public Tab tagsTab;
+    @FXML
     public Tab historyTab;
+    @FXML
     public Tab currentLyricsTab;
+    @FXML
+    public Tab editTagsTab;
     @FXML
     private AnchorPane playlistAnchorPane;
 

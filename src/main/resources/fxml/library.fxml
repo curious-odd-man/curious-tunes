@@ -114,16 +114,8 @@
                                     </ScrollPane>
                                  </content>
                               </Tab>
-                              <Tab fx:id="currentLyricsTab" onSelectionChanged="#onTabSelectionChange" text="Current Lyrics">
-                                <content>
-                                  <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" />
-                                </content>
-                              </Tab>
-                              <Tab fx:id="tagsTab" closable="false" onSelectionChanged="#onTabSelectionChange" text="Tags">
-                                <content>
-                                  <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" />
-                                </content>
-                              </Tab>
+                              <Tab fx:id="currentLyricsTab" onSelectionChanged="#onTabSelectionChange" text="Current Lyrics" />
+                              <Tab fx:id="editTagsTab" closable="false" onSelectionChanged="#onTabSelectionChange" text="Edit Tags" />
                               <Tab fx:id="historyTab" closable="false" onSelectionChanged="#onTabSelectionChange" text="History">
                               </Tab>
                            </tabs>
