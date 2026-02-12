@@ -2,7 +2,6 @@ package com.github.curiousoddman.curious_tunes.actions.services;
 
 import com.github.curiousoddman.curious_tunes.actions.dao.PendingActionDao;
 import com.github.curiousoddman.curious_tunes.actions.handler.PendingActionsHandler;
-import com.github.curiousoddman.curious_tunes.actions.payload.UpdateLyricsPayload;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PendingActionRecord;
 import com.github.curiousoddman.curious_tunes.util.StartupRunnable;
 import lombok.extern.slf4j.Slf4j;
@@ -43,11 +42,11 @@ public class PendingActionService implements StartupRunnable {
         log.info("Pending actions execution completed.");
     }
 
-    public void updateLyrics(String newLyrics, Path filePath) {
+/*    public void updateLyrics(String newLyrics, Path filePath) {
         UpdateLyricsPayload payload = new UpdateLyricsPayload(newLyrics, filePath);
         PendingActionRecord action = dao.newAction(payload);
         process(action);
-    }
+    }*/
 
     private void process(PendingActionRecord action) {
         PendingActionsHandler<?> handler = handlers.get(action.getType());

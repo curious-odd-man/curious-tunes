@@ -46,13 +46,14 @@ public class Mp3MetadataTags extends MetadataTagsBase implements MetadataTags {
 
     @Override
     public void updateFile() throws IOException {
-        try {
-            Path tempFile = Files.createTempFile("tmp-file", "mp3");
-            sourceFile.save(tempFile.toAbsolutePath().toString());
-            Files.move(tempFile, Path.of(fileLocation), StandardCopyOption.REPLACE_EXISTING);
-        } catch (NotSupportedException e) {
-            throw new IllegalArgumentException(e);
-        }
+        log.warn("Saving to file is disabled to avoid accidental corruption. This needs to be implemented separately with caution and backups...");
+//        try {
+//            Path tempFile = Files.createTempFile("tmp-file", "mp3");
+//            sourceFile.save(tempFile.toAbsolutePath().toString());
+//            Files.move(tempFile, Path.of(fileLocation), StandardCopyOption.REPLACE_EXISTING);
+//        } catch (NotSupportedException e) {
+//            throw new IllegalArgumentException(e);
+//        }
     }
 
     @Override

@@ -108,9 +108,10 @@ public class Mp4MetadataTags extends MetadataTagsBase implements MetadataTags {
 
     @Override
     public void updateFile() throws IOException {
-        try (WritableByteChannel channel = Files.newByteChannel(Path.of(fileLocation), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
-            isoFile.getBox(channel);
-        }
+        log.warn("Saving to file is disabled to avoid accidental corruption. This needs to be implemented separately with caution and backups...");
+//        try (WritableByteChannel channel = Files.newByteChannel(Path.of(fileLocation), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+//            isoFile.getBox(channel);
+//        }
     }
 
     @Override

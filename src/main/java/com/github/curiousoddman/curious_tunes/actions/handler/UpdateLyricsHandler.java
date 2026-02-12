@@ -1,5 +1,5 @@
 package com.github.curiousoddman.curious_tunes.actions.handler;
-
+/*
 import com.github.curiousoddman.curious_tunes.actions.payload.UpdateLyricsPayload;
 import com.github.curiousoddman.curious_tunes.backend.tags.MetadataManager;
 import com.github.curiousoddman.curious_tunes.backend.tags.MetadataTags;
@@ -7,6 +7,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PendingAction
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
 
 @Slf4j
 @Component
@@ -21,4 +22,4 @@ public class UpdateLyricsHandler extends PendingActionsHandler<UpdateLyricsPaylo
         metadata.setLyrics(payload.getLyrics());
         metadata.updateFile();
     }
-}
+}*/
