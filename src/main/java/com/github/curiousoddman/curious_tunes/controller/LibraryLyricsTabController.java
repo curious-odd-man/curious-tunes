@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
@@ -92,25 +91,20 @@ public class LibraryLyricsTabController implements Initializable {
 
     @FXML
     public void onFindLyrics(ActionEvent actionEvent) {
-        Thread t = new Thread(() -> {
-            PlaylistItem playlistItem = trackRecordObservable.get();
-            Optional<String> lyrics = lyricsService.findLyrics(
-                    playlistItem.getTrackArtist().getName(),
-                    playlistItem.getTrackAlbum().getName(),
-                    playlistItem.getTrackRecord().getTitle()
-            );
+        PlaylistItem playlistItem = trackRecordObservable.get();
+        lyricsService.findLyricsAsync(
+                playlistItem.getTrackArtist().getName(),
+                playlistItem.getTrackAlbum().getName(),
+                playlistItem.getTrackRecord().getTitle(),
+                lyrics -> Platform.runLater(() -> {
+                    saveButton.setDisable(false);
+                    editButton.setSelected(true);
+                    lyricsTextArea.setText(lyrics);
+                }),
+                () -> {
+                    log.warn("Unable to find lyrics...");
 
-            if (lyrics.isEmpty()) {
-                log.warn("Unable to find lyrics...");
-                return;
-            }
-
-            Platform.runLater(() -> {
-                saveButton.setDisable(false);
-                editButton.setSelected(true);
-                lyricsTextArea.setText(lyrics.get());
-            });
-        }, "Find lyrics online");
-        t.start();
+                }
+        );
     }
 }

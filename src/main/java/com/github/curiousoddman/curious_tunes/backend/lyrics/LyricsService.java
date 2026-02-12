@@ -9,6 +9,7 @@ import okhttp3.Response;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 @Slf4j
 @Component
@@ -17,6 +18,22 @@ public class LyricsService {
     private static final OkHttpClient CLIENT = new OkHttpClient();
 
     private final List<LyricsSource> sourceList;
+
+    public void findLyricsAsync(String artist,
+                                String album,
+                                String title,
+                                Consumer<String> onSuccess,
+                                Runnable onFailure) {
+        Thread t = new Thread(() -> {
+            Optional<String> lyrics = findLyrics(artist, album, title);
+            if (lyrics.isEmpty()) {
+                onFailure.run();
+            } else {
+                onSuccess.accept(lyrics.get());
+            }
+        }, "Find lyrics online");
+        t.start();
+    }
 
     public Optional<String> findLyrics(String artist, String album, String title) {
         log.info("Attempting to find lyrics...");
