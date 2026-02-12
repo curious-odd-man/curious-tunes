@@ -5,14 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.mp4parser.Box;
 import org.mp4parser.IsoFile;
 import org.mp4parser.boxes.apple.*;
-import org.mp4parser.boxes.iso14496.part12.MediaHeaderBox;
-import org.mp4parser.boxes.iso14496.part12.TrackHeaderBox;
+import org.mp4parser.boxes.iso14496.part12.*;
 
 import java.io.IOException;
-import java.nio.channels.WritableByteChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 @Slf4j
@@ -29,7 +25,6 @@ public class Mp4MetadataTags extends MetadataTagsBase implements MetadataTags {
     private AppleGenreBox appleGenreBox;
     private AppleAlbumBox appleAlbumBox;
     private AppleRecordingYear2Box appleRecordingYear2Box;
-
 
     public Mp4MetadataTags(IsoFile isoFile, List<Box> allBoxes, Path path) {
         super(path.toAbsolutePath().toString());
@@ -116,52 +111,82 @@ public class Mp4MetadataTags extends MetadataTagsBase implements MetadataTags {
 
     @Override
     protected void onArtistUpdated() {
-        appleArtistBox.setValue(artist);
+        if (artist != null) {
+            appleArtistBox = ensureAppleBox(appleArtistBox, AppleArtistBox.class);
+            appleArtistBox.setValue(artist);
+        }
     }
 
     @Override
     protected void onAlbumUpdated() {
-        appleAlbumBox.setValue(album);
+        if (album != null) {
+            appleAlbumBox = ensureAppleBox(appleAlbumBox, AppleAlbumBox.class);
+            appleAlbumBox.setValue(album);
+        }
     }
 
     @Override
     protected void onTitleUpdated() {
-        appleNameBox.setValue(title);
+        if (title != null) {
+            appleNameBox = ensureAppleBox(appleNameBox, AppleNameBox.class);
+            appleNameBox.setValue(title);
+        }
     }
 
     @Override
     protected void onTrackNumberUpdated() {
-        appleTrackNumberBox.setA(trackNumber);
+        if (trackNumber != null) {
+            appleTrackNumberBox = ensureAppleBox(appleTrackNumberBox, AppleTrackNumberBox.class);
+            appleTrackNumberBox.setA(trackNumber);
+        }
     }
 
     @Override
     protected void onReleaseDateUpdated() {
-        appleRecordingYear2Box.setValue(releaseDate);
+        if (releaseDate != null) {
+            appleRecordingYear2Box = ensureAppleBox(appleRecordingYear2Box, AppleRecordingYear2Box.class);
+            appleRecordingYear2Box.setValue(releaseDate);
+        }
     }
 
     @Override
     protected void onDiskNumberUpdated() {
-        appleDiskNumberBox.setA(diskNumber);
+        if (diskNumber != null) {
+            appleDiskNumberBox = ensureAppleBox(appleDiskNumberBox, AppleDiskNumberBox.class);
+            appleDiskNumberBox.setA(diskNumber);
+        }
     }
 
     @Override
     protected void onGenreUpdated() {
-        appleGenreBox.setValue(genre);
+        if (genre != null) {
+            appleGenreBox = ensureAppleBox(appleGenreBox, AppleGenreBox.class);
+            appleGenreBox.setValue(genre);
+        }
     }
 
     @Override
     protected void onComposerUpdated() {
-        // FIXME: what if it is not defined????
-        appleTrackAuthorBox.setValue(composer);
+        if (composer != null) {
+            appleTrackAuthorBox = ensureAppleBox(appleTrackAuthorBox, AppleTrackAuthorBox.class);
+            appleTrackAuthorBox.setValue(composer);
+        }
     }
 
     @Override
     protected void onLyricsUpdated() {
-        appleLyricsBox.setValue(lyrics);
+        if (lyrics != null) {
+            appleLyricsBox = ensureAppleBox(appleLyricsBox, AppleLyricsBox.class);
+            appleLyricsBox.setValue(lyrics);
+        }
     }
 
     @Override
     protected void onAlbumCoverUpdated() {
+        if (albumCover == null) {
+            return;
+        }
+        appleCoverBox = ensureAppleBox(appleCoverBox, AppleCoverBox.class);
         switch (albumCover.getType()) {
             case "PNG":
                 appleCoverBox.setPng(albumCover.getData());
@@ -173,4 +198,68 @@ public class Mp4MetadataTags extends MetadataTagsBase implements MetadataTags {
                 throw new IllegalStateException("Cannot update cover - unknown data type: " + albumCover.getType());
         }
     }
+
+    private <T extends Box> T ensureAppleBox(T potentialNull, Class<T> clazz) {
+        if (potentialNull != null) {
+            return potentialNull;
+        }
+        AppleItemListBox ilst = ensureIlst();
+
+        return ilst.getBoxes(clazz).stream()
+                .findFirst()
+                .orElseGet(() -> {
+                    T box = null;
+                    try {
+                        box = clazz.getConstructor().newInstance();
+                        ilst.addBox(box);
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                    }
+                    return box;
+                });
+    }
+
+
+    private MovieBox moov() {
+        List<MovieBox> boxes = isoFile.getBoxes(MovieBox.class);
+        return boxes.getFirst();
+    }
+
+    private AppleItemListBox ensureIlst() {
+        MovieBox moov = moov();
+
+        // --- udta ---
+        UserDataBox udta = moov.getBoxes(UserDataBox.class).stream()
+                .findFirst()
+                .orElseGet(() -> {
+                    UserDataBox u = new UserDataBox();
+                    moov.addBox(u);
+                    return u;
+                });
+
+        // --- meta ---
+        MetaBox meta = udta.getBoxes(MetaBox.class).stream()
+                .findFirst()
+                .orElseGet(() -> {
+                    MetaBox m = new MetaBox();
+                    udta.addBox(m);
+
+                    // required handler
+                    HandlerBox hdlr = new HandlerBox();
+                    hdlr.setHandlerType("mdir");
+                    m.addBox(hdlr);
+
+                    return m;
+                });
+
+        // --- ilst ---
+        return meta.getBoxes(AppleItemListBox.class).stream()
+                .findFirst()
+                .orElseGet(() -> {
+                    AppleItemListBox ilst = new AppleItemListBox();
+                    meta.addBox(ilst);
+                    return ilst;
+                });
+    }
+
 }
