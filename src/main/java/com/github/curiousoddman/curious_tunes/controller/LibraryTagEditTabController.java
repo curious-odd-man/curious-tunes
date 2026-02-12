@@ -1,12 +1,14 @@
 package com.github.curiousoddman.curious_tunes.controller;
 
 import com.github.curiousoddman.curious_tunes.backend.DataAccess;
+import com.github.curiousoddman.curious_tunes.backend.lyrics.LyricsService;
 import com.github.curiousoddman.curious_tunes.backend.tags.MetadataTags;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
+import com.github.curiousoddman.curious_tunes.util.JooqUtils;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -19,18 +21,24 @@ import javafx.scene.layout.GridPane;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.Field;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
-import static com.github.curiousoddman.curious_tunes.util.ConversionUtils.setIfDefined;
+import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
+import static com.github.curiousoddman.curious_tunes.util.ConversionUtils.str;
+import static com.github.curiousoddman.curious_tunes.util.ConversionUtils.toInteger;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class LibraryTagEditTabController implements Initializable {
+    private final LyricsService lyricsService;
     @FXML
     public GridPane tagsGrid;
     @FXML
@@ -71,36 +79,68 @@ public class LibraryTagEditTabController implements Initializable {
         this.fileTags = fileTags;
         this.trackInfo = trackInfo;
 
-        fillTextFieldsFromFile();
+        fillFieldsFromDb();
         markDifferentFields(trackInfo);
     }
 
-
     @FXML
     public void onSyncDatabase(ActionEvent actionEvent) {
-        ArtistRecord artistRecord = dataAccess.getOrInsertArtist(fileTags.getArtist());
-        AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), fileTags.getAlbum(), fileTags.getAlbumCover().getData());
-        TrackRecord trackRecord = dataAccess.getTrack(albumRecord.getId(), fileTags.getTitle());
-        showTags(
-                fileTags,
-                new PlaylistItem(trackRecord, artistRecord, albumRecord)
-        );
+        fillFieldsFromFile();
     }
 
     @FXML
     public void onFindLyrics(ActionEvent actionEvent) {
-        // FIXME
+        lyricsService.findLyricsAsync(
+                trackInfo.getTrackArtist().getName(),
+                trackInfo.getTrackAlbum().getName(),
+                trackInfo.getTitle(),
+                lyrics -> Platform.runLater(() -> lyricsEditArea.setText(lyrics)),
+                () -> log.error("Unable to find lyrics online")
+        );
     }
 
     @FXML
     @SneakyThrows
     public void onSave(ActionEvent actionEvent) {
-        applyFieldsToFileTags();
+        applyFieldsToDb();
         fileTags.updateFile();
-        onSyncDatabase(actionEvent);
     }
 
-    private void applyFieldsToFileTags() {
+    private void applyFieldsToDb() {
+        log.info("Updating track info \n{}", trackInfo);
+        ArtistRecord artist = trackInfo.getTrackArtist();
+        if (!artistField.getText().equals(trackInfo.getArtistName())) {
+            log.info("Artist name changed!");
+            artist = dataAccess.getOrInsertArtist(artistField.getText());
+            AlbumRecord album = dataAccess.getOrInsertAlbum(artist.getId(), albumField.getText(), trackInfo.getAlbumImage());
+            TrackRecord trackRecord = trackInfo.getTrackRecord();
+            trackRecord.setFkAlbum(album.getId());
+            trackRecord.update(TRACK.FK_ALBUM);
+        } else if (!albumField.getText().equals(trackInfo.getAlbumName())) {
+            log.info("Album changed");
+            AlbumRecord album = dataAccess.getOrInsertAlbum(artist.getId(), albumField.getText(), trackInfo.getAlbumImage());
+            TrackRecord trackRecord = trackInfo.getTrackRecord();
+            trackRecord.setFkAlbum(album.getId());
+            trackRecord.update(TRACK.FK_ALBUM);
+        }
+
+        List<Field<?>> fieldsToUpdate = new ArrayList<>();
+
+        JooqUtils.updateIfChanged(trackInfo.getTitle(), fileTags.getTitle(), trackInfo::setTitle, fieldsToUpdate, TRACK.TITLE);
+        JooqUtils.updateIfChanged(str(trackInfo.getTrackNumber()), str(fileTags.getTrackNumber()), v -> trackInfo.setTrackNumber(toInteger(v)), fieldsToUpdate, TRACK.TRACK_NUMBER);
+        JooqUtils.updateIfChanged(str(trackInfo.getDiskNumber()), str(fileTags.getDiskNumber()), v -> trackInfo.setDiskNumber(toInteger(v)), fieldsToUpdate, TRACK.DISK_NUMBER);
+        JooqUtils.updateIfChanged(trackInfo.getGenre(), fileTags.getGenre(), trackInfo::setGenre, fieldsToUpdate, TRACK.GENRE);
+        JooqUtils.updateIfChanged(trackInfo.getComposer(), fileTags.getComposer(), trackInfo::setComposer, fieldsToUpdate, TRACK.COMPOSER);
+        JooqUtils.updateIfChanged(trackInfo.getReleaseDate(), fileTags.getReleaseDate(), trackInfo::setReleaseDate, fieldsToUpdate, TRACK.RELEASE_DATE);
+        JooqUtils.updateIfChanged(trackInfo.getLyrics(), fileTags.getLyrics(), trackInfo::setLyrics, fieldsToUpdate, TRACK.LYRICS);
+
+        if (!fieldsToUpdate.isEmpty()) {
+            log.info("Updating \n{}", trackInfo);
+            trackInfo.getTrackRecord().update(fieldsToUpdate);
+        }
+    }
+
+    /*    private void applyFieldsToFileTags() {
         fileTags.setArtist(artistField.getText());
         fileTags.setAlbum(albumField.getText());
         fileTags.setTitle(titleField.getText());
@@ -110,27 +150,26 @@ public class LibraryTagEditTabController implements Initializable {
         fileTags.setComposer(composerField.getText());
         fileTags.setReleaseDate(releaseDateField.getText());
         fileTags.setLyrics(lyricsEditArea.getText());
+    }*/
+
+    private void fillFieldsFromDb() {
+        artistField.setText(trackInfo.getArtistName());
+        albumField.setText(trackInfo.getAlbumName());
+        titleField.setText(trackInfo.getTitle());
+        trackNumberField.setText(str(trackInfo.getTrackNumber()));
+        diskNumberField.setText(str(trackInfo.getDiskNumber()));
+        genreField.setText(trackInfo.getGenre());
+        composerField.setText(trackInfo.getComposer());
+        releaseDateField.setText(trackInfo.getReleaseDate());
+        lyricsEditArea.setText(trackInfo.getLyrics());
     }
 
-    private Integer parseInt(String value) {
-        try {
-            return value == null || value.isBlank() ? null : Integer.valueOf(value);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    private String toString(Integer value) {
-        return value == null ? "" : value.toString();
-    }
-
-
-    private void fillTextFieldsFromFile() {
+    private void fillFieldsFromFile() {
         artistField.setText(fileTags.getArtist());
         albumField.setText(fileTags.getAlbum());
         titleField.setText(fileTags.getTitle());
-        trackNumberField.setText(toString(fileTags.getTrackNumber()));
-        diskNumberField.setText(toString(fileTags.getDiskNumber()));
+        trackNumberField.setText(str(fileTags.getTrackNumber()));
+        diskNumberField.setText(str(fileTags.getDiskNumber()));
         genreField.setText(fileTags.getGenre());
         composerField.setText(fileTags.getComposer());
         releaseDateField.setText(fileTags.getReleaseDate());
@@ -138,18 +177,15 @@ public class LibraryTagEditTabController implements Initializable {
     }
 
     private void markDifferentFields(TrackInfo trackInfo) {
-        ArtistRecord trackArtist = trackInfo.getTrackArtist();
-        AlbumRecord trackAlbum = trackInfo.getTrackAlbum();
-        TrackRecord trackRecord = trackInfo.getTrackRecord();
-        markIfDifferent(artistField, fileTags.getArtist(), trackArtist.getName());
-        markIfDifferent(albumField, fileTags.getAlbum(), trackAlbum.getName());
-        markIfDifferent(titleField, fileTags.getTitle(), trackRecord.getTitle());
-        markIfDifferent(trackNumberField, fileTags.getTrackNumber(), trackRecord.getTrackNumber());
-        markIfDifferent(diskNumberField, fileTags.getDiskNumber(), trackRecord.getDiskNumber());
-        markIfDifferent(genreField, fileTags.getGenre(), trackRecord.getGenre());
-        markIfDifferent(composerField, fileTags.getComposer(), trackRecord.getComposer());
-        markIfDifferent(releaseDateField, fileTags.getReleaseDate(), trackRecord.getReleaseDate());
-        markIfDifferent(lyricsEditArea, fileTags.getLyrics(), trackRecord.getLyrics());
+        markIfDifferent(artistField, fileTags.getArtist(), trackInfo.getArtistName());
+        markIfDifferent(albumField, fileTags.getAlbum(), trackInfo.getAlbumName());
+        markIfDifferent(titleField, fileTags.getTitle(), trackInfo.getTitle());
+        markIfDifferent(trackNumberField, fileTags.getTrackNumber(), trackInfo.getTrackNumber());
+        markIfDifferent(diskNumberField, fileTags.getDiskNumber(), trackInfo.getDiskNumber());
+        markIfDifferent(genreField, fileTags.getGenre(), trackInfo.getGenre());
+        markIfDifferent(composerField, fileTags.getComposer(), trackInfo.getComposer());
+        markIfDifferent(releaseDateField, fileTags.getReleaseDate(), trackInfo.getReleaseDate());
+        markIfDifferent(lyricsEditArea, fileTags.getLyrics(), trackInfo.getLyrics());
     }
 
     private void markIfDifferent(TextInputControl field, Object fileValue, Object dbValue) {

@@ -27,4 +27,19 @@ public class ConversionUtils {
         }
         setter.accept(mapper.apply(value));
     }
+
+    public static Integer toInteger(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(value.trim());
+        } catch (NumberFormatException e) {
+            return null; // or handle validation error
+        }
+    }
+
+    public static String str(Object value) {
+        return value == null ? "" : value.toString();
+    }
 }
