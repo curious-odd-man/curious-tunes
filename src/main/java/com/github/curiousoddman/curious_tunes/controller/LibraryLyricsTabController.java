@@ -84,7 +84,7 @@ public class LibraryLyricsTabController implements Initializable {
             log.info("Saving updated lyrics to {}", trackRecord.getFileLocation());
             trackRecord.setLyrics(lyricsTextArea.getText());
             trackRecord.update(TRACK.LYRICS);
-            pendingActionService.updateLyrics(lyricsTextArea.getText(), Path.of(trackRecord.getFileLocation()));
+            //pendingActionService.updateLyrics(lyricsTextArea.getText(), Path.of(trackRecord.getFileLocation()));
             log.info("Update completed...");
         }, "Update metadata");
         t.start();
