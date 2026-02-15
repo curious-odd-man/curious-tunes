@@ -1,6 +1,11 @@
 package com.github.curiousoddman.curious_tunes.config;
 
-import com.github.curiousoddman.curious_tunes.controller.*;
+import com.github.curiousoddman.curious_tunes.ui.controller.element.*;
+import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryHistoryTabController;
+import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
+import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryTagEditTabController;
+import com.github.curiousoddman.curious_tunes.ui.controller.screen.LibraryController;
+import com.github.curiousoddman.curious_tunes.ui.controller.screen.RescanLibraryController;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

@@ -1,6 +1,6 @@
 package com.github.curiousoddman.curious_tunes;
 
-import com.github.curiousoddman.curious_tunes.preloader.AnimatedPreloader;
+import com.github.curiousoddman.curious_tunes.app.preloader.AnimatedPreloader;
 import com.sun.javafx.application.LauncherImpl;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;

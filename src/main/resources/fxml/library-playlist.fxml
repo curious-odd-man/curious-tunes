@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryPlaylistController">
+<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryPlaylistController">
     <top>
         <ToolBar maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER_RIGHT">
             <items>

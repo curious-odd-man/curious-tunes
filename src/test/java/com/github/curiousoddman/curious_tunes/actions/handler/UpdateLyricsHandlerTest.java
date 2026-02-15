@@ -2,6 +2,7 @@ package com.github.curiousoddman.curious_tunes.actions.handler;
 
 import com.github.curiousoddman.curious_tunes.actions.payload.UpdateLyricsPayload;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PendingActionRecord;
+import com.github.curiousoddman.curious_tunes.retryable.actions.handler.DurableActionsHandler;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,7 +20,7 @@ class UpdateLyricsHandlerTest {
     void testDeserialize() throws Exception {
         UpdateLyricsHandler handler = new UpdateLyricsHandler(null);
         UpdateLyricsPayload payload = new UpdateLyricsPayload("New lyrics", null);
-        String json = PendingActionsHandler.OBJECT_MAPPER.writeValueAsString(payload);
+        String json = DurableActionsHandler.OBJECT_MAPPER.writeValueAsString(payload);
 
         // Simulate a PendingActionRecord with the JSON payload
         PendingActionRecord record = new com.github.curiousoddman.curious_tunes.dbobj.tables.records.PendingActionRecord();

@@ -1,6 +1,6 @@
 package com.github.curiousoddman.curious_tunes.config;
 
-import com.github.curiousoddman.curious_tunes.backend.ExceptionTranslator;
+import com.github.curiousoddman.curious_tunes.domain.ExceptionTranslator;
 import lombok.RequiredArgsConstructor;
 import org.jooq.SQLDialect;
 import org.jooq.conf.Settings;

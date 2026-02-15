@@ -1,6 +1,6 @@
 package com.github.curiousoddman.curious_tunes.model;
 
-import com.github.curiousoddman.curious_tunes.controller.LibraryArtistController;
+import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistController;
 import javafx.scene.control.SingleSelectionModel;
 import lombok.RequiredArgsConstructor;
 

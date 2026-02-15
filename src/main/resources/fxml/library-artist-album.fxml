@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="pane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.controller.LibraryArtistAlbumController">
+<BorderPane fx:id="pane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumController">
     <left>
       <StackPane onMouseEntered="#onAlbumImageHover" onMouseExited="#onAlbumImageUnhover" BorderPane.alignment="CENTER">
          <children>

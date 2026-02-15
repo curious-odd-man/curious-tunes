@@ -1,6 +1,6 @@
 package com.github.curiousoddman.curious_tunes.model.playlist;
 
-import com.github.curiousoddman.curious_tunes.backend.DataAccess;
+import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
