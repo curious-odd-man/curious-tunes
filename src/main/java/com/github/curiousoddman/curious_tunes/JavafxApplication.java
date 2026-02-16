@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes;
 
+import com.github.curiousoddman.curious_tunes.app.preloader.MainSceneVisible;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
 import javafx.application.Application;
@@ -30,5 +31,6 @@ public class JavafxApplication extends Application {
         stage = primaryStage;
         stageManager = applicationContext.getBean(StageManager.class, primaryStage);
         stageManager.switchScene(FxmlView.LIBRARY);
+        notifyPreloader(new MainSceneVisible());
     }
 }

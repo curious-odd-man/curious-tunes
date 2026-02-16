@@ -7,7 +7,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class AnimatedPreloader extends Preloader {
-
     private Stage stage;
 
     @Override
@@ -24,8 +23,8 @@ public class AnimatedPreloader extends Preloader {
     }
 
     @Override
-    public void handleStateChangeNotification(StateChangeNotification info) {
-        if (info.getType() == StateChangeNotification.Type.BEFORE_START) {
+    public void handleApplicationNotification(PreloaderNotification info) {
+        if (info instanceof MainSceneVisible) {
             stage.hide();
         }
     }
