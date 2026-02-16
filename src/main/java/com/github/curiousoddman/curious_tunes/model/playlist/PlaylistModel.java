@@ -206,7 +206,7 @@ public class PlaylistModel {
     public void updateStatuses(PlayerStatusEvent playerStatusEvent) {
         PlaylistItem playlistItem = playerStatusEvent.getPlaylistItem();
         switch (playerStatusEvent.getStatus()) {
-            case NONE, PAUSED, PLAYING -> {
+            case STOPPED, PAUSED, PLAYING -> {
             }
             case LAUNCHING -> {
                 playlistItem.setPlaylistItemStatus(PlaylistItemStatus.PLAYING);

@@ -1,12 +1,8 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.element.tabs;
 
-import com.github.curiousoddman.curious_tunes.retryable.actions.services.DurableActionService;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.LyricsService;
-import com.github.curiousoddman.curious_tunes.domain.tags.MetadataManager;
-import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -26,8 +22,6 @@ import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 @Component
 @RequiredArgsConstructor
 public class LibraryLyricsTabController implements Initializable {
-    private final MetadataManager metadataManager;
-    private final DurableActionService durableActionService;
     private final LyricsService lyricsService;
 
     @FXML
@@ -39,28 +33,18 @@ public class LibraryLyricsTabController implements Initializable {
     @FXML
     public Button searchLyricsButton;
 
-    private ReadOnlyObjectProperty<PlaylistItem> trackRecordObservable;
+    private PlaylistItem playlistItem;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         editButton.setDisable(true);
     }
 
-    public void showLyrics(ReadOnlyObjectProperty<PlaylistItem> observable) {
-        PlaylistItem playlistItem = observable.getValue();
-        TrackRecord trackRecord = playlistItem.getTrackRecord();
-        String lyrics = trackRecord.getLyrics();
+    public void showLyrics(PlaylistItem playlistItem) {
+        this.playlistItem = playlistItem;
+        String lyrics = playlistItem.getLyrics();
         lyricsTextArea.setText(lyrics);
         editButton.setSelected(false);
-        if (trackRecordObservable == null) {
-            trackRecordObservable = observable;
-            trackRecordObservable.addListener((observable1, oldValue, newValue) -> {
-                if (newValue != null) {
-                    lyricsTextArea.setText(newValue.getTrackRecord().getLyrics());
-                    editButton.setSelected(false);
-                }
-            });
-        }
         editButton.setDisable(false);
     }
 
@@ -76,12 +60,10 @@ public class LibraryLyricsTabController implements Initializable {
         saveButton.setDisable(true);
         editButton.setSelected(false);
 
-        TrackRecord trackRecord = trackRecordObservable.get().getTrackRecord();
-
         Thread t = new Thread(() -> {
-            log.info("Saving updated lyrics to {}", trackRecord.getFileLocation());
-            trackRecord.setLyrics(lyricsTextArea.getText());
-            trackRecord.update(TRACK.LYRICS);
+            log.info("Saving updated lyrics to {}", playlistItem.getFileLocation());
+            playlistItem.setLyrics(lyricsTextArea.getText());
+            playlistItem.getTrackRecord().update(TRACK.LYRICS);
             //pendingActionService.updateLyrics(lyricsTextArea.getText(), Path.of(trackRecord.getFileLocation()));
             log.info("Update completed...");
         }, "Update metadata");
@@ -90,7 +72,6 @@ public class LibraryLyricsTabController implements Initializable {
 
     @FXML
     public void onFindLyrics(ActionEvent actionEvent) {
-        PlaylistItem playlistItem = trackRecordObservable.get();
         lyricsService.findLyricsAsync(
                 playlistItem.getTrackArtist().getName(),
                 playlistItem.getTrackAlbum().getName(),
@@ -102,7 +83,6 @@ public class LibraryLyricsTabController implements Initializable {
                 }),
                 () -> {
                     log.warn("Unable to find lyrics...");
-
                 }
         );
     }
