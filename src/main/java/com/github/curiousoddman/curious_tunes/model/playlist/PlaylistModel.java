@@ -32,7 +32,7 @@ public class PlaylistModel {
     private final DataAccess dataAccess;
 
     public void addItems(AddToPlaylistEvent addToPlaylistEvent) {
-        PlaylistItem selectedItem = currentlyPlayingModel.getSelectedItem();
+        PlaylistItem currentlyPlayingItem = currentlyPlayingModel.getSelectedItem();
         List<PlaylistItem> tracksToAdd = new ArrayList<>();
         if (addToPlaylistEvent.getTracks() != null) {
             List<PlaylistItem> list = addToPlaylistEvent
@@ -90,11 +90,11 @@ public class PlaylistModel {
             log.error("Unknown type of shuffle {}", shuffle);
             playlistItems.addAll(tracksToAdd);
         }
-        if (selectedItem != null) {
+        if (currentlyPlayingItem != null) {
             if (!replacePlaylist) {
-                playlistItems.remove(selectedItem);
+                playlistItems.remove(currentlyPlayingItem);
             }
-            playlistItems.addFirst(selectedItem);
+            playlistItems.addFirst(currentlyPlayingItem);
             selectionModel.select(0);
             currentlyPlayingModel.select(0);
         }
@@ -191,7 +191,7 @@ public class PlaylistModel {
                     playlistItem.getTrackRecord().getTitle()
             );
         }
-        log.info("END");
+        log.debug("END");
         MDC.remove(".");
     }
 
