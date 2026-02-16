@@ -65,7 +65,6 @@ public class LibraryPlaylistController implements Initializable {
 
     public void redrawPlaylist() {
         List<PlaylistItem> playlistItems = playlistModel.getPlaylistItems();
-        Map<TrackInfo, Map.Entry<AlbumRecord, ArtistRecord>> tracksInfo = dataAccess.getArtistAlbumForTracks(playlistItems);
         playlistItemControllers.clear();
 
         runLater(() -> {
@@ -76,19 +75,11 @@ public class LibraryPlaylistController implements Initializable {
                 return;
             }
 
-            for (Map.Entry<TrackInfo, Map.Entry<AlbumRecord, ArtistRecord>> entry : tracksInfo.entrySet()) {
-                TrackInfo trackInfo = entry.getKey();
-                PlaylistItem playlistItem = new PlaylistItem(
-                        trackInfo.getTrackRecord(),
-                        trackInfo.getTrackArtist(),
-                        trackInfo.getTrackAlbum()
-                );
-                Map.Entry<AlbumRecord, ArtistRecord> albumArtist = entry.getValue();
-                ArtistRecord artistRecord = albumArtist.getValue();
+            for (PlaylistItem playlistItem : playlistItems) {
                 LoadedFxml<PlaylistItemController> loadedFxml = fxmlLoader.load(
                         FxmlView.PLAYLIST_ITEM,
                         new PlaylistItemResourceBundle(
-                                artistRecord.getName(),
+                                playlistItem.getArtistName(),
                                 playlistItem,
                                 playlistModel
                         )
