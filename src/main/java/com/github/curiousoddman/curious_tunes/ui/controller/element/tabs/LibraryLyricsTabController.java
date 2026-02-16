@@ -81,9 +81,7 @@ public class LibraryLyricsTabController implements Initializable {
                     editButton.setSelected(true);
                     lyricsTextArea.setText(lyrics);
                 }),
-                () -> {
-                    log.warn("Unable to find lyrics...");
-                }
+                () -> log.warn("Unable to find lyrics...")
         );
     }
 }

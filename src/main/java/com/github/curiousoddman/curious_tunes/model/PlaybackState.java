@@ -5,5 +5,5 @@ public enum PlaybackState {
     LAUNCHING,
     PLAYING,
     PAUSED,
-    ENDED;
+    ENDED
 }

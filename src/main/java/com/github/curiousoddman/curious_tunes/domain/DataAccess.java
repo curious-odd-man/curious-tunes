@@ -177,10 +177,6 @@ public class DataAccess {
                 .execute();
     }
 
-    public void insertIntoHistory(TrackRecord trackRecord) {
-
-    }
-
     public List<PlaybackHistoryRecord> getAllHistoryRecords() {
         return dsl
                 .selectFrom(PLAYBACK_HISTORY)

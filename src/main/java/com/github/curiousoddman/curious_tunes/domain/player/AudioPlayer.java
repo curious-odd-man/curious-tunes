@@ -35,9 +35,9 @@ public class AudioPlayer {
     private DoubleProperty volumeProperty;
     private TrackPlaybackProgressListener playbackProgressListener;
     @Getter
-    private SimpleObjectProperty<PlaybackState> playbackStatusProperty;
+    private final SimpleObjectProperty<PlaybackState> playbackStatusProperty;
     @Getter
-    private SimpleObjectProperty<PlaylistItem> playlistItemProperty;
+    private final SimpleObjectProperty<PlaylistItem> playlistItemProperty;
 
     public AudioPlayer(ApplicationEventPublisher eventPublisher,
                        PlaylistModel playlistModel,
@@ -121,9 +121,7 @@ public class AudioPlayer {
             eventPublisher.publishEvent(new PlayPauseEvent(this));
         });
         currentPlayer.setVolume(volumeProperty.getValue() / 100);
-        volumeProperty.addListener(ov -> {
-            currentPlayer.setVolume(volumeProperty.getValue() / 100);
-        });
+        volumeProperty.addListener(ov -> currentPlayer.setVolume(volumeProperty.getValue() / 100));
         currentPlayer.currentTimeProperty().addListener(ov ->
                 playbackProgressListener.onProgressUpdated(
                         currentPlayer.getCurrentTime(),
