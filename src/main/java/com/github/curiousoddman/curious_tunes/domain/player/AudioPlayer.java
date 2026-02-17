@@ -102,6 +102,11 @@ public class AudioPlayer {
             nextPlaylistItem = null;
         }
 
+        if (playlistItemProperty.get() == null) {
+            log.info("No more songs to play in playlist");
+            return;
+        }
+
         mediaPlayerListeningTracker.attachToPlayer(currentPlayer, playlistItemProperty.get().getTrackRecord());
         playbackStatusProperty.set(PlaybackState.LAUNCHING);
         Optional<PlaylistItem> nextForPlayback = playlistModel.getNextForPlayback();
