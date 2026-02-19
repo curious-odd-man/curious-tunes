@@ -54,11 +54,12 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.function.Function;
 
 import static com.github.curiousoddman.curious_tunes.domain.tags.FilesScanningService.LIBRARY_SCAN;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 import static javafx.application.Platform.runLater;
 
 @Lazy
@@ -157,7 +158,7 @@ public class LibraryController implements Initializable {
                         case PLAYING -> buttonPlayPause.setText("⏸");
                         case STOPPED, PAUSED, ENDED -> buttonPlayPause.setText("▶");
                     }
-        });
+                });
         audioPlayer.linkWithUi(
                 volumeControl.valueProperty(),
                 (currentDuration, totalDuration) -> {
@@ -183,13 +184,68 @@ public class LibraryController implements Initializable {
         artistAlbumsView.getChildren().remove(1, artistAlbumsView.getChildren().size());
         List<AlbumRecord> albums = dataAccess.getArtistAlbums(artistId);
         TrackSelectionModel trackSelectionModel = new TrackSelectionModel();
+        List<YearAndLoadedFxml> loadedFxmlsByYear = new ArrayList<>();
         for (AlbumRecord album : albums) {
-            LoadedFxml<LibraryArtistAlbumController> loadedFxml = fxmlLoader.load(
-                    FxmlView.LIBRARY_ARTIST_ALBUM,
-                    new ArtistAlbumBundle(artistName, new AlbumInfo(artistRecord, album), trackSelectionModel)
-            );
-            artistAlbumsView.getChildren().add(loadedFxml.parent());
+            List<TrackRecord> albumTracks = dataAccess.getAlbumTracks(album.getId());
+            Integer yearFromTracks = getYearFromTracks(albumTracks);
+            log.debug("For album {} year {}", album.getName(), yearFromTracks);
+            loadedFxmlsByYear.add(
+                    new YearAndLoadedFxml(
+                            yearFromTracks,
+                            fxmlLoader.load(
+                                    FxmlView.LIBRARY_ARTIST_ALBUM,
+                                    new ArtistAlbumBundle(artistName,
+                                            new AlbumInfo(
+                                                    artistRecord,
+                                                    album,
+                                                    yearFromTracks
+                                            ),
+                                            trackSelectionModel,
+                                            albumTracks
+                                    )
+                            )));
         }
+        List<Parent> rootElements = loadedFxmlsByYear
+                .stream()
+                .sorted(Comparator.nullsLast(Comparator.comparing(YearAndLoadedFxml::year)))
+                .map(YearAndLoadedFxml::loadedFxml)
+                .map(LoadedFxml::parent)
+                .toList();
+        artistAlbumsView.getChildren().addAll(rootElements);
+    }
+
+    record YearAndLoadedFxml(Integer year, LoadedFxml<LibraryArtistAlbumController> loadedFxml) {
+
+    }
+
+    private Integer getYearFromTracks(List<TrackRecord> albumTracks) {
+        Map<Optional<Integer>, Long> countPerYear = albumTracks
+                .stream()
+                .map(TrackRecord::getReleaseDate)
+                .map(text -> {
+                    try {
+                        return Optional.ofNullable(text).map(Integer::valueOf);
+                    } catch (Exception e) {
+                        log.warn("Album year cannot be extracted");
+                        return Optional.<Integer>empty();
+                    }
+                })
+                .filter(Optional::isPresent)
+                .collect(groupingBy(Function.identity(), counting()));
+
+        if (countPerYear.size() > 1) {
+            log.warn("Different release dats found in album {}", countPerYear);
+        }
+
+        Integer year = null;
+        long count = 0;
+        for (Map.Entry<Optional<Integer>, Long> entry : countPerYear.entrySet()) {
+            if (count < entry.getValue()) {
+                count = entry.getValue();
+                year = entry.getKey().orElse(null);
+            }
+        }
+        return year;
     }
 
     @EventListener

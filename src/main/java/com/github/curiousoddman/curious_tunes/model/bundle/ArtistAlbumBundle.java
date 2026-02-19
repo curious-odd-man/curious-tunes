@@ -1,10 +1,12 @@
 package com.github.curiousoddman.curious_tunes.model.bundle;
 
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.model.TrackSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.ListResourceBundle;
 
 @Getter
@@ -13,13 +15,15 @@ public class ArtistAlbumBundle extends ListResourceBundle {
     private final String artist;
     private final AlbumInfo albumInfo;
     private final TrackSelectionModel trackSelectionModel;
+    private final List<TrackRecord> albumTracks;
 
     @Override
     protected Object[][] getContents() {
         return new Object[][]{
                 {"artist", artist},
                 {"albumInfo", albumInfo},
-                {"trackRecordSelectionModel", trackSelectionModel}
+                {"trackRecordSelectionModel", trackSelectionModel},
+                {"albumsTracks", albumTracks}
         };
     }
 }

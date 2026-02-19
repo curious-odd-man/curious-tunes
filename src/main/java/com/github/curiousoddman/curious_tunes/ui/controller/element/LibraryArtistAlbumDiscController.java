@@ -43,7 +43,7 @@ public class LibraryArtistAlbumDiscController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         diskNumberLabel.getStyleClass().add(DISC_NAME);
         if (resources instanceof ArtistAlbumDiscBundle albumDiscBundle) {
-            log.info("Album {} disk {}", albumDiscBundle.getAlbumInfo().getName(), albumDiscBundle.getDiscNumber());
+            log.debug("Album {} disk {}", albumDiscBundle.getAlbumInfo().getName(), albumDiscBundle.getDiscNumber());
             if (albumDiscBundle.getDiscNumber() != null) {
                 diskNumberLabel.setText("💿 " + albumDiscBundle.getDiscNumber());
             } else {

@@ -41,7 +41,6 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class LibraryArtistAlbumController implements Initializable {
-    private final DataAccess dataAccess;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final FxmlLoader fxmlLoader;
     public ImageView albumImage;
@@ -61,9 +60,10 @@ public class LibraryArtistAlbumController implements Initializable {
             albumInfo = albumBundle.getAlbumInfo();
             ImageUtils.setImageIfPresent(albumInfo, albumImage);
 
+            Integer albumYear = albumBundle.getAlbumInfo().getAlbumYear();
             albumTitle.setText(albumInfo.getName());
-            albumDetails.setText("empty details..."); // FIXME
-            List<TrackRecord> albumsTracks = dataAccess.getAlbumTracks(albumInfo.getId());
+            albumDetails.setText(albumYear == null ? "🎵" : String.valueOf(albumYear));
+            List<TrackRecord> albumsTracks = albumBundle.getAlbumTracks();
 
             Map<Optional<Integer>, List<TrackRecord>> groupedByDiscNumber = albumsTracks
                     .stream()
@@ -77,7 +77,7 @@ public class LibraryArtistAlbumController implements Initializable {
                     .toList();
 
             boolean showDiskNumber = groupedByDiscNumber.size() != 1;
-            log.info("{} For album {} got disc numbers {} ", showDiskNumber, albumInfo.getName(), groupedByDiscNumber.keySet());
+            log.debug("{} For album {} got disc numbers {} ", showDiskNumber, albumInfo.getName(), groupedByDiscNumber.keySet());
 
             for (Integer diskNumber : sortedDiskNumbers) {
                 LoadedFxml<LibraryArtistAlbumDiscController> loaded = fxmlLoader.load(

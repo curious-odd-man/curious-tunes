@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 public class AlbumInfo {
     protected final ArtistRecord artistRecord;
     protected final AlbumRecord albumRecord;
+    protected final Integer albumYear;
 
     public TrackInfo toTrackInfo(TrackRecord trackRecord) {
         return new TrackInfo(
