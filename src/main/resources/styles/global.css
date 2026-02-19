@@ -27,3 +27,7 @@
     -fx-border-width: 1px 0 1px 0;
     -fx-border-color: rgb(202, 202, 202);
 }
+
+.disc-name {
+    -fx-background-color: rgb(165, 165, 165);
+}

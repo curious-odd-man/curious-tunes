@@ -1,20 +1,19 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.element;
 
-import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
-import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
-import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumTrackBundle;
+import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumDiscBundle;
 import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import javafx.animation.FadeTransition;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -30,11 +29,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
-import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.BORDERED_ITEM;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.groupingBy;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Lazy
@@ -49,17 +47,16 @@ public class LibraryArtistAlbumController implements Initializable {
     public ImageView albumImage;
     public Label albumTitle;
     public Label albumDetails;
-    public VBox tracksLeftColumnVbox;
-    public VBox tracksRightColumnVbox;
+    public VBox albumDiscsVbox;
     public BorderPane pane;
     public ImageView playImageButton;
 
+    private final List<LibraryArtistAlbumDiscController> discControllers = new ArrayList<>();
     private AlbumInfo albumInfo;
 
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
-        pane.getStyleClass().add(BORDERED_ITEM);
         if (resources instanceof ArtistAlbumBundle albumBundle) {
             albumInfo = albumBundle.getAlbumInfo();
             ImageUtils.setImageIfPresent(albumInfo, albumImage);
@@ -67,27 +64,33 @@ public class LibraryArtistAlbumController implements Initializable {
             albumTitle.setText(albumInfo.getName());
             albumDetails.setText("empty details..."); // FIXME
             List<TrackRecord> albumsTracks = dataAccess.getAlbumTracks(albumInfo.getId());
-            int tracksPerColumn = albumsTracks.size() <= 10
-                    ? albumsTracks.size()
-                    : (albumsTracks.size() / 2);
 
-            Iterator<TrackRecord> iterator = albumsTracks.iterator();
-            int row = 0;
-            VBox col = tracksLeftColumnVbox;
-            while (iterator.hasNext()) {
-                TrackRecord trackRecord = iterator.next();
-                LoadedFxml<LibraryArtistAlbumTrackController> loadedFxml = fxmlLoader.load(
-                        FxmlView.LIBRARY_ALBUM_TRACK,
-                        new ArtistAlbumTrackBundle(albumInfo.toTrackInfo(trackRecord), albumBundle.getTrackSelectionModel())
+            Map<Optional<Integer>, List<TrackRecord>> groupedByDiscNumber = albumsTracks
+                    .stream()
+                    .collect(groupingBy(trackRecord -> ofNullable(trackRecord.getDiskNumber())));
+
+            List<Integer> sortedDiskNumbers = groupedByDiscNumber
+                    .keySet()
+                    .stream()
+                    .map(o -> o.orElse(null))
+                    .sorted(Comparator.nullsLast(Comparator.naturalOrder()))
+                    .toList();
+
+            boolean showDiskNumber = groupedByDiscNumber.size() != 1;
+            log.info("{} For album {} got disc numbers {} ", showDiskNumber, albumInfo.getName(), groupedByDiscNumber.keySet());
+
+            for (Integer diskNumber : sortedDiskNumbers) {
+                LoadedFxml<LibraryArtistAlbumDiscController> loaded = fxmlLoader.load(
+                        FxmlView.LIBRARY_ARTIST_ALBUM_DISC,
+                        new ArtistAlbumDiscBundle(
+                                showDiskNumber ? diskNumber : null,
+                                groupedByDiscNumber.get(ofNullable(diskNumber)),
+                                albumBundle.getTrackSelectionModel(),
+                                albumInfo
+                        )
                 );
-                Parent parent = loadedFxml.parent();
-                col.getChildren().add(parent);
-                if (row + 1 == tracksPerColumn) {
-                    col = tracksRightColumnVbox;
-                    row = 0;
-                } else {
-                    row++;
-                }
+                discControllers.add(loaded.controller());
+                albumDiscsVbox.getChildren().add(loaded.parent());
             }
         }
     }

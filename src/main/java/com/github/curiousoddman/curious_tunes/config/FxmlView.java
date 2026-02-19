@@ -15,6 +15,7 @@ public class FxmlView<T> {
     public static final FxmlView<LibraryController> LIBRARY = new FxmlView<>(".\\fxml\\library.fxml", LibraryController.class);
     public static final FxmlView<LibraryArtistController> LIBRARY_ARTIST_ITEM = new FxmlView<>(".\\fxml\\library-artist.fxml", LibraryArtistController.class);
     public static final FxmlView<LibraryArtistAlbumController> LIBRARY_ARTIST_ALBUM = new FxmlView<>(".\\fxml\\library-artist-album.fxml", LibraryArtistAlbumController.class);
+    public static final FxmlView<LibraryArtistAlbumDiscController> LIBRARY_ARTIST_ALBUM_DISC = new FxmlView<>(".\\fxml\\library-artist-album-disc.fxml", LibraryArtistAlbumDiscController.class);
     public static final FxmlView<RescanLibraryController> RESCAN_MODAL = new FxmlView<>(".\\fxml\\rescan-modal.fxml", RescanLibraryController.class);
     public static final FxmlView<LibraryPlaylistController> LIBRARY_PLAYLIST = new FxmlView<>(".\\fxml\\library-playlist.fxml", LibraryPlaylistController.class);
     public static final FxmlView<PlaylistItemController> PLAYLIST_ITEM = new FxmlView<>(".\\fxml\\playlist-item.fxml", PlaylistItemController.class);
