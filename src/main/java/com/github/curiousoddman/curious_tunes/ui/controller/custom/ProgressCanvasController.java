@@ -2,13 +2,11 @@ package com.github.curiousoddman.curious_tunes.ui.controller.custom;
 
 import com.github.curiousoddman.curious_tunes.util.async.WaveformWriter;
 import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +21,9 @@ import java.util.Arrays;
 @Component
 @RequiredArgsConstructor
 public class ProgressCanvasController implements WaveformDataListener {
-    private static final int NUM_BARS = 1000;
+    private static final int NUM_BARS = 2000;
     private static final double BAR_GAP = 0.0;
-    private static final int AUDIO_THRESHOLD = -80;
+    private static final int AUDIO_THRESHOLD_DB = -80;
 
     private static final Color BG_COLOR = Color.web("#3a4149");
     private static final Color PLAYED_TOP = Color.web("#ffa500");
@@ -39,9 +37,7 @@ public class ProgressCanvasController implements WaveformDataListener {
     private final double[] waveform = new double[NUM_BARS];
 
     private Canvas canvas;
-    private StackPane parentPane;
     private GraphicsContext graphicsContext;
-
     private WritableImage playedImage;
     private WritableImage unplayedImage;
     private Duration currentDuration;
@@ -50,7 +46,6 @@ public class ProgressCanvasController implements WaveformDataListener {
 
     public void init(StackPane parentPane, Canvas canvas) {
         this.canvas = canvas;
-        this.parentPane = parentPane;
 
         parentPane.widthProperty().addListener(w -> {
             canvas.setWidth(parentPane.getWidth());
@@ -62,25 +57,18 @@ public class ProgressCanvasController implements WaveformDataListener {
         setProgressZero();
     }
 
-    private void clearWaveform(GraphicsContext gc) {
-        double width = canvas.getWidth();
-        double height = canvas.getHeight();
-        gc.setFill(BG_COLOR);
-        gc.fillRect(0, 0, width, height);
-    }
-
     @SneakyThrows
     public void startProgress() {
-        if (timer != null) {
-            timer.stop();
+        if (timer == null) {
+            timer = new AnimationTimer() {
+                @Override
+                public void handle(long now) {
+                    render();
+                }
+            };
+            timer.start();
         }
-        timer = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                render();
-            }
-        };
-        timer.start();
+
         setProgressZero();
         clearWaveform(graphicsContext);
         waveformWriter.stop();
@@ -103,29 +91,32 @@ public class ProgressCanvasController implements WaveformDataListener {
                                    double duration,
                                    float[] magnitudes,
                                    float[] phases) {
-        float[] magClone = magnitudes.clone();
-        double prgrs = timestamp / totalDuration.toSeconds();
-        int target = Math.min(NUM_BARS - 1, (int) (prgrs * NUM_BARS));
+        double progress = timestamp / totalDuration.toSeconds();
+        int barIndex = Math.min(NUM_BARS - 1, (int) (progress * NUM_BARS));
 
-        float db = 0;
-        for (float mag : magClone) {
-            float baselinedMag = mag - AUDIO_THRESHOLD;
-            if (db < baselinedMag) {
-                db = baselinedMag;
-            }
-        }
+        float loudestMagnitude = getLoudestMagnitude(magnitudes);
 
-        double wi = waveform[target];
-        double dbRate = Math.min(1.0, db / -AUDIO_THRESHOLD);
-        if (wi == 0) {
-            wi = Math.max(0.04, dbRate);
+        double barMagnitude = waveform[barIndex];
+        double currentMagnitude = Math.min(1.0, loudestMagnitude / -AUDIO_THRESHOLD_DB);
+        if (barMagnitude == 0) {
+            barMagnitude = Math.max(0, currentMagnitude);
         } else {
-            wi = Math.max(wi, dbRate);
+            barMagnitude = Math.max(barMagnitude, currentMagnitude);
         }
 
-        waveformWriter.append(timestamp, duration, magClone, phases, db, wi);
-        waveform[target] = wi;
-        Platform.runLater(this::buildImages);
+        waveformWriter.append(timestamp, duration, magnitudes, phases, loudestMagnitude, barMagnitude);
+        waveform[barIndex] = barMagnitude;
+        buildImages();
+    }
+
+    @Override
+    public int getAudioSpectrumThreshold() {
+        return AUDIO_THRESHOLD_DB;
+    }
+
+    @Override
+    public double getAudioSpectrumInterval() {
+        return 0.1;
     }
 
     private void buildImages() {
@@ -196,13 +187,21 @@ public class ProgressCanvasController implements WaveformDataListener {
         }
     }
 
-    @Override
-    public int getAudioSpectrumThreshold() {
-        return AUDIO_THRESHOLD;
+    private void clearWaveform(GraphicsContext gc) {
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+        gc.setFill(BG_COLOR);
+        gc.fillRect(0, 0, width, height);
     }
 
-    @Override
-    public double getAudioSpectrumInterval() {
-        return 0.1;
+    private static float getLoudestMagnitude(float[] magnitudes) {
+        float loudestMagnitude = 0;
+        for (float magnitude : magnitudes) {
+            float zeroBasedMagnitude = magnitude - AUDIO_THRESHOLD_DB;
+            if (loudestMagnitude < zeroBasedMagnitude) {
+                loudestMagnitude = zeroBasedMagnitude;
+            }
+        }
+        return loudestMagnitude;
     }
 }
