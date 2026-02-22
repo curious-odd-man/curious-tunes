@@ -42,6 +42,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -111,7 +112,7 @@ public class LibraryController implements Initializable {
     public Tab currentLyricsTab;
     @FXML
     public Tab editTagsTab;
-    public VBox canvasPane;
+    public StackPane canvasPane;
     @FXML
     private AnchorPane playlistAnchorPane;
 

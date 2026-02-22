@@ -7,6 +7,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
@@ -38,7 +39,7 @@ public class ProgressCanvasController implements WaveformDataListener {
     private final double[] waveform = new double[NUM_BARS];
 
     private Canvas canvas;
-    private VBox parentPane;
+    private StackPane parentPane;
     private GraphicsContext graphicsContext;
 
     private WritableImage playedImage;
@@ -47,23 +48,18 @@ public class ProgressCanvasController implements WaveformDataListener {
     private Duration totalDuration;
     private AnimationTimer timer;
 
-    public void init(VBox parentPane, Canvas canvas) {
+    public void init(StackPane parentPane, Canvas canvas) {
         this.canvas = canvas;
         this.parentPane = parentPane;
 
         parentPane.widthProperty().addListener(w -> {
             canvas.setWidth(parentPane.getWidth());
-            log.info("WaveformProgress width: {}", parentPane.getWidth());
         });
 
         graphicsContext = canvas.getGraphicsContext2D();
         clearWaveform(graphicsContext);
         parentPane.setStyle("-fx-background-color: #0d0d0d; -fx-background-radius: 8;");
         setProgressZero();
-
-        double width = canvas.getWidth();
-        double height = canvas.getHeight();
-        log.info("Canvas dims: {}:{}", width, height);
     }
 
     private void clearWaveform(GraphicsContext gc) {
