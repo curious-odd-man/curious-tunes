@@ -158,7 +158,7 @@ public class LibraryController implements Initializable {
                             currentTrackAlbum.setText(playlistItem.getAlbumName());
                             currentTrackArtist.setText(playlistItem.getArtistName());
                             timeSinceStart.setText(String.valueOf(0));
-                            timeRemaining.setText(String.valueOf(playlistItem.getDuration()));
+                            timeRemaining.setText('-' + String.valueOf(playlistItem.getDuration()));
                             libraryLyricsTabController.showLyrics(playlistItem);
                             progressCanvasController.startProgress();
                         }
@@ -170,7 +170,7 @@ public class LibraryController implements Initializable {
                 volumeControl.valueProperty(),
                 (currentDuration, totalDuration) -> {
                     timeSinceStart.setText(TimeUtils.secondsToHumanTime((int) currentDuration.toSeconds()));
-                    timeRemaining.setText(TimeUtils.secondsToHumanTime((int) (totalDuration.toSeconds() - currentDuration.toSeconds())));
+                    timeRemaining.setText('-' + TimeUtils.secondsToHumanTime((int) (totalDuration.toSeconds() - currentDuration.toSeconds())));
                     progressCanvasController.setProgress(currentDuration, totalDuration);
                 },
                 progressCanvasController
