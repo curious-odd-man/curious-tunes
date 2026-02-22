@@ -18,7 +18,7 @@
                   <Image url="@img/noimage.png" />
                </image>
             </ImageView>
-            <ImageView fx:id="playImageButton" fitHeight="200.0" fitWidth="200.0" onMouseClicked="#onPlayImageClicked" opacity="0.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="TOP_CENTER">
+            <ImageView fx:id="playImageButton" fitHeight="200.0" fitWidth="200.0" onMouseClicked="#onPlayImageClicked" opacity="0.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER">
                <image>
                   <Image url="@img/album-play-button.png" />
                </image>

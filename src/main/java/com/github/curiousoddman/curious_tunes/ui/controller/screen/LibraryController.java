@@ -23,6 +23,7 @@ import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
+import com.github.curiousoddman.curious_tunes.ui.controller.custom.ProgressCanvasController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryPlaylistController;
@@ -36,6 +37,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -58,6 +60,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static com.github.curiousoddman.curious_tunes.domain.tags.FilesScanningService.LIBRARY_SCAN;
+import static java.util.Comparator.*;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static javafx.application.Platform.runLater;
@@ -85,7 +88,7 @@ public class LibraryController implements Initializable {
     @FXML
     public Label currentTrackArtist;
     @FXML
-    public ProgressBar currentTrackProgress;
+    public Canvas currentTrackProgress;
     @FXML
     public Label timeSinceStart;
     @FXML
@@ -108,10 +111,12 @@ public class LibraryController implements Initializable {
     public Tab currentLyricsTab;
     @FXML
     public Tab editTagsTab;
+    public VBox canvasPane;
     @FXML
     private AnchorPane playlistAnchorPane;
 
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
+    private final ProgressCanvasController progressCanvasController;
     private final PlaylistModel playlistModel;
     private final AudioPlayer audioPlayer;
 
@@ -135,6 +140,7 @@ public class LibraryController implements Initializable {
         AnchorPane.setLeftAnchor(parent, .0);
         AnchorPane.setRightAnchor(parent, .0);
         onLibraryDataUpdated();
+        progressCanvasController.init(canvasPane, currentTrackProgress);
 
         LoadedFxml<LibraryTagEditTabController> loaded = fxmlLoader.load(FxmlView.LIBRARY_TAB_TAGS_EDIT, null);
         libraryTagEditTabController = loaded.controller();
@@ -150,10 +156,10 @@ public class LibraryController implements Initializable {
                             currentTrackName.setText(playlistItem.getTitle());
                             currentTrackAlbum.setText(playlistItem.getAlbumName());
                             currentTrackArtist.setText(playlistItem.getArtistName());
-                            currentTrackProgress.setProgress(0);
                             timeSinceStart.setText(String.valueOf(0));
                             timeRemaining.setText(String.valueOf(playlistItem.getDuration()));
                             libraryLyricsTabController.showLyrics(playlistItem);
+                            progressCanvasController.startProgress();
                         }
                         case PLAYING -> buttonPlayPause.setText("⏸");
                         case STOPPED, PAUSED, ENDED -> buttonPlayPause.setText("▶");
@@ -164,9 +170,9 @@ public class LibraryController implements Initializable {
                 (currentDuration, totalDuration) -> {
                     timeSinceStart.setText(TimeUtils.secondsToHumanTime((int) currentDuration.toSeconds()));
                     timeRemaining.setText(TimeUtils.secondsToHumanTime((int) (totalDuration.toSeconds() - currentDuration.toSeconds())));
-                    double progress = currentDuration.toSeconds() / totalDuration.toSeconds();
-                    currentTrackProgress.setProgress(progress);
-                }
+                    progressCanvasController.setProgress(currentDuration, totalDuration);
+                },
+                progressCanvasController
         );
 
         LoadedFxml<LibraryLyricsTabController> lyricsTab = fxmlLoader.load(FxmlView.LIBRARY_TAB_LYRICS, null);
@@ -207,7 +213,7 @@ public class LibraryController implements Initializable {
         }
         List<Parent> rootElements = loadedFxmlsByYear
                 .stream()
-                .sorted(Comparator.nullsLast(Comparator.comparing(YearAndLoadedFxml::year)))
+                .sorted(comparing(YearAndLoadedFxml::year, nullsLast(naturalOrder())))
                 .map(YearAndLoadedFxml::loadedFxml)
                 .map(LoadedFxml::parent)
                 .toList();
@@ -252,9 +258,12 @@ public class LibraryController implements Initializable {
     public void onBackgroundProcessEvent(BackgroundProcessEvent event) {
         runLater(() -> {
             if (event.getMaxProgress() > 0) {
-                currentTrackProgress.setProgress((double) event.getProgress() / event.getMaxProgress());
+                progressCanvasController.setProgress(
+                        Duration.seconds(event.getProgress()),
+                        Duration.seconds(event.getMaxProgress())
+                );
             } else {
-                currentTrackProgress.setProgress(0);
+                progressCanvasController.setProgressZero();
             }
 
             currentTrackName.setText(event.getProcessName());

@@ -6,6 +6,7 @@ import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
+import com.github.curiousoddman.curious_tunes.ui.controller.custom.WaveformDataListener;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.media.Media;
@@ -38,6 +39,7 @@ public class AudioPlayer {
     private final SimpleObjectProperty<PlaybackState> playbackStatusProperty;
     @Getter
     private final SimpleObjectProperty<PlaylistItem> playlistItemProperty;
+    private WaveformDataListener waveformDataListener;
 
     public AudioPlayer(ApplicationEventPublisher eventPublisher,
                        PlaylistModel playlistModel,
@@ -58,10 +60,11 @@ public class AudioPlayer {
     }
 
     public void linkWithUi(DoubleProperty volumeProperty,
-                           TrackPlaybackProgressListener playbackProgressListener) {
+                           TrackPlaybackProgressListener playbackProgressListener,
+                           WaveformDataListener waveformDataListener) {
         this.volumeProperty = volumeProperty;
         this.playbackProgressListener = playbackProgressListener;
-
+        this.waveformDataListener = waveformDataListener;
     }
 
     @SneakyThrows
@@ -132,6 +135,9 @@ public class AudioPlayer {
                         currentPlayer.getCurrentTime(),
                         Duration.seconds(playlistItemProperty.get().getDuration())
                         ));
+        currentPlayer.setAudioSpectrumThreshold(waveformDataListener.getAudioSpectrumThreshold());
+        currentPlayer.setAudioSpectrumInterval(waveformDataListener.getAudioSpectrumInterval());
+        currentPlayer.setAudioSpectrumListener(waveformDataListener);
         currentPlayer.play();
         playbackStatusProperty.set(PlaybackState.PLAYING);
     }
