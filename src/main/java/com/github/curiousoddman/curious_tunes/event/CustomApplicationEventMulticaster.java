@@ -8,21 +8,27 @@ import org.springframework.context.event.ApplicationListenerMethodAdapter;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.core.ResolvableType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.support.ServletRequestHandledEvent;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 
 @Slf4j
 @Component("applicationEventMulticaster")
 public class CustomApplicationEventMulticaster extends SimpleApplicationEventMulticaster {
+    private static final Set<Class<?>> EXCLUSIONS = Set.of(
+            ServletRequestHandledEvent.class
+    );
+
     // Only difference is that we log listeners invocations
     @Override
     public void multicastEvent(ApplicationEvent event, @Nullable ResolvableType eventType) {
         ResolvableType type = (eventType != null ? eventType : ResolvableType.forInstance(event));
         Executor executor = getTaskExecutor();
         Collection<ApplicationListener<?>> applicationListeners = getApplicationListeners(event, type);
-        if (applicationListeners.isEmpty()) {
+        if (applicationListeners.isEmpty() && !EXCLUSIONS.contains(event.getClass())) {
             log.error("No listeners defined for the event: {}", event.getClass().getSimpleName());
         } else {
             log.info("Handling event: {} ", event.getClass().getSimpleName());

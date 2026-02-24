@@ -21,7 +21,12 @@ public class AddToPlaylistEvent extends ApplicationEvent {
     private final Shuffle shuffle;
     private final PlaylistAddMode playlistAddMode;
 
-    public AddToPlaylistEvent(Object source, List<TrackQueueItem> tracks, List<AlbumRecord> albums, ArtistRecord artistRecord, Shuffle shuffle, PlaylistAddMode playlistAddMode) {
+    public AddToPlaylistEvent(Object source,
+                              List<TrackQueueItem> tracks,
+                              List<AlbumRecord> albums,
+                              ArtistRecord artistRecord,
+                              Shuffle shuffle,
+                              PlaylistAddMode playlistAddMode) {
         super(source);
         this.source = source;
         this.tracks = tracks;
@@ -31,6 +36,8 @@ public class AddToPlaylistEvent extends ApplicationEvent {
         this.playlistAddMode = playlistAddMode;
     }
 
-    public record TrackQueueItem(TrackRecord trackRecord, ArtistRecord trackArtist, AlbumRecord trackAlbum) {
+    public record TrackQueueItem(TrackRecord trackRecord,
+                                 ArtistRecord trackArtist,
+                                 AlbumRecord trackAlbum) {
     }
 }

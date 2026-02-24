@@ -63,8 +63,7 @@ public class LibraryPlaylistController implements Initializable {
     public void redrawPlaylist() {
         List<PlaylistItem> playlistItems = playlistModel.getPlaylistItems();
         playlistItemControllers.clear();
-
-        runLater(() -> {
+        runInUiThread(() -> {
             ObservableList<Node> playlistNodes = playlistVbox.getChildren();
             playlistNodes.clear();
 
