@@ -97,7 +97,7 @@ public class AudioPlayer {
             Media media = mediaProvider.getMedia(playlistItemProperty.get().getTrackRecord());
             currentPlayer = new MediaPlayer(media);
         } else {
-            log.info("Next song in playlist...");
+            log.info("Not first song in playlist...");
             currentPlayer.dispose();
             currentPlayer = nextPlayer;
             playlistItemProperty.set(nextPlaylistItem);
@@ -134,7 +134,7 @@ public class AudioPlayer {
                 playbackProgressListener.onProgressUpdated(
                         currentPlayer.getCurrentTime(),
                         Duration.seconds(playlistItemProperty.get().getDuration())
-                        ));
+                ));
         currentPlayer.setAudioSpectrumThreshold(waveformDataListener.getAudioSpectrumThreshold());
         currentPlayer.setAudioSpectrumInterval(waveformDataListener.getAudioSpectrumInterval());
         currentPlayer.setAudioSpectrumListener(waveformDataListener);
@@ -150,13 +150,20 @@ public class AudioPlayer {
         return currentPlayer == null;
     }
 
+    @EventListener
+    public void onApplicationShutdown(UserShutdownApplication event) {
+        stop();
+    }
+
     public void stop() {
         if (currentPlayer != null) {
             currentPlayer.stop();
             currentPlayer.dispose();
+            currentPlayer = null;
         }
         if (nextPlayer != null) {
             nextPlayer.dispose();
+            nextPlayer = null;
         }
         playbackStatusProperty.set(PlaybackState.STOPPED);
     }

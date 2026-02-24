@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -24,16 +24,17 @@ public class HttpRestController {
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
     )
     @Cacheable(value = "media", key = "#name")
-    public @ResponseBody byte[] get(@RequestParam("name") String name) throws IOException {
-        log.info("Requested {}", name);
-        Path path = Path.of(name).toAbsolutePath().normalize();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        AlacDecoder
-                .decode(WavFormat.RAW_PCM)
-                .fromFile(path)
-                .toStream(baos)
-                .execute();
-
-        return baos.toByteArray();
+    public @ResponseBody StreamingResponseBody get(@RequestParam("name") String name) throws IOException {
+        try {
+            log.info("Requested {}", name);
+            Path path = Path.of(name).toAbsolutePath().normalize();
+            return os ->  AlacDecoder
+                    .decode(WavFormat.RAW_PCM)
+                    .fromFile(path)
+                    .toStream(os)
+                    .execute();
+        } finally {
+            log.info("Request processing done");
+        }
     }
 }
