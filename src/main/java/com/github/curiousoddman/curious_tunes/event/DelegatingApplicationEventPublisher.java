@@ -28,7 +28,7 @@ public class DelegatingApplicationEventPublisher implements ApplicationEventPubl
     }
 
     private void logEvent(Object event) {
-        log.info("Published: {} by {}",
+        log.info("📨 Published: {} by {}",
                 event.getClass().getSimpleName(),
                 event instanceof ApplicationEvent ae
                         ? ae.getSource().getClass().getSimpleName()

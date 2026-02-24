@@ -32,9 +32,9 @@ public class CustomApplicationEventMulticaster extends SimpleApplicationEventMul
             if (EXCLUSIONS.contains(event.getClass())) {
                 return;
             }
-            log.error("No listeners defined for the event: {}", event.getClass().getSimpleName());
+            log.error("🔕 No listeners defined for the event: {}", event.getClass().getSimpleName());
         } else {
-            log.info("Handling event: {} ", event.getClass().getSimpleName());
+            log.info("🖖 Handling event: {} ", event.getClass().getSimpleName());
         }
         for (ApplicationListener<?> listener : applicationListeners) {
             if (listener instanceof ApplicationListenerMethodAdapter adapter) {
