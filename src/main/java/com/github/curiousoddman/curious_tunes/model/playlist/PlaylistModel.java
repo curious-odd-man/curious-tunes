@@ -38,7 +38,7 @@ public class PlaylistModel {
             List<PlaylistItem> list = addToPlaylistEvent
                     .getTracks()
                     .stream()
-                    .map(tqi -> new PlaylistItem(tqi.trackRecord(), tqi.trackArtist(), tqi.trackAlbum()))
+                    .map(tqi -> new PlaylistItem(tqi.getTrackRecord(), tqi.getTrackArtist(), tqi.getTrackAlbum()))
                     .toList();
             tracksToAdd.addAll(list);
         }
@@ -170,7 +170,7 @@ public class PlaylistModel {
         int nextIndex = currentlyPlayingModel.getSelectedIndex() + 1;
         if (nextIndex < playlistItems.size()) {
             PlaylistItem playlistItem = playlistItems.get(nextIndex);
-            log.info("Next item to play is: {}", playlistItem.getTrackRecord().getTitle());
+            log.info("▶ Next item to play is: {}", playlistItem.getTrackRecord().getTitle());
             return Optional.of(playlistItem);
         }
         return Optional.empty();

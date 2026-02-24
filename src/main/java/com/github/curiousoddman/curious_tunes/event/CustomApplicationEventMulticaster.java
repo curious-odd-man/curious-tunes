@@ -28,7 +28,10 @@ public class CustomApplicationEventMulticaster extends SimpleApplicationEventMul
         ResolvableType type = (eventType != null ? eventType : ResolvableType.forInstance(event));
         Executor executor = getTaskExecutor();
         Collection<ApplicationListener<?>> applicationListeners = getApplicationListeners(event, type);
-        if (applicationListeners.isEmpty() && !EXCLUSIONS.contains(event.getClass())) {
+        if (applicationListeners.isEmpty()) {
+            if (EXCLUSIONS.contains(event.getClass())) {
+                return;
+            }
             log.error("No listeners defined for the event: {}", event.getClass().getSimpleName());
         } else {
             log.info("Handling event: {} ", event.getClass().getSimpleName());
