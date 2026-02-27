@@ -2,6 +2,7 @@ package com.github.curiousoddman.curious_tunes.ui.controller.element;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
@@ -19,6 +20,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -37,6 +39,7 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class PlaylistItemController implements Initializable {
+    private final ApplicationEventPublisher eventPublisher;
     @FXML
     public ImageView image;
     @FXML
@@ -77,10 +80,10 @@ public class PlaylistItemController implements Initializable {
     }
 
     private void onPlaylistSelectionChanged(Object observable, PlaylistItem oldValue, PlaylistItem newValue) {
-        if (Objects.equals(oldValue, playlistItem)) {
-            pane.getStyleClass().remove(SELECTED_ITEM);
-        } else if (Objects.equals(newValue, playlistItem)) {
+        if (Objects.equals(newValue, playlistItem)) {
             pane.getStyleClass().add(SELECTED_ITEM);
+        } else {
+            pane.getStyleClass().remove(SELECTED_ITEM);
         }
     }
 
@@ -90,6 +93,9 @@ public class PlaylistItemController implements Initializable {
             contextMenu.show(pane, mouseEvent.getScreenX(), mouseEvent.getScreenY());
         }
         playlistSelectionModel.select(playlistItem);
+        if (mouseEvent.getButton() == MouseButton.PRIMARY && mouseEvent.getClickCount() > 1) {
+            eventPublisher.publishEvent(new PlaySpecificTrackEvent(this, playlistItem, false));
+        }
     }
 
     public void updateStyle() {

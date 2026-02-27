@@ -1,6 +1,7 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.element;
 
 import com.github.curiousoddman.curious_tunes.event.EditTagsForTrackEvent;
+import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.model.TrackSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumTrackBundle;
@@ -90,5 +91,8 @@ public class LibraryArtistAlbumTrackController implements Initializable {
             contextMenu.show(rootHbox, mouseEvent.getScreenX(), mouseEvent.getScreenY());
         }
         trackSelectionModel.select(trackInfo);
+        if (mouseEvent.getButton() == MouseButton.PRIMARY && mouseEvent.getClickCount() > 1) {
+            applicationEventPublisher.publishEvent(new PlaySpecificTrackEvent(this, trackInfo, true));
+        }
     }
 }

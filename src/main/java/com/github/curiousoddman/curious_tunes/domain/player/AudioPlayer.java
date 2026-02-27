@@ -1,9 +1,15 @@
 package com.github.curiousoddman.curious_tunes.domain.player;
 
 import com.github.curiousoddman.curious_tunes.domain.MediaProvider;
+import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
+import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
+import com.github.curiousoddman.curious_tunes.event.UserShutdownApplication;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
+import com.github.curiousoddman.curious_tunes.model.Shuffle;
+import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.ui.controller.custom.WaveformDataListener;
@@ -19,6 +25,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -65,6 +72,24 @@ public class AudioPlayer {
         this.volumeProperty = volumeProperty;
         this.playbackProgressListener = playbackProgressListener;
         this.waveformDataListener = waveformDataListener;
+    }
+
+    @EventListener
+    public void onPlaySpecificTrack(PlaySpecificTrackEvent event) {
+        stop();
+        TrackInfo trackToPlay = event.getTrackToPlay();
+        boolean addToPlaylistFirst = event.isAddToPlaylistFirst();
+        if (addToPlaylistFirst) {
+            eventPublisher.publishEvent(new AddToPlaylistEvent(
+                    this,
+                    List.of(trackToPlay),
+                    List.of(),
+                    null,
+                    Shuffle.SKIP,
+                    PlaylistAddMode.PUT_AFTER_CURRENT
+            ));
+        }
+        onPlayPause(new PlayPauseEvent(this));
     }
 
     @SneakyThrows

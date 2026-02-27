@@ -327,7 +327,7 @@ public class LibraryController implements Initializable {
     public void onProgressClicked(MouseEvent mouseEvent) {
         double seekTo = (mouseEvent.getX() - currentTrackProgress.getLayoutX()) / currentTrackProgress.getWidth();
 
-        TrackRecord currentTrack = playlistModel.getCurrentlyPlaying().get().getTrackRecord();
+        TrackRecord currentTrack = playlistModel.getCurrentlyPlayingItem().get().getTrackRecord();
         Long duration = currentTrack.getDuration();
         log.info("Seek to {} : {}", seekTo, duration * seekTo);
         audioPlayer.seek(Duration.seconds(duration * seekTo));

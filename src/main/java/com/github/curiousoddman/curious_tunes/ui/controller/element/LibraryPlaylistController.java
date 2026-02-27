@@ -1,14 +1,13 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.element;
 
-import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
+import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
-import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,7 +25,7 @@ import org.springframework.stereotype.Component;
 import java.net.URL;
 import java.util.*;
 
-import static javafx.application.Platform.runLater;
+import static com.github.curiousoddman.curious_tunes.util.UiUtils.runInUiThread;
 
 @Lazy
 @Slf4j
@@ -37,7 +36,6 @@ public class LibraryPlaylistController implements Initializable {
 
     private final PlaylistModel playlistModel;
     private final FxmlLoader fxmlLoader;
-    private final DataAccess dataAccess;
 
     @FXML
     private VBox playlistVbox;
@@ -49,18 +47,22 @@ public class LibraryPlaylistController implements Initializable {
     @EventListener
     public void onAddToPlaylist(AddToPlaylistEvent addToPlaylistEvent) {
         playlistModel.addItems(addToPlaylistEvent);
-        redrawPlaylist();
+        updatePlaylist();
     }
 
     @EventListener
     public void onPlayerStatusEvent(PlayerStatusEvent playerStatusEvent) {
-        playlistModel.updateStatuses(playerStatusEvent);
+        playlistModel.updateStatus(playerStatusEvent);
         PlaylistItem playlistItem = playerStatusEvent.getPlaylistItem();
         PlaylistItemController playlistItemController = playlistItemControllers.get(playlistItem);
-        playlistItemController.updateStyle();
+        if (playlistItemController == null) {
+            log.error("NPE: null for {}", playlistItem.getTitle());
+        } else {
+            playlistItemController.updateStyle();
+        }
     }
 
-    public void redrawPlaylist() {
+    public void updatePlaylist() {
         List<PlaylistItem> playlistItems = playlistModel.getPlaylistItems();
         playlistItemControllers.clear();
         runInUiThread(() -> {
@@ -121,12 +123,12 @@ public class LibraryPlaylistController implements Initializable {
     @FXML
     public void onShuffleClicked(ActionEvent actionEvent) {
         playlistModel.shuffle();
-        redrawPlaylist();       // TODO: Very inefficient
+        updatePlaylist();       // TODO: Very inefficient
     }
 
     @FXML
     public void onClearPlaylistClicked(ActionEvent actionEvent) {
         playlistModel.clear();
-        redrawPlaylist();
+        updatePlaylist();
     }
 }
