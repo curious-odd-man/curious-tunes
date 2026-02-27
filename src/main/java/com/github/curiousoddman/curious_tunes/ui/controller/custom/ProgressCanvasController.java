@@ -15,12 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.function.LongConsumer;
 
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProgressCanvasController implements WaveformDataListener {
+public class ProgressCanvasController implements TrackProgressController {
     private static final int NUM_BARS = 2000;
     private static final double BAR_GAP = 0.0;
     private static final int AUDIO_THRESHOLD_DB = -80;
@@ -32,6 +33,7 @@ public class ProgressCanvasController implements WaveformDataListener {
     private static final Color UNPLAYED_BOT = Color.web("#6d8898");
 
     private final WaveformWriter waveformWriter;
+    private final MusicCurveAnimation musicCurveAnimation;
 
     // ── Waveform data ────────────────────────────────────────────────────────
     private final double[] waveform = new double[NUM_BARS];
@@ -43,6 +45,8 @@ public class ProgressCanvasController implements WaveformDataListener {
     private Duration currentDuration;
     private Duration totalDuration;
     private AnimationTimer timer;
+
+    private LongConsumer animation = now -> render();
 
     public void init(StackPane parentPane, Canvas canvas) {
         this.canvas = canvas;
@@ -63,7 +67,7 @@ public class ProgressCanvasController implements WaveformDataListener {
             timer = new AnimationTimer() {
                 @Override
                 public void handle(long now) {
-                    render();
+                    animation.accept(now);
                 }
             };
             timer.start();
@@ -117,6 +121,22 @@ public class ProgressCanvasController implements WaveformDataListener {
     @Override
     public double getAudioSpectrumInterval() {
         return 0.1;
+    }
+
+    @Override
+    public void startLoadingAnimation() {
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+        GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
+        animation = now -> {
+            musicCurveAnimation.update(now, width, height);
+            musicCurveAnimation.draw(graphicsContext2D, width, height);
+        };
+    }
+
+    @Override
+    public void stopLoadingAnimation() {
+        animation = now -> render();
     }
 
     private void buildImages() {

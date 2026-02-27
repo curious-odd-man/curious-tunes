@@ -12,7 +12,7 @@ import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
-import com.github.curiousoddman.curious_tunes.ui.controller.custom.WaveformDataListener;
+import com.github.curiousoddman.curious_tunes.ui.controller.custom.TrackProgressController;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.media.Media;
@@ -46,7 +46,7 @@ public class AudioPlayer {
     private final SimpleObjectProperty<PlaybackState> playbackStatusProperty;
     @Getter
     private final SimpleObjectProperty<PlaylistItem> playlistItemProperty;
-    private WaveformDataListener waveformDataListener;
+    private TrackProgressController trackProgressController;
 
     public AudioPlayer(ApplicationEventPublisher eventPublisher,
                        PlaylistModel playlistModel,
@@ -68,10 +68,10 @@ public class AudioPlayer {
 
     public void linkWithUi(DoubleProperty volumeProperty,
                            TrackPlaybackProgressListener playbackProgressListener,
-                           WaveformDataListener waveformDataListener) {
+                           TrackProgressController trackProgressController) {
         this.volumeProperty = volumeProperty;
         this.playbackProgressListener = playbackProgressListener;
-        this.waveformDataListener = waveformDataListener;
+        this.trackProgressController = trackProgressController;
     }
 
     @EventListener
@@ -136,6 +136,7 @@ public class AudioPlayer {
         }
 
         mediaPlayerListeningTracker.attachToPlayer(currentPlayer, playlistItemProperty.get().getTrackRecord());
+        trackProgressController.startLoadingAnimation();
         playbackStatusProperty.set(PlaybackState.LAUNCHING);
         Optional<PlaylistItem> nextForPlayback = playlistModel.getNextForPlayback();
 
@@ -160,11 +161,14 @@ public class AudioPlayer {
                         currentPlayer.getCurrentTime(),
                         Duration.seconds(playlistItemProperty.get().getDuration())
                 ));
-        currentPlayer.setAudioSpectrumThreshold(waveformDataListener.getAudioSpectrumThreshold());
-        currentPlayer.setAudioSpectrumInterval(waveformDataListener.getAudioSpectrumInterval());
-        currentPlayer.setAudioSpectrumListener(waveformDataListener);
+        currentPlayer.setAudioSpectrumThreshold(trackProgressController.getAudioSpectrumThreshold());
+        currentPlayer.setAudioSpectrumInterval(trackProgressController.getAudioSpectrumInterval());
+        currentPlayer.setAudioSpectrumListener(trackProgressController);
         currentPlayer.play();
-        playbackStatusProperty.set(PlaybackState.PLAYING);
+        currentPlayer.setOnPlaying(() -> {
+            trackProgressController.stopLoadingAnimation();
+            playbackStatusProperty.set(PlaybackState.PLAYING);
+        });
     }
 
     public void seek(Duration duration) {
