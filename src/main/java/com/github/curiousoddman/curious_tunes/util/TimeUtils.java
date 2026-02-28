@@ -1,8 +1,11 @@
 package com.github.curiousoddman.curious_tunes.util;
 
 public class TimeUtils {
-    public static String secondsToHumanTime(long seconds) {
-        return secondsToHumanTime((int) seconds);
+    public static String secondsToHumanTime(Long seconds) {
+        if (seconds == null) {
+            return "-1";
+        }
+        return secondsToHumanTime(seconds.intValue());
     }
 
     public static String secondsToHumanTime(int seconds) {

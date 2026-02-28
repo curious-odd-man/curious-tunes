@@ -257,7 +257,7 @@ public class LibraryController implements Initializable {
 
     @EventListener
     public void onBackgroundProcessEvent(BackgroundProcessEvent event) {
-        runLater(() -> {
+        runInUiThread(() -> {
             if (event.getMaxProgress() > 0) {
                 progressCanvasController.setProgress(
                         Duration.seconds(event.getProgress()),
