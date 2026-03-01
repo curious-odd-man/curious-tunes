@@ -1,26 +1,21 @@
 package com.github.curiousoddman.curious_tunes.domain;
 
-import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
-import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
-import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PlaybackHistoryRecord;
-import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.*;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import lombok.RequiredArgsConstructor;
+import org.jooq.TableField;
 import org.jooq.impl.DefaultDSLContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.github.curiousoddman.curious_tunes.dbobj.Tables.PLAYBACK_HISTORY;
-import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
+import static com.github.curiousoddman.curious_tunes.dbobj.Tables.*;
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Album.ALBUM;
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Artist.ARTIST;
 
@@ -34,6 +29,8 @@ public class DataAccess {
     }
 
     private final DefaultDSLContext dsl;
+
+    private Map<Integer, List<TrackOverridesHistoryRecord>> trackOverrides;
 
     @Cacheable(Caches.ARTISTS)
     public ArtistRecord getOrInsertArtist(String artist) {
@@ -81,6 +78,10 @@ public class DataAccess {
                 ).fetchOne();
     }
 
+    public TrackRecord getTrack(int trackId) {
+        return dsl.fetchSingle(TRACK, TRACK.ID.eq(trackId));
+    }
+
     public void insertTrack(TrackRecord newTrackRecord) {
         dsl
                 .insertInto(TRACK)
@@ -122,6 +123,22 @@ public class DataAccess {
                 .where(TRACK.FK_ALBUM.eq(albumFk))
                 .stream()
                 .toList();
+    }
+
+    public List<TrackOverridesHistoryRecord> getTrackOverrides(int id) {
+        return initTrackOverrides().getOrDefault(id, List.of());
+    }
+
+    private Map<Integer, List<TrackOverridesHistoryRecord>> initTrackOverrides() {
+        if (trackOverrides == null) {
+            trackOverrides = dsl
+                    .selectFrom(TRACK_OVERRIDES_HISTORY)
+                    .fetchStream()
+                    .collect(Collectors.groupingBy(
+                            TrackOverridesHistoryRecord::getTrackId
+                    ));
+        }
+        return trackOverrides;
     }
 
     public List<TrackInfo> getArtistTracks(ArtistRecord artistRecord) {
@@ -205,5 +222,17 @@ public class DataAccess {
         return dsl.fetch(ARTIST, ARTIST.ID.in(artistFks));
     }
 
+    public void storeTrackOverride(TrackInfo trackInfo, TableField<TrackRecord, ?> field, String text) {
+        TrackOverridesHistoryRecord insertedRow = dsl.insertInto(TRACK_OVERRIDES_HISTORY)
+                .set(TRACK_OVERRIDES_HISTORY.TRACK_ID, trackInfo.getTrackId())
+                .set(TRACK_OVERRIDES_HISTORY.FIELD, field.getName())
+                .set(TRACK_OVERRIDES_HISTORY.OLD_VALUE, text)
+                .set(TRACK_OVERRIDES_HISTORY.MODIFIED_AT, LocalDateTime.now())
+                .returning()
+                .fetchOne();
 
+        initTrackOverrides()
+                .computeIfAbsent(insertedRow.getTrackId(), k -> new ArrayList<>())
+                .add(insertedRow);
+    }
 }

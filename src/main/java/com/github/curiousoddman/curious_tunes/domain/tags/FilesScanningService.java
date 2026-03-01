@@ -22,8 +22,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.github.curiousoddman.curious_tunes.util.FileUtils.audioMd5;
 
 @Slf4j
 @Component
@@ -113,7 +116,8 @@ public class FilesScanningService {
     private void extractMetadataAndUpdateDatabase(Path file) {
         MetadataTags metadata = metadataManager.getMetadata(file);
         ArtistRecord artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
-        AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum(), metadata.getAlbumCover().getData());
+        AlbumCover albumCover = metadata.getAlbumCover();
+        AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum(), albumCover == null ? null : albumCover.getData());
         TrackRecord trackRecord = dataAccess.getTrack(albumRecord.getId(), metadata.getTitle());
 
         if (trackRecord == null) {
@@ -128,6 +132,8 @@ public class FilesScanningService {
                     metadata.getGenre(),
                     metadata.getComposer(),
                     metadata.getFileLocation(),
+                    audioMd5(Path.of(metadata.getFileLocation())),
+                    LocalDateTime.now(),
                     metadata.getDuration(),
                     TrackStatus.ACTIVE.name(),
                     metadata.getLyrics()

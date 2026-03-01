@@ -56,15 +56,14 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 
 import static com.github.curiousoddman.curious_tunes.domain.tags.FilesScanningService.LIBRARY_SCAN;
+import static com.github.curiousoddman.curious_tunes.util.UiUtils.runInUiThread;
 import static java.util.Comparator.*;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
-import static javafx.application.Platform.runLater;
 
 @Lazy
 @Slf4j
@@ -284,11 +283,7 @@ public class LibraryController implements Initializable {
     public void onTagsUiUpdatedEvent(EditTagsForTrackEvent event) {
         tabPane.getSelectionModel().select(editTagsTab);
         TrackInfo trackInfo = event.getTrackInfo();
-        TrackRecord trackRecord = trackInfo.getTrackRecord();
-        libraryTagEditTabController.showTags(
-                metadataManager.getMetadata(Path.of(trackRecord.getFileLocation())),
-                trackInfo
-        );
+        libraryTagEditTabController.showTags(trackInfo);
     }
 
     @SneakyThrows
