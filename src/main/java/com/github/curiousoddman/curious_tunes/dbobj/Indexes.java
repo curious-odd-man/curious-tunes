@@ -9,6 +9,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.Artist;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.TrackOverridesHistory;
 
 import javax.annotation.processing.Generated;
 
@@ -40,6 +41,7 @@ public class Indexes {
     public static final Index ALBUM_NAME_INDEX = Internal.createIndex(DSL.name("ALBUM_NAME_INDEX"), Album.ALBUM, new OrderField[] { Album.ALBUM.NAME }, false);
     public static final Index ARTIST_NAME_INDEX = Internal.createIndex(DSL.name("ARTIST_NAME_INDEX"), Artist.ARTIST, new OrderField[] { Artist.ARTIST.NAME }, false);
     public static final Index FLYWAY_SCHEMA_HISTORY_S_IDX = Internal.createIndex(DSL.name("flyway_schema_history_s_idx"), FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, new OrderField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.SUCCESS }, false);
+    public static final Index IDX_OVERRIDES_TRACK_ID = Internal.createIndex(DSL.name("IDX_OVERRIDES_TRACK_ID"), TrackOverridesHistory.TRACK_OVERRIDES_HISTORY, new OrderField[] { TrackOverridesHistory.TRACK_OVERRIDES_HISTORY.TRACK_ID }, false);
     public static final Index PLAYBACK_HISTORY_TRACK_INDEX = Internal.createIndex(DSL.name("PLAYBACK_HISTORY_TRACK_INDEX"), PlaybackHistory.PLAYBACK_HISTORY, new OrderField[] { PlaybackHistory.PLAYBACK_HISTORY.FK_TRACK }, false);
     public static final Index TRACK_ALBUM_INDEX = Internal.createIndex(DSL.name("TRACK_ALBUM_INDEX"), Track.TRACK, new OrderField[] { Track.TRACK.FK_ALBUM }, false);
     public static final Index TRACK_TITLE_INDEX = Internal.createIndex(DSL.name("TRACK_TITLE_INDEX"), Track.TRACK, new OrderField[] { Track.TRACK.TITLE }, false);

@@ -10,6 +10,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingAction;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.TrackOverridesHistory;
 
 import javax.annotation.processing.Generated;
 
@@ -57,4 +58,9 @@ public class Tables {
      * The table <code>public.TRACK</code>.
      */
     public static final Track TRACK = Track.TRACK;
+
+    /**
+     * The table <code>public.TRACK_OVERRIDES_HISTORY</code>.
+     */
+    public static final TrackOverridesHistory TRACK_OVERRIDES_HISTORY = TrackOverridesHistory.TRACK_OVERRIDES_HISTORY;
 }

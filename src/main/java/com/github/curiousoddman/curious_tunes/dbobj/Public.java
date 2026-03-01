@@ -10,6 +10,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingAction;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.TrackOverridesHistory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -73,6 +74,11 @@ public class Public extends SchemaImpl {
     public final Track TRACK = Track.TRACK;
 
     /**
+     * The table <code>public.TRACK_OVERRIDES_HISTORY</code>.
+     */
+    public final TrackOverridesHistory TRACK_OVERRIDES_HISTORY = TrackOverridesHistory.TRACK_OVERRIDES_HISTORY;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -93,7 +99,8 @@ public class Public extends SchemaImpl {
             FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY,
             PendingAction.PENDING_ACTION,
             PlaybackHistory.PLAYBACK_HISTORY,
-            Track.TRACK
+            Track.TRACK,
+            TrackOverridesHistory.TRACK_OVERRIDES_HISTORY
         );
     }
 }

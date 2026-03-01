@@ -6,6 +6,8 @@ package com.github.curiousoddman.curious_tunes.dbobj.tables.records;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 
+import java.time.LocalDateTime;
+
 import javax.annotation.processing.Generated;
 
 import org.jooq.Record1;
@@ -169,45 +171,73 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
     }
 
     /**
+     * Setter for <code>public.TRACK.FILE_HASH</code>.
+     */
+    public void setFileHash(String value) {
+        set(10, value);
+    }
+
+    /**
+     * Getter for <code>public.TRACK.FILE_HASH</code>.
+     */
+    public String getFileHash() {
+        return (String) get(10);
+    }
+
+    /**
+     * Setter for <code>public.TRACK.SCANNED_AT</code>.
+     */
+    public void setScannedAt(LocalDateTime value) {
+        set(11, value);
+    }
+
+    /**
+     * Getter for <code>public.TRACK.SCANNED_AT</code>.
+     */
+    public LocalDateTime getScannedAt() {
+        return (LocalDateTime) get(11);
+    }
+
+    /**
      * Setter for <code>public.TRACK.DURATION</code>.
      */
     public void setDuration(Long value) {
-        set(10, value);
+        set(12, value);
     }
 
     /**
      * Getter for <code>public.TRACK.DURATION</code>.
      */
     public Long getDuration() {
-        return (Long) get(10);
+        return (Long) get(12);
     }
 
     /**
      * Setter for <code>public.TRACK.STATUS</code>.
      */
     public void setStatus(String value) {
-        set(11, value);
+        set(13, value);
     }
 
     /**
      * Getter for <code>public.TRACK.STATUS</code>.
      */
     public String getStatus() {
-        return (String) get(11);
+        return (String) get(13);
     }
 
     /**
      * Setter for <code>public.TRACK.LYRICS</code>.
      */
     public void setLyrics(String value) {
-        set(12, value);
+        set(14, value);
     }
 
     /**
      * Getter for <code>public.TRACK.LYRICS</code>.
      */
     public String getLyrics() {
-        return (String) get(12);
+        return (String) get(14);
     }
 
     // -------------------------------------------------------------------------
@@ -233,7 +263,7 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
     /**
      * Create a detached, initialised TrackRecord
      */
-    public TrackRecord(Integer id, Integer fkAlbum, String title, Integer trackNumber, String releaseDate, Integer diskNumber, Integer audioSampleRate, String genre, String composer, String fileLocation, Long duration, String status, String lyrics) {
+    public TrackRecord(Integer id, Integer fkAlbum, String title, Integer trackNumber, String releaseDate, Integer diskNumber, Integer audioSampleRate, String genre, String composer, String fileLocation, String fileHash, LocalDateTime scannedAt, Long duration, String status, String lyrics) {
         super(Track.TRACK);
 
         setId(id);
@@ -246,6 +276,8 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
         setGenre(genre);
         setComposer(composer);
         setFileLocation(fileLocation);
+        setFileHash(fileHash);
+        setScannedAt(scannedAt);
         setDuration(duration);
         setStatus(status);
         setLyrics(lyrics);
