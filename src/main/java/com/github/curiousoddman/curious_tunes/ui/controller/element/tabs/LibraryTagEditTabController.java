@@ -38,7 +38,6 @@ import static com.github.curiousoddman.curious_tunes.util.ConversionUtils.str;
 @Component
 @RequiredArgsConstructor
 public class LibraryTagEditTabController implements Initializable {
-    private final LyricsService lyricsService;
     @FXML
     public GridPane tagsGrid;
     @FXML
@@ -64,10 +63,10 @@ public class LibraryTagEditTabController implements Initializable {
     @FXML
     public AnchorPane rootPane;
 
+    private final LyricsService lyricsService;
     private final DataAccess dataAccess;
 
     private TrackInfo trackInfo;
-
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -135,7 +134,7 @@ public class LibraryTagEditTabController implements Initializable {
 
         for (ChangeCheck changeCheck : changeChecks) {
             if (!Objects.equals(changeCheck.uiValue, str(changeCheck.trackValue))) {
-                log.info("Value for {} does not match {} --> {}, updating...", changeCheck.field.getName(), changeCheck.uiValue, changeCheck.trackValue);
+                log.info("Value for '{}' does not match '{}' --> '{}', updating...", changeCheck.field.getName(), changeCheck.uiValue, changeCheck.trackValue);
                 dataAccess.storeTrackOverride(trackInfo, changeCheck.field, str(changeCheck.trackValue));
                 trackInfo.getTrackRecord().set(changeCheck.field, changeCheck.mapper.apply(changeCheck.uiValue));
             }
@@ -173,17 +172,21 @@ public class LibraryTagEditTabController implements Initializable {
                                  Object currentValue,
                                  List<TrackOverridesHistoryRecord> trackOverrides,
                                  TableField<TrackRecord, ?> field) {
+        boolean wasOverridden = wasOverridden(currentValue, trackOverrides, field);
+        if (wasOverridden) {
+            inputField.setStyle("-fx-border-color: orange; -fx-border-width: 2;");
+        } else {
+            inputField.setStyle(null);
+        }
+    }
+
+    public static boolean wasOverridden(Object currentValue, List<TrackOverridesHistoryRecord> trackOverrides, TableField<TrackRecord, ?> field) {
         Optional<TrackOverridesHistoryRecord> override = trackOverrides
                 .reversed()
                 .stream()
                 .filter(r -> r.getField().equals(field.getName()))
                 .findFirst();
-        boolean different = override.isPresent()
+        return override.isPresent()
                 && !Objects.equals(currentValue, override.get().getOldValue());
-        if (different) {
-            inputField.setStyle("-fx-border-color: orange; -fx-border-width: 2;");
-        } else {
-            inputField.setStyle(null);
-        }
     }
 }
