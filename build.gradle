@@ -20,9 +20,7 @@ version = '0.0.1-SNAPSHOT'
 description = 'An audio player resembling iTunes'
 
 def javafxVersion = '25.0.1'
-def testfxVersion = '4.0.18'
-
-def flywayAndJooqDatabase ='jdbc:h2:file:~/ctunes/test;DB_CLOSE_ON_EXIT=FALSE'
+def flywayAndJooqDatabase ='jdbc:h2:file:~/ctunes/fw-jooq;DB_CLOSE_ON_EXIT=FALSE'
 
 idea {
     module {
@@ -102,8 +100,6 @@ jooq {
     }
 }
 
-
-
 jooqCodegen.dependsOn flywayMigrate
 
 dependencies {
@@ -138,8 +134,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-jooq-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-//    testImplementation "org.testfx:testfx-core:${testfxVersion}"
-//    testImplementation "org.testfx:testfx-junit5:${testfxVersion}"
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -155,4 +149,65 @@ tasks.named('test') {
             "--add-opens", "javafx.graphics/com.sun.javafx.css=ALL-UNNAMED",
             "--add-opens", "javafx.base/com.sun.javafx.runtime=ALL-UNNAMED"
     ])
+}
+
+def deployDir = "C:\\cTunes"
+def desktopDir = System.getProperty("user.home") + "\\Desktop"
+def jarName = "cTunes.jar"
+def javaHome = System.getProperty("java.home")
+def javawPath = "${javaHome}\\bin\\java.exe"
+
+def tokens = [
+        deployDir : deployDir,
+        jarName   : jarName,
+        desktopDir: desktopDir,
+        javawPath : javawPath
+]
+
+tasks.register('deploy') {
+    dependsOn(bootJar)
+
+    description = "Builds prod JAR and deploys to `$deployDir`"
+
+    doLast {
+        // Create deploy dir
+        mkdir deployDir
+
+        // Copy JAR
+        def jarFile = bootJar.archiveFile.get().asFile
+        copy {
+            from jarFile
+            into deployDir
+            rename { jarName }
+        }
+
+        copy {
+            from "deploy/launch-app.bat"
+            into deployDir
+            expand(tokens)
+        }
+
+        def vbs = new File("${deployDir}\\create-shortcut.vbs")
+        copy {
+            from "deploy/create-shortcut.vbs"
+            into deployDir
+            expand(tokens)
+        }
+
+        println "✅ JAR deployed to: ${deployDir}\\${jarName}"
+        println "✅ Desktop shortcut created: ${desktopDir}\\cTunes.lnk"
+
+        println "VBS path: ${vbs.absolutePath}"
+        println "VBS content:\n${vbs.text}"
+        println "Desktop dir: ${desktopDir}"
+
+        def proc = ["cscript", "//Nologo", vbs.absolutePath].execute()
+        def stdout = proc.inputStream.text
+        def stderr = proc.errorStream.text
+        proc.waitFor()
+
+        println "Exit code: ${proc.exitValue()}"
+        if (stdout) println "stdout: ${stdout}"
+        if (stderr) println "stderr: ${stderr}"
+    }
 }

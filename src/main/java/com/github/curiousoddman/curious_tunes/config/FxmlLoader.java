@@ -5,12 +5,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.net.URL;
+import java.io.InputStream;
 import java.util.ResourceBundle;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class FxmlLoader {
@@ -18,13 +20,16 @@ public class FxmlLoader {
 
     @SneakyThrows
     public <T> LoadedFxml<T> load(FxmlView<T> fxmlPath, ResourceBundle resourceBundle) {
+        log.info("Loading {} ...", fxmlPath.getFxmlPath());
         FXMLLoader loader = new FXMLLoader();
         loader.setControllerFactory(context::getBean);
-        URL resource = getClass().getClassLoader().getResource(fxmlPath.getFxmlPath());
-        loader.setLocation(resource);
+        InputStream fxmlStream = getClass().getResourceAsStream(fxmlPath.getFxmlPath());
+        if (fxmlStream == null) {
+            throw new IllegalStateException("Cannot find FXML: " + fxmlPath.getFxmlPath());
+        }
         loader.setResources(resourceBundle);
         loader.setClassLoader(context.getClassLoader());
-        Parent parent = loader.load();
+        Parent parent = loader.load(fxmlStream);
         return new LoadedFxml<>(
                 parent,
                 loader.getController()

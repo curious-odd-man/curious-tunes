@@ -4,7 +4,7 @@ spring:
   application:
     name: curious-tunes
   datasource:
-    url: jdbc:h2:file:~/ctunes/ctunes-prod;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:file:~/ctunes/${DATABASE_FILE};DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password: sa
@@ -13,13 +13,13 @@ spring:
   title: cTunes
   h2:
     console:
-      enabled: true
+      enabled: ${H2_CONSOLE_ENABLED}
   cache:
     caffeine:
       spec: "maximumSize=5,expireAfterAccess=600s"
 
 server:
-  port: 7777
+  port: ${SERVER_PORT}
 
 logging.level.org.jooq.Constants: off
 
