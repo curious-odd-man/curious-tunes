@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.element.tabs;
 
+import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.LyricsService;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import javafx.application.Platform;
@@ -23,6 +24,7 @@ import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 @RequiredArgsConstructor
 public class LibraryLyricsTabController implements Initializable {
     private final LyricsService lyricsService;
+    private final DataAccess dataAccess;
 
     @FXML
     public ToggleButton editButton;
@@ -62,9 +64,9 @@ public class LibraryLyricsTabController implements Initializable {
 
         Thread t = new Thread(() -> {
             log.info("Saving updated lyrics to {}", playlistItem.getFileLocation());
+            dataAccess.storeTrackOverride(playlistItem, TRACK.LYRICS, playlistItem.getLyrics());
             playlistItem.setLyrics(lyricsTextArea.getText());
             playlistItem.getTrackRecord().update(TRACK.LYRICS);
-            //pendingActionService.updateLyrics(lyricsTextArea.getText(), Path.of(trackRecord.getFileLocation()));
             log.info("Update completed...");
         }, "Update metadata");
         t.start();
