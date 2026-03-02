@@ -78,10 +78,6 @@ public class DataAccess {
                 ).fetchOne();
     }
 
-    public TrackRecord getTrack(int trackId) {
-        return dsl.fetchSingle(TRACK, TRACK.ID.eq(trackId));
-    }
-
     public void insertTrack(TrackRecord newTrackRecord) {
         dsl
                 .insertInto(TRACK)

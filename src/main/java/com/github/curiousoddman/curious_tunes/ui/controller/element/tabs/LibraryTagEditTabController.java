@@ -104,19 +104,19 @@ public class LibraryTagEditTabController implements Initializable {
     @SneakyThrows
     public void onSave(ActionEvent actionEvent) {
         log.info("Updating track info \n{}", trackInfo);
+        TrackRecord trackRecord = trackInfo.getTrackRecord();
+
         ArtistRecord artist = trackInfo.getTrackArtist();
         if (!artistField.getText().equals(trackInfo.getArtistName())) {
             log.info("Artist name changed!");
             artist = dataAccess.getOrInsertArtist(artistField.getText());
             AlbumRecord album = dataAccess.getOrInsertAlbum(artist.getId(), albumField.getText(), trackInfo.getAlbumImage());
-            TrackRecord trackRecord = trackInfo.getTrackRecord();
             dataAccess.storeTrackOverride(trackInfo, TRACK.FK_ALBUM, str(trackRecord.getFkAlbum()));
             trackRecord.setFkAlbum(album.getId());
             trackRecord.update(TRACK.FK_ALBUM);
         } else if (!albumField.getText().equals(trackInfo.getAlbumName())) {
             log.info("Album changed");
             AlbumRecord album = dataAccess.getOrInsertAlbum(artist.getId(), albumField.getText(), trackInfo.getAlbumImage());
-            TrackRecord trackRecord = trackInfo.getTrackRecord();
             dataAccess.storeTrackOverride(trackInfo, TRACK.FK_ALBUM, str(trackRecord.getFkAlbum()));
             trackRecord.setFkAlbum(album.getId());
             trackRecord.update(TRACK.FK_ALBUM);
@@ -136,9 +136,11 @@ public class LibraryTagEditTabController implements Initializable {
             if (!Objects.equals(changeCheck.uiValue, str(changeCheck.trackValue))) {
                 log.info("Value for '{}' does not match '{}' --> '{}', updating...", changeCheck.field.getName(), changeCheck.uiValue, changeCheck.trackValue);
                 dataAccess.storeTrackOverride(trackInfo, changeCheck.field, str(changeCheck.trackValue));
-                trackInfo.getTrackRecord().set(changeCheck.field, changeCheck.mapper.apply(changeCheck.uiValue));
+                trackRecord.set(changeCheck.field, changeCheck.mapper.apply(changeCheck.uiValue));
+                trackRecord.update(changeCheck.field);
             }
         }
+        markModifiedFields();
     }
 
     private void fillFieldsFromTrackInfo() {
