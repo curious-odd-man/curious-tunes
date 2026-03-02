@@ -290,15 +290,21 @@ public class LibraryController implements Initializable {
     private void onLibraryDataUpdated() {
         artistsControllers.clear();
         artistList.getChildren().clear();
-        for (ArtistRecord artist : dataAccess.getAllArtists()) {
-            LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
-                    FxmlView.LIBRARY_ARTIST_ITEM,
-                    new ArtistItemBundle(artist, artistSelectionModel)
-            );
-            Parent parent = loadedFxml.parent();
-            artistsControllers.add(loadedFxml.controller());
-            artistList.getChildren().add(parent);
-        }
+        log.info("Update UI from library in separate thread");
+        Thread t = new Thread(() -> {
+            for (ArtistRecord artist : dataAccess.getAllArtists()) {
+                runInUiThread(() -> {
+                    LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
+                            FxmlView.LIBRARY_ARTIST_ITEM,
+                            new ArtistItemBundle(artist, artistSelectionModel)
+                    );
+                    Parent parent = loadedFxml.parent();
+                    artistsControllers.add(loadedFxml.controller());
+                    artistList.getChildren().add(parent);
+                });
+            }
+        });
+        t.start();
     }
 
     @FXML
