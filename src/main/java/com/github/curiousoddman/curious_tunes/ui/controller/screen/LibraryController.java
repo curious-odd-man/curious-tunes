@@ -188,36 +188,37 @@ public class LibraryController implements Initializable {
         String artistName = artistRecord.getName();
         artistTitle.setText(artistName);
         artistAlbumsView.getChildren().remove(1, artistAlbumsView.getChildren().size());
-        List<AlbumRecord> albums = dataAccess.getArtistAlbums(artistId);
-        TrackSelectionModel trackSelectionModel = new TrackSelectionModel();
-        List<YearAndLoadedFxml> loadedFxmlsByYear = new ArrayList<>();
-        for (AlbumRecord album : albums) {
-            List<TrackRecord> albumTracks = dataAccess.getAlbumTracks(album.getId());
-            Integer yearFromTracks = getYearFromTracks(albumTracks);
-            log.debug("For album {} year {}", album.getName(), yearFromTracks);
-            loadedFxmlsByYear.add(
-                    new YearAndLoadedFxml(
-                            yearFromTracks,
-                            fxmlLoader.load(
-                                    FxmlView.LIBRARY_ARTIST_ALBUM,
-                                    new ArtistAlbumBundle(artistName,
-                                            new AlbumInfo(
-                                                    artistRecord,
-                                                    album,
-                                                    yearFromTracks
-                                            ),
-                                            trackSelectionModel,
-                                            albumTracks
-                                    )
-                            )));
-        }
-        List<Parent> rootElements = loadedFxmlsByYear
-                .stream()
-                .sorted(comparing(YearAndLoadedFxml::year, nullsLast(naturalOrder())))
-                .map(YearAndLoadedFxml::loadedFxml)
-                .map(LoadedFxml::parent)
-                .toList();
-        artistAlbumsView.getChildren().addAll(rootElements);
+        Thread t = new Thread(() -> {
+            List<AlbumRecord> albums = dataAccess.getArtistAlbums(artistId);
+            TrackSelectionModel trackSelectionModel = new TrackSelectionModel();
+            List<YearAndLoadedFxml> loadedFxmlsByYear = new ArrayList<>();
+            for (AlbumRecord album : albums) {
+                List<TrackRecord> albumTracks = dataAccess.getAlbumTracks(album.getId());
+                Integer yearFromTracks = getYearFromTracks(albumTracks);
+                log.debug("For album {} year {}", album.getName(), yearFromTracks);
+                LoadedFxml<LibraryArtistAlbumController> loaded = fxmlLoader.load(
+                        FxmlView.LIBRARY_ARTIST_ALBUM,
+                        new ArtistAlbumBundle(artistName,
+                                new AlbumInfo(
+                                        artistRecord,
+                                        album,
+                                        yearFromTracks
+                                ),
+                                trackSelectionModel,
+                                albumTracks
+                        )
+                );
+                loadedFxmlsByYear.add(new YearAndLoadedFxml(yearFromTracks, loaded));
+            }
+            List<Parent> rootElements = loadedFxmlsByYear
+                    .stream()
+                    .sorted(comparing(YearAndLoadedFxml::year, nullsLast(naturalOrder())))
+                    .map(YearAndLoadedFxml::loadedFxml)
+                    .map(LoadedFxml::parent)
+                    .toList();
+            runInUiThread(() -> artistAlbumsView.getChildren().addAll(rootElements));
+        });
+        t.start();
     }
 
     record YearAndLoadedFxml(Integer year, LoadedFxml<LibraryArtistAlbumController> loadedFxml) {
