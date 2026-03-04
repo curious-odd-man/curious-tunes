@@ -40,6 +40,7 @@ public class Indexes {
     public static final Index ALBUM_ARTIST_INDEX = Internal.createIndex(DSL.name("ALBUM_ARTIST_INDEX"), Album.ALBUM, new OrderField[] { Album.ALBUM.FK_ARTIST }, false);
     public static final Index ALBUM_NAME_INDEX = Internal.createIndex(DSL.name("ALBUM_NAME_INDEX"), Album.ALBUM, new OrderField[] { Album.ALBUM.NAME }, false);
     public static final Index ARTIST_NAME_INDEX = Internal.createIndex(DSL.name("ARTIST_NAME_INDEX"), Artist.ARTIST, new OrderField[] { Artist.ARTIST.NAME }, false);
+    public static final Index FILE_LOCATION_UNIQUE_INDX = Internal.createIndex(DSL.name("FILE_LOCATION_UNIQUE_INDX"), Track.TRACK, new OrderField[] { Track.TRACK.FILE_LOCATION }, true);
     public static final Index FLYWAY_SCHEMA_HISTORY_S_IDX = Internal.createIndex(DSL.name("flyway_schema_history_s_idx"), FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, new OrderField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.SUCCESS }, false);
     public static final Index IDX_OVERRIDES_TRACK_ID = Internal.createIndex(DSL.name("IDX_OVERRIDES_TRACK_ID"), TrackOverridesHistory.TRACK_OVERRIDES_HISTORY, new OrderField[] { TrackOverridesHistory.TRACK_OVERRIDES_HISTORY.TRACK_ID }, false);
     public static final Index PLAYBACK_HISTORY_TRACK_INDEX = Internal.createIndex(DSL.name("PLAYBACK_HISTORY_TRACK_INDEX"), PlaybackHistory.PLAYBACK_HISTORY, new OrderField[] { PlaybackHistory.PLAYBACK_HISTORY.FK_TRACK }, false);

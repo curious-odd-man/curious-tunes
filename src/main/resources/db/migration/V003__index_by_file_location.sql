@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX file_location_unique_indx ON track (file_location);

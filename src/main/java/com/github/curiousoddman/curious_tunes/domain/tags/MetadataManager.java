@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.domain.tags;
 
+import org.mp4parser.CustomizedPropertyBoxParser;
 import com.mpatric.mp3agic.Mp3File;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,10 @@ public class MetadataManager {
         try (FileInputStream fileInputStream = new FileInputStream(file.toFile())) {
             List<Box> resultBoxes = new ArrayList<>();
 
-            IsoFile isoFile = new IsoFile(fileInputStream.getChannel());
+            IsoFile isoFile = new IsoFile(
+                    fileInputStream.getChannel(),
+                    new CustomizedPropertyBoxParser()
+            );
             Queue<Box> boxesQueue = new LinkedList<>(isoFile.getBoxes());
             while (!boxesQueue.isEmpty()) {
                 Box box = boxesQueue.remove();

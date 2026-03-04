@@ -7,7 +7,7 @@ import java.io.IOException;
 public interface MetadataTags {
     <T> T validate(String description, T field, T newValue);
 
-    boolean updateTrackIfChanged(TrackRecord trackRecord);
+    boolean updateTrackIfChanged(TrackRecord trackRecord, Integer newAlbumId);
 
     String getFileLocation();
 

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Track.TRACK;
+import static com.github.curiousoddman.curious_tunes.util.JooqUtils.updateFieldIfChanged;
 
 @Slf4j
 @Getter
@@ -42,21 +43,23 @@ public abstract class MetadataTagsBase implements MetadataTags {
     }
 
     @Override
-    public boolean updateTrackIfChanged(TrackRecord trackRecord) {
-        JooqUtils.updateFieldIfChanged(trackRecord, fileLocation, TRACK.FILE_LOCATION);
-        // Those 3 cannot really change - they belong to album and artist
-//        updateFieldIfChanged(trackRecord, artist, TRACK.);
-//        updateFieldIfChanged(trackRecord, album, TRACK.);
+    public boolean updateTrackIfChanged(TrackRecord trackRecord, Integer newAlbumId) {
+        // This cannot really change - they belong to album and artist
+
+        //updateFieldIfChanged(trackRecord, artist, TRACK.F);
         // updateFieldIfChanged(trackRecord, albumCover, TRACK.);
-        JooqUtils.updateFieldIfChanged(trackRecord, title, TRACK.TITLE);
-        JooqUtils.updateFieldIfChanged(trackRecord, trackNumber, TRACK.TRACK_NUMBER);
-        JooqUtils.updateFieldIfChanged(trackRecord, releaseDate, TRACK.RELEASE_DATE);
-        JooqUtils.updateFieldIfChanged(trackRecord, diskNumber, TRACK.DISK_NUMBER);
-        JooqUtils.updateFieldIfChanged(trackRecord, sampleRate, TRACK.AUDIO_SAMPLE_RATE);
-        JooqUtils.updateFieldIfChanged(trackRecord, genre, TRACK.GENRE);
-        JooqUtils.updateFieldIfChanged(trackRecord, composer, TRACK.COMPOSER);
-        JooqUtils.updateFieldIfChanged(trackRecord, duration, TRACK.DURATION);
-        JooqUtils.updateFieldIfChanged(trackRecord, lyrics, TRACK.LYRICS);
+
+        updateFieldIfChanged(trackRecord, newAlbumId, TRACK.FK_ALBUM);
+        updateFieldIfChanged(trackRecord, fileLocation, TRACK.FILE_LOCATION);
+        updateFieldIfChanged(trackRecord, title, TRACK.TITLE);
+        updateFieldIfChanged(trackRecord, trackNumber, TRACK.TRACK_NUMBER);
+        updateFieldIfChanged(trackRecord, releaseDate, TRACK.RELEASE_DATE);
+        updateFieldIfChanged(trackRecord, diskNumber, TRACK.DISK_NUMBER);
+        updateFieldIfChanged(trackRecord, sampleRate, TRACK.AUDIO_SAMPLE_RATE);
+        updateFieldIfChanged(trackRecord, genre, TRACK.GENRE);
+        updateFieldIfChanged(trackRecord, composer, TRACK.COMPOSER);
+        updateFieldIfChanged(trackRecord, duration, TRACK.DURATION);
+        updateFieldIfChanged(trackRecord, lyrics, TRACK.LYRICS);
         return trackRecord.changed();
     }
 

@@ -9,6 +9,7 @@ import org.jooq.impl.DefaultDSLContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -230,5 +231,10 @@ public class DataAccess {
         initTrackOverrides()
                 .computeIfAbsent(insertedRow.getTrackId(), k -> new ArrayList<>())
                 .add(insertedRow);
+    }
+
+    public TrackRecord getTrack(Path file) {
+        return dsl
+                .fetchSingle(TRACK, TRACK.FILE_LOCATION.eq(file.toString()));
     }
 }

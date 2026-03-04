@@ -222,7 +222,7 @@ public class Track extends TableImpl<TrackRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.TRACK_ALBUM_INDEX, Indexes.TRACK_TITLE_INDEX);
+        return Arrays.asList(Indexes.FILE_LOCATION_UNIQUE_INDX, Indexes.TRACK_ALBUM_INDEX, Indexes.TRACK_TITLE_INDEX);
     }
 
     @Override

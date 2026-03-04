@@ -1,9 +1,9 @@
 package com.github.curiousoddman.curious_tunes.domain.tags;
 
-import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.RescanLibraryEvent;
@@ -47,57 +47,28 @@ public class FilesScanningService {
         log.info("Received rescan library event...");
         Runnable rescanRunnable = () -> {
             log.info("Starting scanning: discover files...");
-            applicationEventPublisher.publishEvent(
-                    getBackgroundProcessEventBuilder()
-                            .eventType(BackgroundProcessEventType.STARTED)
-                            .description("Discovering files...")
-                            .maxProgress(-1)
-                            .build());
+            publishStartedEvent();
             try {
                 List<Path> paths = doScan(Path.of(libraryRoot));
                 log.info("Discovered {} files. Started processing", paths.size());
-                applicationEventPublisher.publishEvent(
-                        getBackgroundProcessEventBuilder()
-                                .eventType(BackgroundProcessEventType.IN_PROGRESS)
-                                .maxProgress(paths.size())
-                                .description("Fetching metadata...")
-                                .build());
+                publishInProgressEvent(paths);
                 for (int i = 0; i < paths.size(); i++) {
                     Path file = paths.get(i);
                     MDC.put("file", String.valueOf(i));
                     log.info("\t{}", file);
                     if (shouldInterrupt) {
                         log.info("Scanning interrupted");
-                        applicationEventPublisher.publishEvent(
-                                getBackgroundProcessEventBuilder()
-                                        .eventType(BackgroundProcessEventType.INTERRUPTED)
-                                        .description("Interrupted")
-                                        .build());
+                        publishInterruptedEvent();
                         return;
                     }
 
                     extractMetadataAndUpdateDatabase(file);
-                    applicationEventPublisher.publishEvent(
-                            getBackgroundProcessEventBuilder()
-                                    .eventType(BackgroundProcessEventType.IN_PROGRESS)
-                                    .progress(i + 1)
-                                    .maxProgress(paths.size())
-                                    .description("Fetching metadata...")
-                                    .build());
+                    publishInProgressStatusEvent(i, paths);
                 }
-                applicationEventPublisher.publishEvent(
-                        getBackgroundProcessEventBuilder()
-                                .eventType(BackgroundProcessEventType.ENDED)
-                                .description("Interrupted")
-                                .build());
+                publishCompletedEvent();
                 log.info("Scanning completed...");
             } catch (Exception e) {
-                applicationEventPublisher.publishEvent(
-                        getBackgroundProcessEventBuilder()
-                                .eventType(BackgroundProcessEventType.FAILED)
-                                .description("Failed...")
-                                .error(e)
-                                .build());
+                publishFailedEvent(e);
                 log.error("Failed parsing files...", e);
                 MDC.remove("file");
             }
@@ -106,19 +77,12 @@ public class FilesScanningService {
         rescanThread.start();
     }
 
-    private BackgroundProcessEvent.BackgroundProcessEventBuilder getBackgroundProcessEventBuilder() {
-        return BackgroundProcessEvent
-                .builder()
-                .source(this)
-                .processName(LIBRARY_SCAN);
-    }
-
     private void extractMetadataAndUpdateDatabase(Path file) {
         MetadataTags metadata = metadataManager.getMetadata(file);
         ArtistRecord artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
         AlbumCover albumCover = metadata.getAlbumCover();
         AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum(), albumCover == null ? null : albumCover.getData());
-        TrackRecord trackRecord = dataAccess.getTrack(albumRecord.getId(), metadata.getTitle());
+        TrackRecord trackRecord = dataAccess.getTrack(file);
 
         if (trackRecord == null) {
             TrackRecord mewTrackRecord = new TrackRecord(
@@ -140,7 +104,7 @@ public class FilesScanningService {
             );
             dataAccess.insertTrack(mewTrackRecord);
         } else {
-            if (metadata.updateTrackIfChanged(trackRecord)) {
+            if (metadata.updateTrackIfChanged(trackRecord, albumRecord.getId())) {
                 trackRecord.update();
             }
         }
@@ -164,5 +128,65 @@ public class FilesScanningService {
             }
         });
         return foundFiles;
+    }
+
+    private void publishFailedEvent(Exception e) {
+        applicationEventPublisher.publishEvent(
+                getBackgroundProcessEventBuilder()
+                        .eventType(BackgroundProcessEventType.FAILED)
+                        .description("Failed...")
+                        .error(e)
+                        .build());
+    }
+
+    private void publishCompletedEvent() {
+        applicationEventPublisher.publishEvent(
+                getBackgroundProcessEventBuilder()
+                        .eventType(BackgroundProcessEventType.ENDED)
+                        .description("Interrupted")
+                        .build());
+    }
+
+    private void publishInProgressStatusEvent(int i, List<Path> paths) {
+        applicationEventPublisher.publishEvent(
+                getBackgroundProcessEventBuilder()
+                        .eventType(BackgroundProcessEventType.IN_PROGRESS)
+                        .progress(i + 1)
+                        .maxProgress(paths.size())
+                        .description("Fetching metadata...")
+                        .build());
+    }
+
+    private void publishInterruptedEvent() {
+        applicationEventPublisher.publishEvent(
+                getBackgroundProcessEventBuilder()
+                        .eventType(BackgroundProcessEventType.INTERRUPTED)
+                        .description("Interrupted")
+                        .build());
+    }
+
+    private void publishInProgressEvent(List<Path> paths) {
+        applicationEventPublisher.publishEvent(
+                getBackgroundProcessEventBuilder()
+                        .eventType(BackgroundProcessEventType.IN_PROGRESS)
+                        .maxProgress(paths.size())
+                        .description("Fetching metadata...")
+                        .build());
+    }
+
+    private void publishStartedEvent() {
+        applicationEventPublisher.publishEvent(
+                getBackgroundProcessEventBuilder()
+                        .eventType(BackgroundProcessEventType.STARTED)
+                        .description("Discovering files...")
+                        .maxProgress(-1)
+                        .build());
+    }
+
+    private BackgroundProcessEvent.BackgroundProcessEventBuilder getBackgroundProcessEventBuilder() {
+        return BackgroundProcessEvent
+                .builder()
+                .source(this)
+                .processName(LIBRARY_SCAN);
     }
 }
