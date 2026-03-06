@@ -233,8 +233,11 @@ public class DataAccess {
                 .add(insertedRow);
     }
 
-    public TrackRecord getTrack(Path file) {
+    public Optional<TrackRecord> getTrack(Path file) {
         return dsl
-                .fetchSingle(TRACK, TRACK.FILE_LOCATION.eq(file.toString()));
+                .selectFrom(TRACK)
+                .where(TRACK.FILE_LOCATION.eq(file.toString()))
+                .fetchOptional();
+
     }
 }

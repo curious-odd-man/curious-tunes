@@ -25,6 +25,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.github.curiousoddman.curious_tunes.util.FileUtils.audioMd5;
 
@@ -82,9 +83,9 @@ public class FilesScanningService {
         ArtistRecord artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
         AlbumCover albumCover = metadata.getAlbumCover();
         AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum(), albumCover == null ? null : albumCover.getData());
-        TrackRecord trackRecord = dataAccess.getTrack(file);
+        Optional<TrackRecord> trackRecord = dataAccess.getTrack(file);
 
-        if (trackRecord == null) {
+        if (trackRecord.isEmpty()) {
             TrackRecord mewTrackRecord = new TrackRecord(
                     null,
                     albumRecord.getId(),
@@ -104,8 +105,8 @@ public class FilesScanningService {
             );
             dataAccess.insertTrack(mewTrackRecord);
         } else {
-            if (metadata.updateTrackIfChanged(trackRecord, albumRecord.getId())) {
-                trackRecord.update();
+            if (metadata.updateTrackIfChanged(trackRecord.orElse(null), albumRecord.getId())) {
+                trackRecord.get().update();
             }
         }
     }
