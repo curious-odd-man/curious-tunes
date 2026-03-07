@@ -72,6 +72,20 @@ public class PlaybackHistoryRecord extends UpdatableRecordImpl<PlaybackHistoryRe
         return (Integer) get(2);
     }
 
+    /**
+     * Setter for <code>public.PLAYBACK_HISTORY.VOLUME</code>.
+     */
+    public void setVolume(Byte value) {
+        set(3, value);
+    }
+
+    /**
+     * Getter for <code>public.PLAYBACK_HISTORY.VOLUME</code>.
+     */
+    public Byte getVolume() {
+        return (Byte) get(3);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -95,12 +109,13 @@ public class PlaybackHistoryRecord extends UpdatableRecordImpl<PlaybackHistoryRe
     /**
      * Create a detached, initialised PlaybackHistoryRecord
      */
-    public PlaybackHistoryRecord(Integer id, OffsetDateTime datetime, Integer fkTrack) {
+    public PlaybackHistoryRecord(Integer id, OffsetDateTime datetime, Integer fkTrack, Byte volume) {
         super(PlaybackHistory.PLAYBACK_HISTORY);
 
         setId(id);
         setDatetime(datetime);
         setFkTrack(fkTrack);
+        setVolume(volume);
         resetChangedOnNotNull();
     }
 }

@@ -80,6 +80,11 @@ public class PlaybackHistory extends TableImpl<PlaybackHistoryRecord> {
      */
     public final TableField<PlaybackHistoryRecord, Integer> FK_TRACK = createField(DSL.name("FK_TRACK"), SQLDataType.INTEGER, this, "");
 
+    /**
+     * The column <code>public.PLAYBACK_HISTORY.VOLUME</code>.
+     */
+    public final TableField<PlaybackHistoryRecord, Byte> VOLUME = createField(DSL.name("VOLUME"), SQLDataType.TINYINT, this, "");
+
     private PlaybackHistory(Name alias, Table<PlaybackHistoryRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

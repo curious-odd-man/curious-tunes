@@ -8,13 +8,16 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MediaPlayerListeningTracker {
     private final ApplicationEventPublisher eventPublisher;
+    private final WindowsVolumeService windowsVolumeService;
 
     private Duration totalListenedTime = Duration.ZERO;
     private Duration lastRecordedTime = Duration.ZERO;
@@ -42,7 +45,21 @@ public class MediaPlayerListeningTracker {
                             double listenedPercentage = totalListenedTime.toMillis() / totalDuration.toMillis();
 
                             if (listenedPercentage >= 0.30) {
-                                eventPublisher.publishEvent(new PlayedThirdOfTrackEvent(MediaPlayerListeningTracker.this, trackRecord));
+                                log.info("Preparing to report 30% track played");
+                                double mpVol = mediaPlayer.getVolume();
+                                float master = windowsVolumeService.getMasterVolume();
+                                double effective = windowsVolumeService.getEffectiveVolume(mpVol);
+
+                                log.info(String.format("MediaPlayer volume: %.0f%%", mpVol * 100));
+                                log.info(String.format("Windows master:     %.0f%%", master * 100));
+                                double volumeToReport = effective * 100;
+                                log.info(String.format("Effective volume:   %.0f%%", volumeToReport));
+
+                                log.info("Played 30 percent, current volume is: {}", volumeToReport);
+                                eventPublisher.publishEvent(new PlayedThirdOfTrackEvent(
+                                        MediaPlayerListeningTracker.this,
+                                        trackRecord,
+                                        (int) volumeToReport));
                                 durationReadOnlyObjectProperty.removeListener(this);
                             }
                         }

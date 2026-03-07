@@ -183,11 +183,11 @@ public class DataAccess {
                 ));
     }
 
-    public void insertIntoHistory(OffsetDateTime now, Integer trackId) {
+    public void insertIntoHistory(OffsetDateTime now, Integer trackId, int volume) {
         dsl
                 .insertInto(PLAYBACK_HISTORY)
-                .columns(PLAYBACK_HISTORY.DATETIME, PLAYBACK_HISTORY.FK_TRACK)
-                .values(now, trackId)
+                .columns(PLAYBACK_HISTORY.DATETIME, PLAYBACK_HISTORY.FK_TRACK, PLAYBACK_HISTORY.VOLUME)
+                .values(now, trackId, (byte) volume)
                 .execute();
     }
 

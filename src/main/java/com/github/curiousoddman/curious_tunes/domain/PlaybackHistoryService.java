@@ -18,6 +18,10 @@ public class PlaybackHistoryService {
     @EventListener
     public void onThirdOfSongPlayed(PlayedThirdOfTrackEvent event) {
         TrackRecord trackRecord = event.getTrackRecord();
-        dataAccess.insertIntoHistory(OffsetDateTime.now(), trackRecord.getId());
+        dataAccess.insertIntoHistory(
+                OffsetDateTime.now(),
+                trackRecord.getId(),
+                event.getVolume()
+        );
     }
 }
