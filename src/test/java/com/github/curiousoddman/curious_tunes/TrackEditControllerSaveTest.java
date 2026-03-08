@@ -225,7 +225,7 @@ class TrackEditControllerSaveTest {
             sut.onSave(new ActionEvent());
         });
 
-        verify(dataAccess).getTrackOverrides(anyInt());
+        verify(dataAccess, times(2)).getTrackOverrides(anyInt());
         verify(dataAccess).storeTrackOverride(trackInfo, TRACK.TITLE, "Title");
         verify(dataAccess).storeTrackOverride(trackInfo, TRACK.GENRE, "Rock");
         verify(dataAccess).storeTrackOverride(trackInfo, TRACK.COMPOSER, "Composer");
@@ -243,7 +243,7 @@ class TrackEditControllerSaveTest {
             sut.onSave(new ActionEvent());
         });
 
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.GENRE, "");
+        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.GENRE, null);
     }
 
     @Test

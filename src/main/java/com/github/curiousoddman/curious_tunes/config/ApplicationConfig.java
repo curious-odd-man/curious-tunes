@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.config;
 
+import com.github.curiousoddman.curious_tunes.util.VersionService;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,10 +17,13 @@ public class ApplicationConfig {
     @Value("${spring.title}")
     private final String applicationTitle;
     private final ApplicationEventPublisher eventPublisher;
+    private final VersionService versionService;
 
     @Bean
     @Lazy
     public StageManager stageManager(Stage stage) {
-        return new StageManager(fxmlLoader, stage, applicationTitle, eventPublisher);
+        return new StageManager(fxmlLoader, stage,
+                applicationTitle + "   -   " + versionService.getVersionLabel(),
+                eventPublisher);
     }
 }

@@ -16,7 +16,6 @@ plugins {
 }
 
 group = 'com.github.curiousoddman'
-version = '0.0.1-SNAPSHOT'
 description = 'An audio player resembling iTunes'
 
 def javafxVersion = '25.0.1'
@@ -103,6 +102,46 @@ jooq {
 
 jooqCodegen.dependsOn flywayMigrate
 
+def gitExec = { String... args ->
+    def proc = (["git"] + args.toList()).execute(null, projectDir)
+    proc.waitFor()
+    return proc.text.trim()
+}
+
+def versionFile = file("version.txt")
+
+tasks.register('bumpVersion') {
+    doLast {
+        def current = versionFile.text.trim().toInteger()
+        def next = current + 1
+        versionFile.text = next
+        println "Version bumped: ${current} → ${next}"
+    }
+}
+
+tasks.register('tagVersion') {
+    doLast {
+        def v = versionFile.text.trim()
+        gitExec("tag", "-a", "v${v}", "-m", "Release v${v}")
+        println "Tagged: v${v}"
+    }
+}
+
+tagVersion.mustRunAfter bumpVersion
+build.mustRunAfter tagVersion
+
+springBoot {
+    buildInfo {
+        properties {
+            version = versionFile.text.trim()
+            additional = [
+                    'commit.hash' : gitExec("rev-parse", "--short", "HEAD"),
+                    'commit.date' : gitExec("log", "-1", "--format=%cs"),
+            ]
+        }
+    }
+}
+
 dependencies {
     runtimeOnly "org.jooq:jooq-codegen"
     runtimeOnly 'com.h2database:h2'
@@ -111,6 +150,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.springframework.boot:spring-boot-starter-jooq'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     implementation("com.github.curious-odd-man:alac2wav:1.2")
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
@@ -166,7 +207,7 @@ def tokens = [
 ]
 
 tasks.register('deploy') {
-    dependsOn(bootJar)
+    dependsOn(bootJar, bumpVersion, tagVersion, build)
 
     description = "Builds prod JAR and deploys to `$deployDir`"
 
