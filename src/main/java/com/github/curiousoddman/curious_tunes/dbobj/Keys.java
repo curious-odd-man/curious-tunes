@@ -11,6 +11,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingAction;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.TrackOverridesHistory;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.UserPreferences;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.FlywaySchemaHistoryRecord;
@@ -18,6 +19,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PendingAction
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PlaybackHistoryRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackOverridesHistoryRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.UserPreferencesRecord;
 
 import javax.annotation.processing.Generated;
 
@@ -54,6 +56,7 @@ public class Keys {
     public static final UniqueKey<PlaybackHistoryRecord> CONSTRAINT_8 = Internal.createUniqueKey(PlaybackHistory.PLAYBACK_HISTORY, DSL.name("CONSTRAINT_8"), new TableField[] { PlaybackHistory.PLAYBACK_HISTORY.ID }, true);
     public static final UniqueKey<TrackRecord> CONSTRAINT_4 = Internal.createUniqueKey(Track.TRACK, DSL.name("CONSTRAINT_4"), new TableField[] { Track.TRACK.ID }, true);
     public static final UniqueKey<TrackOverridesHistoryRecord> CONSTRAINT_A = Internal.createUniqueKey(TrackOverridesHistory.TRACK_OVERRIDES_HISTORY, DSL.name("CONSTRAINT_A"), new TableField[] { TrackOverridesHistory.TRACK_OVERRIDES_HISTORY.ID }, true);
+    public static final UniqueKey<UserPreferencesRecord> CONSTRAINT_2 = Internal.createUniqueKey(UserPreferences.USER_PREFERENCES, DSL.name("CONSTRAINT_2"), new TableField[] { UserPreferences.USER_PREFERENCES.PREF_KEY }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions

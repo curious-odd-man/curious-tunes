@@ -11,6 +11,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingAction;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.TrackOverridesHistory;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.UserPreferences;
 
 import javax.annotation.processing.Generated;
 
@@ -63,4 +64,9 @@ public class Tables {
      * The table <code>public.TRACK_OVERRIDES_HISTORY</code>.
      */
     public static final TrackOverridesHistory TRACK_OVERRIDES_HISTORY = TrackOverridesHistory.TRACK_OVERRIDES_HISTORY;
+
+    /**
+     * The table <code>public.USER_PREFERENCES</code>.
+     */
+    public static final UserPreferences USER_PREFERENCES = UserPreferences.USER_PREFERENCES;
 }

@@ -98,7 +98,7 @@
                 </BorderPane>
             </top>
             <center>
-                <SplitPane dividerPositions="0.2559, 0.8" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" BorderPane.alignment="CENTER">
+                <SplitPane fx:id="librarySplitPane" dividerPositions="0.2559, 0.8" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" BorderPane.alignment="CENTER">
                     <items>
                         <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
                             <children>

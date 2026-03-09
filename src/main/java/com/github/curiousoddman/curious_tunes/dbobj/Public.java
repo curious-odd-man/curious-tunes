@@ -11,6 +11,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingAction;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.TrackOverridesHistory;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.UserPreferences;
 
 import java.util.Arrays;
 import java.util.List;
@@ -79,6 +80,11 @@ public class Public extends SchemaImpl {
     public final TrackOverridesHistory TRACK_OVERRIDES_HISTORY = TrackOverridesHistory.TRACK_OVERRIDES_HISTORY;
 
     /**
+     * The table <code>public.USER_PREFERENCES</code>.
+     */
+    public final UserPreferences USER_PREFERENCES = UserPreferences.USER_PREFERENCES;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -100,7 +106,8 @@ public class Public extends SchemaImpl {
             PendingAction.PENDING_ACTION,
             PlaybackHistory.PLAYBACK_HISTORY,
             Track.TRACK,
-            TrackOverridesHistory.TRACK_OVERRIDES_HISTORY
+            TrackOverridesHistory.TRACK_OVERRIDES_HISTORY,
+            UserPreferences.USER_PREFERENCES
         );
     }
 }

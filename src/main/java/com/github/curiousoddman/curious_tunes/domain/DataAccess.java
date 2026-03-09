@@ -1,9 +1,12 @@
 package com.github.curiousoddman.curious_tunes.domain;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.*;
+import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPrefKey;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jooq.Record1;
 import org.jooq.TableField;
 import org.jooq.impl.DefaultDSLContext;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,8 +22,10 @@ import java.util.stream.Collectors;
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.*;
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Album.ALBUM;
 import static com.github.curiousoddman.curious_tunes.dbobj.tables.Artist.ARTIST;
+import static org.jooq.impl.DSL.val;
 
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DataAccess {
@@ -239,5 +244,28 @@ public class DataAccess {
                 .where(TRACK.FILE_LOCATION.eq(file.toString()))
                 .fetchOptional();
 
+    }
+
+    public void setUserPref(UserPrefKey key, String value) {
+        dsl.mergeInto(USER_PREFERENCES)
+                .using(dsl.selectOne())
+                .on(USER_PREFERENCES.PREF_KEY.eq(key.getKey()))
+                .whenMatchedThenUpdate()
+                .set(USER_PREFERENCES.PREF_VALUE, val(value))
+                .whenNotMatchedThenInsert(USER_PREFERENCES.PREF_KEY, USER_PREFERENCES.PREF_VALUE)
+                .values(val(key.getKey()), val(value))
+                .execute();
+
+        log.debug("Saved pref [{}] = {}", key.getKey(), value);
+    }
+
+    public String getUserPref(UserPrefKey key, String defaultValue) {
+        Record1<String> record = dsl
+                .select(USER_PREFERENCES.PREF_VALUE)
+                .from(USER_PREFERENCES)
+                .where(USER_PREFERENCES.PREF_KEY.eq(key.getKey()))
+                .fetchOne();
+
+        return record != null ? record.value1() : defaultValue;
     }
 }

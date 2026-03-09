@@ -7,7 +7,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.domain.player.AudioPlayer;
-import com.github.curiousoddman.curious_tunes.domain.tags.MetadataManager;
+import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
 import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.EditTagsForTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
@@ -31,6 +31,8 @@ import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.Library
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryTagEditTabController;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
+import com.github.curiousoddman.curious_tunes.util.async.DelayedAction;
+import javafx.beans.InvalidationListener;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -57,6 +59,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static com.github.curiousoddman.curious_tunes.domain.tags.FilesScanningService.LIBRARY_SCAN;
@@ -73,7 +76,6 @@ public class LibraryController implements Initializable {
     private final ApplicationEventPublisher eventPublisher;
     private final FxmlLoader fxmlLoader;
     private final DataAccess dataAccess;
-    private final MetadataManager metadataManager;
 
     @FXML
     public Button buttonPlayPause;
@@ -112,6 +114,7 @@ public class LibraryController implements Initializable {
     @FXML
     public Tab editTagsTab;
     public StackPane canvasPane;
+    public SplitPane librarySplitPane;
     @FXML
     private AnchorPane playlistAnchorPane;
 
@@ -119,6 +122,7 @@ public class LibraryController implements Initializable {
     private final ProgressCanvasController progressCanvasController;
     private final PlaylistModel playlistModel;
     private final AudioPlayer audioPlayer;
+    private final UserPreferencesService userPreferencesService;
 
     private LibraryHistoryTabController libraryHistoryTabController;
     private LibraryLyricsTabController libraryLyricsTabController;
@@ -219,6 +223,35 @@ public class LibraryController implements Initializable {
             runOnFxThread(() -> artistAlbumsView.getChildren().addAll(rootElements));
         });
         t.start();
+    }
+
+    public void setUserPrefs(Stage primaryStage) {
+        userPreferencesService.restoreWindowState(primaryStage);
+        DelayedAction delayedSaveWindowSize = new DelayedAction(500, TimeUnit.MILLISECONDS);
+        InvalidationListener invalidationListener = o ->
+                delayedSaveWindowSize.reSchedule(() ->
+                        userPreferencesService.saveWindowState(primaryStage));
+
+        primaryStage.widthProperty().addListener(invalidationListener);
+        primaryStage.heightProperty().addListener(invalidationListener);
+        primaryStage.xProperty().addListener(invalidationListener);
+        primaryStage.yProperty().addListener(invalidationListener);
+        primaryStage.maximizedProperty().addListener(invalidationListener);
+
+        volumeControl.setValue(userPreferencesService.getVolume());
+        volumeControl.setOnMouseReleased(_ ->
+                userPreferencesService.saveVolume((int) Math.round(volumeControl.getValue()))
+        );
+
+        librarySplitPane.setDividerPositions(userPreferencesService.getDividerPositions());
+        DelayedAction delayedSaveDividerPosition = new DelayedAction(500, TimeUnit.MILLISECONDS);
+
+        InvalidationListener splitPanePositionListener = o ->
+                delayedSaveDividerPosition.reSchedule(() ->
+                        userPreferencesService.saveSplitPositions(librarySplitPane.getDividerPositions()));
+
+        librarySplitPane.getDividers().getFirst().positionProperty().addListener(splitPanePositionListener);
+        librarySplitPane.getDividers().getLast().positionProperty().addListener(splitPanePositionListener);
     }
 
     record YearAndLoadedFxml(Integer year, LoadedFxml<LibraryArtistAlbumController> loadedFxml) {

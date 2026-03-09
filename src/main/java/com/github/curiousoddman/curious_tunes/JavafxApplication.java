@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes;
 import com.github.curiousoddman.curious_tunes.app.preloader.MainSceneVisible;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
+import com.github.curiousoddman.curious_tunes.ui.controller.screen.LibraryController;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -30,7 +31,8 @@ public class JavafxApplication extends Application {
     public void start(Stage primaryStage) {
         stage = primaryStage;
         stageManager = applicationContext.getBean(StageManager.class, primaryStage);
-        stageManager.switchScene(FxmlView.LIBRARY);
+        LibraryController libraryController = stageManager.switchScene(FxmlView.LIBRARY);
+        libraryController.setUserPrefs(primaryStage);
         notifyPreloader(new MainSceneVisible());
     }
 }
