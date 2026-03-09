@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 import java.net.URL;
 import java.util.*;
 
-import static com.github.curiousoddman.curious_tunes.util.UiUtils.runInUiThread;
+import static com.sun.javafx.util.Utils.runOnFxThread;
 
 @Lazy
 @Slf4j
@@ -65,7 +65,7 @@ public class LibraryPlaylistController implements Initializable {
     public void updatePlaylist() {
         List<PlaylistItem> playlistItems = playlistModel.getPlaylistItems();
         playlistItemControllers.clear();
-        runInUiThread(() -> {
+        runOnFxThread(() -> {
             ObservableList<Node> playlistNodes = playlistVbox.getChildren();
             playlistNodes.clear();
 

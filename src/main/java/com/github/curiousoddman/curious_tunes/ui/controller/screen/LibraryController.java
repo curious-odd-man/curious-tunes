@@ -60,7 +60,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static com.github.curiousoddman.curious_tunes.domain.tags.FilesScanningService.LIBRARY_SCAN;
-import static com.github.curiousoddman.curious_tunes.util.UiUtils.runInUiThread;
+import static com.sun.javafx.util.Utils.runOnFxThread;
 import static java.util.Comparator.*;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
@@ -216,7 +216,7 @@ public class LibraryController implements Initializable {
                     .map(YearAndLoadedFxml::loadedFxml)
                     .map(LoadedFxml::parent)
                     .toList();
-            runInUiThread(() -> artistAlbumsView.getChildren().addAll(rootElements));
+            runOnFxThread(() -> artistAlbumsView.getChildren().addAll(rootElements));
         });
         t.start();
     }
@@ -257,7 +257,7 @@ public class LibraryController implements Initializable {
 
     @EventListener
     public void onBackgroundProcessEvent(BackgroundProcessEvent event) {
-        runInUiThread(() -> {
+        runOnFxThread(() -> {
             if (event.getMaxProgress() > 0) {
                 progressCanvasController.setProgress(
                         Duration.seconds(event.getProgress()),
@@ -294,7 +294,7 @@ public class LibraryController implements Initializable {
         log.info("Update UI from library in separate thread");
         Thread t = new Thread(() -> {
             for (ArtistRecord artist : dataAccess.getAllArtists()) {
-                runInUiThread(() -> {
+                runOnFxThread(() -> {
                     LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
                             FxmlView.LIBRARY_ARTIST_ITEM,
                             new ArtistItemBundle(artist, artistSelectionModel)
