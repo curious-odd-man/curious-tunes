@@ -3,11 +3,13 @@ package com.github.curiousoddman.curious_tunes.ui.controller.element;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
+import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistDragHandler;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
-import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -15,8 +17,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -53,6 +53,7 @@ public class PlaylistItemController implements Initializable {
     private ContextMenu contextMenu;
     private PlaylistItem playlistItem;
     private PlaylistModel playlistSelectionModel;
+    private PlaylistDragHandler playlistDragHandler;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -74,16 +75,20 @@ public class PlaylistItemController implements Initializable {
             bottomText.setText(playlistItemResourceBundle.getArtist() + "  ---  " + albumRecord.getName());
             playlistSelectionModel = playlistItemResourceBundle.getPlaylistModel();
             playlistSelectionModel
-                    .getSelectedProperty()
+                    .getSelectionModel()
+                    .getSelectedItems()
                     .addListener(this::onPlaylistSelectionChanged);
+            playlistDragHandler = playlistItemResourceBundle.getPlaylistDragHandler();
         }
     }
 
-    private void onPlaylistSelectionChanged(Object observable, PlaylistItem oldValue, PlaylistItem newValue) {
-        if (Objects.equals(newValue, playlistItem)) {
-            pane.getStyleClass().add(SELECTED_ITEM);
-        } else {
-            pane.getStyleClass().remove(SELECTED_ITEM);
+    private void onPlaylistSelectionChanged(ListChangeListener.Change<? extends PlaylistItem> change) {
+        while (change.next()) {
+            if (change.getAddedSubList().contains(playlistItem)) {
+                pane.getStyleClass().add(SELECTED_ITEM);
+            } else if (change.getRemoved().contains(playlistItem)) {
+                pane.getStyleClass().remove(SELECTED_ITEM);
+            }
         }
     }
 
@@ -92,9 +97,17 @@ public class PlaylistItemController implements Initializable {
         if (mouseEvent.getButton() == MouseButton.SECONDARY) {
             contextMenu.show(pane, mouseEvent.getScreenX(), mouseEvent.getScreenY());
         }
-        playlistSelectionModel.select(playlistItem);
+
         if (mouseEvent.getButton() == MouseButton.PRIMARY && mouseEvent.getClickCount() > 1) {
             eventPublisher.publishEvent(new PlaySpecificTrackEvent(this, playlistItem, false));
+        }
+
+        if (mouseEvent.isControlDown()) {
+            playlistSelectionModel.toggleSelect(playlistItem);
+        } else if (mouseEvent.isShiftDown()) {
+            playlistSelectionModel.rangeSelect(playlistItem);
+        } else {
+            playlistSelectionModel.selectOnly(playlistItem);
         }
     }
 
@@ -109,5 +122,50 @@ public class PlaylistItemController implements Initializable {
             styleClassList.removeAll(Set.of(PLAYLIST_ITEM_PLAYING, PLAYLIST_ITEM_PLAYED));     // FIXME
             styleClassList.add(styleClass);
         }
+    }
+
+    @FXML
+    public void onDragDetected(MouseEvent mouseEvent) {
+        playlistDragHandler.dragInitiatedOn(pane);
+        if (!playlistSelectionModel.isSelected(playlistItem)) {
+            playlistSelectionModel.selectOnly(playlistItem);
+        }
+        mouseEvent.consume();
+    }
+
+    @FXML
+    public void onDragDone(DragEvent dragEvent) {
+        pane.getStyleClass().remove(PLAYLIST_DRAG_GUIDE);
+        playlistDragHandler.dragCompleted();
+        dragEvent.consume();
+    }
+
+    @FXML
+    public void onDragDropped(DragEvent dragEvent) {
+        playlistDragHandler.dragDropped(pane);
+        dragEvent.setDropCompleted(true);
+        dragEvent.consume();
+    }
+
+    @FXML
+    public void onDragOver(DragEvent dragEvent) {
+        if (dragEvent.getGestureSource() != pane && dragEvent.getDragboard().hasString()) {
+            dragEvent.acceptTransferModes(TransferMode.MOVE);
+        }
+        dragEvent.consume();
+    }
+
+    @FXML
+    public void onDragEntered(DragEvent dragEvent) {
+        if (dragEvent.getGestureSource() != pane && dragEvent.getDragboard().hasString()) {
+            pane.getStyleClass().add(PLAYLIST_DRAG_GUIDE);
+        }
+        dragEvent.consume();
+    }
+
+    @FXML
+    public void onDragExited(DragEvent dragEvent) {
+        pane.getStyleClass().remove(PLAYLIST_DRAG_GUIDE);
+        dragEvent.consume();
     }
 }

@@ -31,3 +31,8 @@
 .disc-name {
     -fx-background-color: rgb(165, 165, 165);
 }
+
+.playlist-drag-guide {
+    -fx-border-color: #4a90d9;
+    -fx-border-width: 2 0 0 0;
+}

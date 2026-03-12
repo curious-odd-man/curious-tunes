@@ -6,4 +6,5 @@ public class CssClasses {
     public static final String DISC_NAME = "disc-name";
     public static final String PLAYLIST_ITEM_PLAYING = "playlist-item-playing";
     public static final String PLAYLIST_ITEM_PLAYED = "playlist-item-played";
+    public static final String PLAYLIST_DRAG_GUIDE = "playlist-drag-guide";
 }

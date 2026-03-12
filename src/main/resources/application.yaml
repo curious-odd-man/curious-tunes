@@ -21,5 +21,15 @@ spring:
 server:
   port: ${SERVER_PORT}
 
-logging.level.org.jooq.Constants: off
+logging.level:
+  org.jooq.Constants: off
+  com:
+    github:
+      curiousoddman:
+        curious_tunes:
+          ui:
+            controller:
+              element: debug
+          model:
+            playlist: debug
 

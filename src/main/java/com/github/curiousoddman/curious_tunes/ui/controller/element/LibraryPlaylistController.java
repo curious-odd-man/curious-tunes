@@ -6,7 +6,9 @@ import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistDragHandler;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItemMovement;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -14,7 +16,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Label;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +28,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 import static com.sun.javafx.util.Utils.runOnFxThread;
 
@@ -39,6 +47,33 @@ public class LibraryPlaylistController implements Initializable {
 
     @FXML
     private VBox playlistVbox;
+
+    // Drag state
+    private int dragFromIndex = -1;
+    private final PlaylistDragHandler playlistDragHandler = new PlaylistDragHandler() {
+        @Override
+        public void dragCompleted() {
+            dragFromIndex = -1;
+        }
+
+        @Override
+        public void dragInitiatedOn(AnchorPane pane) {
+            dragFromIndex = playlistVbox.getChildren().indexOf(pane);
+            Dragboard db = pane.startDragAndDrop(TransferMode.MOVE);
+            ClipboardContent cc = new ClipboardContent();
+            cc.putString(String.valueOf(dragFromIndex)); // payload: from-index
+            db.setContent(cc);
+        }
+
+        @Override
+        public void dragDropped(AnchorPane pane) {
+            int toIndex = playlistVbox.getChildren().indexOf(pane);
+            if (dragFromIndex >= 0 && dragFromIndex != toIndex) {
+                playlistModel.moveItemTo(dragFromIndex, toIndex);
+                updatePlaylist(); // rebuild to reflect new order
+            }
+        }
+    };
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -62,73 +97,86 @@ public class LibraryPlaylistController implements Initializable {
         }
     }
 
-    public void updatePlaylist() {
+    private void updatePlaylist() {
         List<PlaylistItem> playlistItems = playlistModel.getPlaylistItems();
         playlistItemControllers.clear();
         runOnFxThread(() -> {
             ObservableList<Node> playlistNodes = playlistVbox.getChildren();
             playlistNodes.clear();
 
-            if (playlistItems.isEmpty()) {
-                return;
-            }
-
             for (PlaylistItem playlistItem : playlistItems) {
-                LoadedFxml<PlaylistItemController> loadedFxml = fxmlLoader.load(
-                        FxmlView.PLAYLIST_ITEM,
-                        new PlaylistItemResourceBundle(
-                                playlistItem.getArtistName(),
-                                playlistItem,
-                                playlistModel
-                        )
-                );
-                PlaylistItemController playlistItemController = loadedFxml.controller();
-                playlistItemControllers.put(playlistItem, playlistItemController);
-                Parent parent = loadedFxml.parent();
-                playlistItemController.updateStyle();
-                playlistNodes.add(parent);
+                playlistNodes.add(buildRow(playlistItem));
             }
         });
     }
 
+    private Node buildRow(PlaylistItem playlistItem) {
+
+        LoadedFxml<PlaylistItemController> loadedFxml = fxmlLoader.load(
+                FxmlView.PLAYLIST_ITEM,
+                new PlaylistItemResourceBundle(
+                        playlistItem.getArtistName(),
+                        playlistItem,
+                        playlistModel,
+                        playlistDragHandler
+                )
+        );
+        PlaylistItemController controller = loadedFxml.controller();
+        playlistItemControllers.put(playlistItem, controller);
+        Parent parent = loadedFxml.parent();
+        controller.updateStyle();
+        return parent;
+    }
+
     @FXML
     public void onUpButtonClick(ActionEvent actionEvent) {
-        OptionalInt movedIndex = playlistModel.moveSelectedUp();
-        movedIndex.ifPresent(i -> swap(playlistVbox.getChildren(), i - 1, i));
+        List<PlaylistItemMovement> movements = playlistModel.moveSelectedUp();
+        ObservableList<Node> nodes = playlistVbox.getChildren();
+        movements.forEach(m -> swapNodes(nodes, m.fromIndex(), m.toIndex()));
     }
 
     @FXML
     public void onDownButtonClick(ActionEvent actionEvent) {
-        OptionalInt movedIndex = playlistModel.moveSelectedDown();
-        movedIndex.ifPresent(i -> swap(playlistVbox.getChildren(), i + 1, i));
+        List<PlaylistItemMovement> movements = playlistModel.moveSelectedDown();
+        ObservableList<Node> nodes = playlistVbox.getChildren();
+        movements.forEach(m -> swapNodes(nodes, m.fromIndex(), m.toIndex()));
     }
 
-    private void swap(ObservableList<Node> children, int i1, int i2) {
-        Label fakeLabel = new Label();      // Cannot set null
-        Node removed1 = children.set(i1, fakeLabel);
-        Node removed2 = children.set(i2, removed1);
-        children.set(i1, removed2);
+    private void swapNodes(ObservableList<Node> children, int i1, int i2) {
+        if (i1 < 0 || i2 < 0 || i1 >= children.size() || i2 >= children.size()) {
+            return;
+        }
+        Node tmp = children.get(i1);
+        children.set(i1, children.get(i2));
+        children.set(i2, tmp);
     }
 
     @FXML
     public void onDeleteClick(ActionEvent actionEvent) {
         PlaylistItem item = playlistModel.getSelected();
-        OptionalInt deletedIndex = playlistModel.deleteSelected();
-        deletedIndex.ifPresent(i -> {
-            playlistVbox.getChildren().remove(i);
-            playlistItemControllers.remove(item);
-        });
+        if (item == null) {
+            return;
+        }
+
+        int idx = playlistModel.getPlaylistItems().indexOf(item);
+        playlistModel.deleteSelected();
+
+        if (idx >= 0 && idx < playlistVbox.getChildren().size()) {
+            playlistVbox.getChildren().remove(idx);
+        }
+        playlistItemControllers.remove(item);
     }
 
     @FXML
     public void onShuffleClicked(ActionEvent actionEvent) {
         playlistModel.shuffle();
-        updatePlaylist();       // TODO: Very inefficient
+        updatePlaylist();
     }
 
     @FXML
     public void onClearPlaylistClicked(ActionEvent actionEvent) {
         playlistModel.clear();
-        updatePlaylist();
+        playlistItemControllers.clear();
+        playlistVbox.getChildren().clear();
     }
 }

@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.model.bundle;
 
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistDragHandler;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import lombok.Getter;
@@ -13,13 +14,15 @@ public class PlaylistItemResourceBundle extends ListResourceBundle {
     private final String artist;
     private final PlaylistItem playlistItem;
     private final PlaylistModel playlistModel;
+    private final PlaylistDragHandler playlistDragHandler;
 
     @Override
     protected Object[][] getContents() {
         return new Object[][]{
                 {"artist", artist},
                 {"playlistItem", playlistItem},
-                {"playlistModel", playlistModel}
+                {"playlistModel", playlistModel},
+                {"playlistDragHandler", playlistDragHandler}
         };
     }
 }
