@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="icon.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   inkscape:export-filename="icon.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview8"
+     pagecolor="#b93b3b"
+     bordercolor="#cccccc"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="2.3066406"
+     inkscape:cx="379.12278"
+     inkscape:cy="241.25995"
+     inkscape:window-width="2560"
+     inkscape:window-height="1377"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg8"
+     inkscape:export-bgcolor="#ffffff00" />
+  <defs
+     id="defs5">
+    <!-- Background gradient -->
+    <linearGradient
+       id="bgGrad"
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="1">
+      <stop
+         offset="0%"
+         stop-color="#020617"
+         id="stop1" />
+      <stop
+         offset="100%"
+         stop-color="#000000"
+         id="stop2" />
+    </linearGradient>
+    <!-- Neon blue glow -->
+    <filter
+       id="blueGlow"
+       x="-0.19049692"
+       y="-0.16262097"
+       width="1.3810237"
+       height="1.3252419">
+      <feGaussianBlur
+         stdDeviation="12"
+         result="blur"
+         id="feGaussianBlur2" />
+      <feMerge
+         id="feMerge3">
+        <feMergeNode
+           in="blur"
+           id="feMergeNode2" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode3" />
+      </feMerge>
+    </filter>
+    <!-- Neon purple glow -->
+    <filter
+       id="purpleGlow"
+       x="-0.092769607"
+       y="-0.13953488"
+       width="1.1855392"
+       height="1.2790698">
+      <feGaussianBlur
+         stdDeviation="10"
+         result="blur"
+         id="feGaussianBlur3" />
+      <feMerge
+         id="feMerge5">
+        <feMergeNode
+           in="blur"
+           id="feMergeNode4" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode5" />
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect
+     width="512"
+     height="512"
+     rx="120"
+     fill="url(#bgGrad)"
+     id="rect5" />
+  <!-- Neon c frame (glow layer) -->
+  <path
+     d="M380 150            A150 150 0 1 0 380 362"
+     fill="none"
+     stroke="#38bdf8"
+     stroke-width="40"
+     stroke-linecap="round"
+     filter="url(#blueGlow)"
+     id="path5" />
+  <!-- Sharp c frame -->
+  <path
+     d="M 490.80231,176.28134 C 466.638,152.15713 420.72355,106.86826 378.19315,82.075279 317.28707,46.570243 248.78671,46.76036 203.12933,65.601549 125.87712,97.48081 75.504622,172.63387 75.504622,256.00003 c 0,83.36616 50.372498,158.51922 127.624708,190.39848 49.11212,20.26684 147.44386,19.26703 215.74372,-49.2089 39.13446,-39.23535 76.41903,-138.82957 78.86576,-168.11949"
+     fill="none"
+     stroke="#38bdf8"
+     stroke-width="20"
+     stroke-linecap="round"
+     id="path6"
+     sodipodi:nodetypes="csssssc" />
+  <!-- Neon single eighth note (glow layer) -->
+  <g
+     filter="url(#purpleGlow)"
+     fill="#a78bfa"
+     id="g7">
+    <!-- note head -->
+    <circle
+       cx="285"
+       cy="310"
+       r="32"
+       id="circle6" />
+    <!-- stem -->
+    <rect
+       x="305"
+       y="170"
+       width="14"
+       height="150"
+       rx="7"
+       id="rect6" />
+    <!-- flag -->
+    <path
+       d="m 319,170 c 47.33333,13.33333 59.33333,36.66667 36,70 -16.66667,-6.66667 163.82106,-28.87299 156.48772,-38.87299 z"
+       id="path7"
+       sodipodi:nodetypes="cccc" />
+  </g>
+  <!-- Sharp single eighth note -->
+  <g
+     fill="#a78bfa"
+     id="g8">
+    <circle
+       cx="285"
+       cy="310"
+       r="28"
+       id="circle7" />
+    <rect
+       x="307"
+       y="175"
+       width="10"
+       height="140"
+       rx="5"
+       id="rect7" />
+    <path
+       d="m 317,175 c 42,13.33333 53,33.33333 33,60 -10.29862,-15.50494 -24.33333,-11.33333 -33,-20 z"
+       id="path8"
+       sodipodi:nodetypes="cccc" />
+  </g>
+</svg>

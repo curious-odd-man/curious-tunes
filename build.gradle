@@ -236,6 +236,11 @@ tasks.register('deploy') {
             expand(tokens)
         }
 
+        copy {
+            from "src/main/resources/icons/cTunes.ico"
+            into deployDir
+        }
+
         println "✅ JAR deployed to: ${deployDir}\\${jarName}"
         println "✅ Desktop shortcut created: ${desktopDir}\\cTunes.lnk"
 

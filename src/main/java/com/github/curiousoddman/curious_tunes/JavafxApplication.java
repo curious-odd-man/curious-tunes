@@ -5,6 +5,7 @@ import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
 import com.github.curiousoddman.curious_tunes.ui.controller.screen.LibraryController;
 import javafx.application.Application;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -30,6 +31,12 @@ public class JavafxApplication extends Application {
     @Override
     public void start(Stage primaryStage) {
         stage = primaryStage;
+        stage.getIcons().addAll(
+                new Image(getClass().getResourceAsStream("/icons/app-icon-16.png")),
+                new Image(getClass().getResourceAsStream("/icons/app-icon-32.png")),
+                new Image(getClass().getResourceAsStream("/icons/app-icon-64.png")),
+                new Image(getClass().getResourceAsStream("/icons/app-icon-128.png"))
+        );
         stageManager = applicationContext.getBean(StageManager.class, primaryStage);
         LibraryController libraryController = stageManager.switchScene(FxmlView.LIBRARY);
         libraryController.setUserPrefs(primaryStage);
