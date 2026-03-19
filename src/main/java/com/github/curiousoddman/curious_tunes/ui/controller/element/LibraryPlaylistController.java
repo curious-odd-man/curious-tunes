@@ -94,7 +94,7 @@ public class LibraryPlaylistController implements Initializable {
         if (playlistItemController == null) {
             log.error("NPE: null for {}", playlistItem.getTitle());
         } else {
-            playlistItemController.updateStyle();
+            playlistItemController.updateStyleFromPlayerStatus();
         }
     }
 
@@ -125,7 +125,7 @@ public class LibraryPlaylistController implements Initializable {
         PlaylistItemController controller = loadedFxml.controller();
         playlistItemControllers.put(playlistItem, controller);
         Parent parent = loadedFxml.parent();
-        controller.updateStyle();
+        controller.updateStyleFromPlayerStatus();
         return parent;
     }
 

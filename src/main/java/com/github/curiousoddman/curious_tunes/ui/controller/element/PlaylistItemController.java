@@ -17,7 +17,10 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.*;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -84,10 +87,12 @@ public class PlaylistItemController implements Initializable {
 
     private void onPlaylistSelectionChanged(ListChangeListener.Change<? extends PlaylistItem> change) {
         while (change.next()) {
+            if (change.getRemoved().contains(playlistItem)) {   // Replaced = added + removed
+                pane.getStyleClass().remove(SELECTED_ITEM);
+            }
+
             if (change.getAddedSubList().contains(playlistItem)) {
                 pane.getStyleClass().add(SELECTED_ITEM);
-            } else if (change.getRemoved().contains(playlistItem)) {
-                pane.getStyleClass().remove(SELECTED_ITEM);
             }
         }
     }
@@ -111,7 +116,7 @@ public class PlaylistItemController implements Initializable {
         }
     }
 
-    public void updateStyle() {
+    public void updateStyleFromPlayerStatus() {
         String styleClass = switch (playlistItem.getPlaylistItemStatus()) {
             case PLAYING -> PLAYLIST_ITEM_PLAYING;
             case SKIPPED, QUEUED, FILE_NOT_FOUND, TO_BE_SKIPPED -> null;
