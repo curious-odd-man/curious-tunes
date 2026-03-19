@@ -20,6 +20,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -146,9 +147,10 @@ public class LibraryPlaylistController implements Initializable {
         if (i1 < 0 || i2 < 0 || i1 >= children.size() || i2 >= children.size()) {
             return;
         }
-        Node tmp = children.get(i1);
-        children.set(i1, children.get(i2));
-        children.set(i2, tmp);
+        Region placeholder = new Region();
+        Node tmp = children.set(i1, placeholder);
+        Node node2 = children.set(i2, tmp);
+        children.set(i1, node2);
     }
 
     @FXML
