@@ -13,6 +13,7 @@ public enum UserPrefKey {
     WINDOW_WIDTH("window.width"),
     WINDOW_HEIGHT("window.height"),
     WINDOW_MAXIMIZED("window.maximized"),
+    LYRICS_FONT_SIZE("lyrics.font.size"),
 
     // ── Playback ────────────────────────────────────────────────────────────
     VOLUME("playback.volume"),          // 0 – 100

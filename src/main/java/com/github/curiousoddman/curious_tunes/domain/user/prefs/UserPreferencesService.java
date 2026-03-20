@@ -20,6 +20,7 @@ public class UserPreferencesService {
     public static final int DEFAULT_VOLUME = 30;
     public static final double DEFAULT_ARTISTS_SPLIT_WIDTH = 0.26;
     public static final double DEFAULT_PLAYLIST_SPLIT_WIDTH = 0.8;
+    public static final double DEFAULT_LYRICS_FONT_SIZE = 12;
 
     private final DataAccess dataAccess;
 
@@ -82,5 +83,13 @@ public class UserPreferencesService {
     public void saveSplitPositions(double[] dividerPositions) {
         dataAccess.setUserPref(UserPrefKey.ARTISTS_SPLIT_WIDTH, String.valueOf(dividerPositions[0]));
         dataAccess.setUserPref(UserPrefKey.PLAYLIST_SPLIT_WIDTH, String.valueOf(dividerPositions[1]));
+    }
+
+    public void saveLyricsFontSize(double size) {
+        dataAccess.setUserPref(UserPrefKey.LYRICS_FONT_SIZE, String.valueOf(size));
+    }
+
+    public double getLyricsFontSize() {
+        return getDouble(UserPrefKey.LYRICS_FONT_SIZE, DEFAULT_LYRICS_FONT_SIZE);
     }
 }
