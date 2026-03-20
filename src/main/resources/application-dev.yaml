@@ -1,3 +1,4 @@
 DATABASE_FILE: ctunes-dev
+#DATABASE_FILE: ctunes-prod-copy
 H2_CONSOLE_ENABLED: true
 SERVER_PORT: 6666

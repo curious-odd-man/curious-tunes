@@ -116,7 +116,7 @@ class TrackEditControllerSaveTest {
 
         verify(dataAccess).getOrInsertArtist("New Artist");
         verify(dataAccess).getOrInsertAlbum(2, "Album", null);
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.FK_ALBUM, "10");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.FK_ALBUM, "10");
         verify(trackRecord).setFkAlbum(20);
         verify(trackRecord).update(TRACK.FK_ALBUM);
     }
@@ -151,7 +151,7 @@ class TrackEditControllerSaveTest {
 
         verify(dataAccess, never()).getOrInsertArtist(any());
         verify(dataAccess).getOrInsertAlbum(1, "New Album", null);
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.FK_ALBUM, "10");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.FK_ALBUM, "10");
         verify(trackRecord).setFkAlbum(20);
     }
 
@@ -164,7 +164,7 @@ class TrackEditControllerSaveTest {
             sut.onSave(new ActionEvent());
         });
 
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.TITLE, "Title");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.TITLE, "Title");
         verify(trackRecord).set(TRACK.TITLE, "New Title");
     }
 
@@ -177,7 +177,7 @@ class TrackEditControllerSaveTest {
             sut.onSave(new ActionEvent());
         });
 
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.TRACK_NUMBER, "3");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.TRACK_NUMBER, "3");
         verify(trackRecord).set(TRACK.TRACK_NUMBER, 5);
     }
 
@@ -188,7 +188,7 @@ class TrackEditControllerSaveTest {
             sut.onSave(new ActionEvent());
         });
 
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.GENRE, "Rock");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.GENRE, "Rock");
         verify(trackRecord).set(TRACK.GENRE, "Jazz");
     }
 
@@ -199,7 +199,7 @@ class TrackEditControllerSaveTest {
             sut.onSave(new ActionEvent());
         });
 
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.LYRICS, "Lyrics");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.LYRICS, "Lyrics");
         verify(trackRecord).set(TRACK.LYRICS, "New lyrics");
     }
 
@@ -226,9 +226,9 @@ class TrackEditControllerSaveTest {
         });
 
         verify(dataAccess, times(2)).getTrackOverrides(anyInt());
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.TITLE, "Title");
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.GENRE, "Rock");
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.COMPOSER, "Composer");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.TITLE, "Title");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.GENRE, "Rock");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.COMPOSER, "Composer");
         verifyNoMoreInteractions(dataAccess);
     }
 
@@ -243,7 +243,7 @@ class TrackEditControllerSaveTest {
             sut.onSave(new ActionEvent());
         });
 
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.GENRE, null);
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.GENRE, null);
     }
 
     @Test
@@ -253,7 +253,7 @@ class TrackEditControllerSaveTest {
             sut.onSave(new ActionEvent());
         });
 
-        verify(dataAccess).storeTrackOverride(trackInfo, TRACK.GENRE, "Rock");
+        verify(dataAccess).storeTrackOverride(trackInfo.getTrackRecord(), TRACK.GENRE, "Rock");
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

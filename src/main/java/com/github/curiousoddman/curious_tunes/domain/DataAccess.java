@@ -3,7 +3,6 @@ package com.github.curiousoddman.curious_tunes.domain;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.*;
 import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPrefKey;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
-import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Record1;
@@ -84,11 +83,12 @@ public class DataAccess {
                 ).fetchOne();
     }
 
-    public void insertTrack(TrackRecord newTrackRecord) {
-        dsl
+    public TrackRecord insertTrack(TrackRecord newTrackRecord) {
+        return dsl
                 .insertInto(TRACK)
                 .set(newTrackRecord)
-                .execute();
+                .returning()
+                .fetchOne();
     }
 
     public List<ArtistRecord> getAllArtists() {
@@ -148,46 +148,6 @@ public class DataAccess {
         return getAlbumsTracks(artistAlbums);
     }
 
-    public Map<TrackInfo, Map.Entry<AlbumRecord, ArtistRecord>> getArtistAlbumForTracks(List<PlaylistItem> playlistItems) {
-        if (playlistItems.isEmpty()) {
-            return Map.of();
-        }
-        Set<Integer> albumFks = playlistItems
-                .stream()
-                .map(PlaylistItem::getTrackRecord)
-                .map(TrackRecord::getFkAlbum)
-                .collect(Collectors.toSet());
-        Map<Integer, AlbumRecord> albumIdToRecord = dsl
-                .selectFrom(ALBUM)
-                .where(ALBUM.ID.in(albumFks))
-                .fetch()
-                .intoMap(AlbumRecord::getId);
-        Set<Integer> artistFks = albumIdToRecord.values().stream().map(AlbumRecord::getFkArtist).collect(Collectors.toSet());
-        Map<Integer, ArtistRecord> artistIdToRecord = dsl
-                .selectFrom(ARTIST)
-                .where(ARTIST.ID.in(artistFks))
-                .fetch()
-                .intoMap(ArtistRecord::getId);
-
-        return playlistItems
-                .stream()
-                .collect(Collectors.toMap(
-                        Function.identity(),
-                        tr -> {
-                            AlbumRecord albumRecord = albumIdToRecord.get(tr.getTrackRecord().getFkAlbum());
-                            ArtistRecord artistRecord = artistIdToRecord.get(albumRecord.getFkArtist());
-                            return Map.entry(
-                                    albumRecord,
-                                    artistRecord
-                            );
-                        },
-                        (r1, r2) -> {
-                            throw new IllegalArgumentException();
-                        },
-                        LinkedHashMap::new
-                ));
-    }
-
     public void insertIntoHistory(OffsetDateTime now, Integer trackId, int volume) {
         dsl
                 .insertInto(PLAYBACK_HISTORY)
@@ -224,9 +184,9 @@ public class DataAccess {
         return dsl.fetch(ARTIST, ARTIST.ID.in(artistFks));
     }
 
-    public void storeTrackOverride(TrackInfo trackInfo, TableField<TrackRecord, ?> field, String text) {
+    public void storeTrackOverride(TrackRecord trackRecord, TableField<TrackRecord, ?> field, String text) {
         TrackOverridesHistoryRecord insertedRow = dsl.insertInto(TRACK_OVERRIDES_HISTORY)
-                .set(TRACK_OVERRIDES_HISTORY.TRACK_ID, trackInfo.getTrackId())
+                .set(TRACK_OVERRIDES_HISTORY.TRACK_ID, trackRecord.getId())
                 .set(TRACK_OVERRIDES_HISTORY.FIELD, field.getName())
                 .set(TRACK_OVERRIDES_HISTORY.OLD_VALUE, text)
                 .set(TRACK_OVERRIDES_HISTORY.MODIFIED_AT, LocalDateTime.now())
@@ -234,7 +194,7 @@ public class DataAccess {
                 .fetchOne();
 
         initTrackOverrides()
-                .computeIfAbsent(insertedRow.getTrackId(), k -> new ArrayList<>())
+                .computeIfAbsent(trackRecord.getId(), k -> new ArrayList<>())
                 .add(insertedRow);
     }
 
@@ -267,5 +227,12 @@ public class DataAccess {
                 .fetchOne();
 
         return record != null ? record.value1() : defaultValue;
+    }
+
+    public List<TrackRecord> getAllTracks() {
+        return dsl
+                .selectFrom(TRACK)
+                .stream()
+                .toList();
     }
 }

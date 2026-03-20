@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.flagger.Flag;
 
 import java.util.List;
+import java.util.Objects;
 
 // AI Generated
 public record CleanerResult(
@@ -15,6 +16,6 @@ public record CleanerResult(
     }
 
     public boolean wasModified() {
-        return !original.equals(cleaned);
+        return !Objects.equals(original, cleaned);
     }
 }

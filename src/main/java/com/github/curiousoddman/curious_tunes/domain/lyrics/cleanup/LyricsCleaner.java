@@ -18,6 +18,10 @@ public class LyricsCleaner {
     private final List<SuspicionFlagger> flaggers;
 
     public CleanerResult clean(String lyrics) {
+        if (lyrics == null || lyrics.isBlank()) {
+            return new CleanerResult(lyrics, null, List.of());
+        }
+
         List<Flag> flags = flaggers.stream()
                 .filter(f -> f.test(lyrics))
                 .map(SuspicionFlagger::flag)
@@ -26,10 +30,6 @@ public class LyricsCleaner {
         // broken songs are returned as-is — cleaning could corrupt the artifact evidence
         if (flags.contains(Flag.PARSING_ERROR)) {
             return new CleanerResult(lyrics, lyrics, flags);
-        }
-
-        if (lyrics == null || lyrics.isBlank()) {
-            return new CleanerResult(lyrics, null, flags);
         }
 
         List<String> result = Arrays.asList(lyrics.split("\n"));

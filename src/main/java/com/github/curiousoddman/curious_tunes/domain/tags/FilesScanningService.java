@@ -4,11 +4,14 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
+import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.CleanerResult;
+import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.LyricsCleaner;
 import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.RescanLibraryEvent;
 import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
 import com.github.curiousoddman.curious_tunes.model.TrackStatus;
+import com.github.curiousoddman.curious_tunes.util.StartupRunnable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -27,17 +30,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 import static com.github.curiousoddman.curious_tunes.util.FileUtils.audioMd5;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FilesScanningService {
+public class FilesScanningService /*implements StartupRunnable*/ {
     private static final int APPROXIMATE_SIZE_OF_MY_LIBRARY = 5000;
     public static final String LIBRARY_SCAN = "Library Scan";
     private final ApplicationEventPublisher applicationEventPublisher;
     private final DataAccess dataAccess;
     private final MetadataManager metadataManager;
+    private final LyricsCleaner lyricsCleaner;
 
     private boolean shouldInterrupt;
 
@@ -85,8 +90,9 @@ public class FilesScanningService {
         AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum(), albumCover == null ? null : albumCover.getData());
         Optional<TrackRecord> trackRecord = dataAccess.getTrack(file);
 
+        TrackRecord newTrackRecord;
         if (trackRecord.isEmpty()) {
-            TrackRecord mewTrackRecord = new TrackRecord(
+            newTrackRecord = new TrackRecord(
                     null,
                     albumRecord.getId(),
                     metadata.getTitle(),
@@ -103,11 +109,23 @@ public class FilesScanningService {
                     TrackStatus.ACTIVE.name(),
                     metadata.getLyrics()
             );
-            dataAccess.insertTrack(mewTrackRecord);
+            newTrackRecord = dataAccess.insertTrack(newTrackRecord);
         } else {
-            if (metadata.updateTrackIfChanged(trackRecord.orElse(null), albumRecord.getId())) {
-                trackRecord.get().update();
+            newTrackRecord = trackRecord.get();
+            if (metadata.updateTrackIfChanged(newTrackRecord, albumRecord.getId())) {
+                newTrackRecord.update();
             }
+        }
+        autoFixLyrics(newTrackRecord);
+    }
+
+    private void autoFixLyrics(TrackRecord trackRecord) {
+        String lyrics = trackRecord.getLyrics();
+        CleanerResult cleanerResult = lyricsCleaner.clean(lyrics);
+        if (cleanerResult.wasModified()) {
+            dataAccess.storeTrackOverride(trackRecord, TRACK.LYRICS, lyrics);
+            trackRecord.setLyrics(cleanerResult.cleaned());
+            trackRecord.update(TRACK.LYRICS);
         }
     }
 
@@ -190,4 +208,13 @@ public class FilesScanningService {
                 .source(this)
                 .processName(LIBRARY_SCAN);
     }
+
+    // Uncomment if need to bulk fix lyrics again
+//    @Override
+//    public void onStartup() {
+//        List<TrackRecord> trackRecords = dataAccess.getAllTracks();
+//        for (TrackRecord trackRecord : trackRecords) {
+//            autoFixLyrics(trackRecord);
+//        }
+//    }
 }

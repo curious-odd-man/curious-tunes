@@ -111,13 +111,13 @@ public class LibraryTagEditTabController implements Initializable {
             log.info("Artist name changed!");
             artist = dataAccess.getOrInsertArtist(artistField.getText());
             AlbumRecord album = dataAccess.getOrInsertAlbum(artist.getId(), albumField.getText(), trackInfo.getAlbumImage());
-            dataAccess.storeTrackOverride(trackInfo, TRACK.FK_ALBUM, str(trackRecord.getFkAlbum()));
+            dataAccess.storeTrackOverride(trackInfo.getTrackRecord(), TRACK.FK_ALBUM, str(trackRecord.getFkAlbum()));
             trackRecord.setFkAlbum(album.getId());
             trackRecord.update(TRACK.FK_ALBUM);
         } else if (!albumField.getText().equals(trackInfo.getAlbumName())) {
             log.info("Album changed");
             AlbumRecord album = dataAccess.getOrInsertAlbum(artist.getId(), albumField.getText(), trackInfo.getAlbumImage());
-            dataAccess.storeTrackOverride(trackInfo, TRACK.FK_ALBUM, str(trackRecord.getFkAlbum()));
+            dataAccess.storeTrackOverride(trackInfo.getTrackRecord(), TRACK.FK_ALBUM, str(trackRecord.getFkAlbum()));
             trackRecord.setFkAlbum(album.getId());
             trackRecord.update(TRACK.FK_ALBUM);
         }
@@ -135,7 +135,7 @@ public class LibraryTagEditTabController implements Initializable {
         for (ChangeCheck changeCheck : changeChecks) {
             if (!Objects.equals(changeCheck.uiValue, str(changeCheck.trackValue))) {
                 log.info("Value for '{}' does not match '{}' --> '{}', updating...", changeCheck.field.getName(), changeCheck.uiValue, changeCheck.trackValue);
-                dataAccess.storeTrackOverride(trackInfo, changeCheck.field, str(changeCheck.trackValue));
+                dataAccess.storeTrackOverride(trackInfo.getTrackRecord(), changeCheck.field, str(changeCheck.trackValue));
                 trackRecord.set(changeCheck.field, changeCheck.mapper.apply(changeCheck.uiValue));
                 trackRecord.update(changeCheck.field);
             }

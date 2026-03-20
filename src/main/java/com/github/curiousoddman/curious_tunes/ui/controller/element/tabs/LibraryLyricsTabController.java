@@ -64,7 +64,7 @@ public class LibraryLyricsTabController implements Initializable {
 
         Thread t = new Thread(() -> {
             log.info("Saving updated lyrics to {}", playlistItem.getFileLocation());
-            dataAccess.storeTrackOverride(playlistItem, TRACK.LYRICS, playlistItem.getLyrics());
+            dataAccess.storeTrackOverride(playlistItem.getTrackRecord(), TRACK.LYRICS, playlistItem.getLyrics());
             playlistItem.setLyrics(lyricsTextArea.getText());
             playlistItem.getTrackRecord().update(TRACK.LYRICS);
             log.info("Update completed...");
