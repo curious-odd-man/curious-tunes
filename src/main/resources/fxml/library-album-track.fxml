@@ -12,15 +12,15 @@
             <Font size="14.0" />
          </font>
       </Label>
-      <Label fx:id="trackNumberLabel" text="#" HBox.hgrow="NEVER">
+      <Label fx:id="trackNumberLabel" HBox.hgrow="NEVER">
          <font>
             <Font size="14.0" />
          </font></Label>
-      <Label fx:id="trackTitleLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Track Title" HBox.hgrow="ALWAYS">
+      <Label fx:id="trackTitleLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
          <font>
             <Font size="14.0" />
          </font></Label>
-      <Label fx:id="trackTimeLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Time" HBox.hgrow="NEVER">
+      <Label fx:id="trackTimeLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="NEVER">
          <font>
             <Font size="14.0" />
          </font></Label>

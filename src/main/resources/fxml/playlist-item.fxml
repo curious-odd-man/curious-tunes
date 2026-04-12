@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="pane" onDragDetected="#onDragDetected" onDragDone="#onDragDone" onDragDropped="#onDragDropped" onDragOver="#onDragOver" onMouseClicked="#onPaneClicked" onDragEntered="#onDragEntered" onDragExited="#onDragExited" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.PlaylistItemController">
+<AnchorPane fx:id="pane" onDragDetected="#onDragDetected" onDragDone="#onDragDone" onDragDropped="#onDragDropped" onDragEntered="#onDragEntered" onDragExited="#onDragExited" onDragOver="#onDragOver" onMouseClicked="#onPaneClicked" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.PlaylistItemController">
     <children>
         <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <left>
@@ -23,7 +23,7 @@
                 </ImageView>
             </left>
             <right>
-                <Label fx:id="rightText" contentDisplay="RIGHT" text="Label" BorderPane.alignment="CENTER_RIGHT">
+                <Label fx:id="rightText" contentDisplay="RIGHT" BorderPane.alignment="CENTER_RIGHT">
                <padding>
                   <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                </padding></Label>
@@ -31,14 +31,14 @@
             <center>
                 <VBox alignment="CENTER_LEFT" spacing="5.0" BorderPane.alignment="CENTER_LEFT">
                     <children>
-                        <Label fx:id="topText" text="Label">
+                        <Label fx:id="topText">
                      <font>
                         <Font size="14.0" />
                      </font>
                      <padding>
                         <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                      </padding></Label>
-                        <Label fx:id="bottomText" text="Label" textFill="#00000080">
+                        <Label fx:id="bottomText" textFill="#00000080">
                      <padding>
                         <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                      </padding></Label>

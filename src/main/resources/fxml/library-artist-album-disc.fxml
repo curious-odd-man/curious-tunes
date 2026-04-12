@@ -8,7 +8,7 @@
 
 <VBox fx:id="pane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumDiscController">
    <children>
-      <Label fx:id="diskNumberLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="💿 1" VBox.vgrow="SOMETIMES">
+      <Label fx:id="diskNumberLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="SOMETIMES">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>

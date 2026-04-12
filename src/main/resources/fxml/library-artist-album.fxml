@@ -29,12 +29,12 @@
    <center>
           <VBox fx:id="contentsVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="TOP_LEFT">
               <children>
-                  <Label fx:id="albumTitle" text="Red Hot Chile Peppers" VBox.vgrow="NEVER">
+                  <Label fx:id="albumTitle" VBox.vgrow="NEVER">
                       <font>
                           <Font size="24.0" />
                       </font>
                   </Label>
-                  <Label fx:id="albumDetails" layoutX="10.0" layoutY="10.0" text="Pop/Rock   2000" VBox.vgrow="NEVER">
+                  <Label fx:id="albumDetails" layoutX="10.0" layoutY="10.0" VBox.vgrow="NEVER">
                       <font>
                           <Font size="14.0" />
                       </font>

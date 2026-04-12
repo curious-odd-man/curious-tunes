@@ -20,7 +20,7 @@
          <image>
             <Image url="@/img/noimage.png" />
          </image></ImageView>
-        <Label fx:id="artistNameLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Red Hot Chile Peppers" HBox.hgrow="ALWAYS">
+        <Label fx:id="artistNameLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
             <font>
                 <Font name="Consolas Bold" size="14.0" />
             </font>

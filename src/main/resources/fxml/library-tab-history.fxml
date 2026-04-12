@@ -42,25 +42,25 @@
                                             <Font name="System Bold" size="12.0" />
                                         </font>
                                     </Label>
-                                    <Label fx:id="totalTimeListened" text="x years y monts..." GridPane.columnIndex="1" />
+                                    <Label fx:id="totalTimeListened" GridPane.columnIndex="1" />
                                     <Label text="Songs played" GridPane.rowIndex="1">
                                         <font>
                                             <Font name="System Bold" size="12.0" />
                                         </font>
                                     </Label>
-                                    <Label fx:id="songsPlayed" text="nnn " GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <Label fx:id="songsPlayed" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                     <Label text="Albums played" GridPane.rowIndex="2">
                                         <font>
                                             <Font name="System Bold" size="12.0" />
                                         </font>
                                     </Label>
-                                    <Label fx:id="albumsPlayed" text="nnn " GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Label fx:id="albumsPlayed" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                     <Label text="Artists played" GridPane.rowIndex="3">
                                         <font>
                                             <Font name="System Bold" size="12.0" />
                                         </font>
                                     </Label>
-                                    <Label fx:id="artistsPlayed" text="nnn" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                    <Label fx:id="artistsPlayed" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                     <TableView fx:id="latestSongsTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnSpan="9" GridPane.rowIndex="5">
                                         <columns>
                                             <TableColumn fx:id="dateColumn" editable="false" maxWidth="1.7976931348623157E308" sortable="false" text="Date" />
