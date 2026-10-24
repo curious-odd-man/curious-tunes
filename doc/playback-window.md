@@ -170,11 +170,20 @@ These come from reading the current code.
 ## 8. Open questions (summary)
 
 1. Does X on the playback window return to the library, or exit the app?
+> return to library
 2. Is "Maximized" the normal maximized window state (not exclusive full screen)?
+> yes
 3. Is the Simple view content proposal acceptable (no lyrics, one-line Up next)?
+> yes
 4. Next while paused: start the next track immediately?
+> yes
 5. Does clearing the playlist alone reset the session timer? What is shown before first playback?
+> yes. nothing is shown
 6. Lyrics: confirm the "scroll + auto-fit default" reading; text size control type and persistence.
+> correct
 7. Entry button: also disabled when stopped/ended with a loaded track?
+> yes
 8. Do waveform colors follow the album art palette? Animate color transitions?
+> yes and yes
 9. Does saved window size/position apply to Simple view only?
+> yes
