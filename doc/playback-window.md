@@ -1,6 +1,7 @@
 # Playback Window Mode — Requirements & Design Notes
 
-Status: **DRAFT v2 — all answers from review round 1 incorporated. No code yet.**
+Status: **DRAFT v3 — answers from review rounds 1 and 2 incorporated. One item still needs clarification (lyrics size,
+see [OPEN]). No code yet.**
 Items marked **[PROPOSAL]** are my suggestions that have not been explicitly confirmed.
 Items marked **[OPEN]** are still unanswered.
 
@@ -13,24 +14,26 @@ layout than the library screen. It is inspired by iTunes but is not a copy of it
 
 ## 2. Decisions
 
-| #  | Topic                   | Decision                                                                                                                                                                                                                                     |
-|----|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1  | Relationship to library | Separate window. The library window is hidden while the playback window is open and is brought back when the playback window is left. **[PROPOSAL]** Hide rather than destroy, so library state (selection, tabs, playlist, scroll) is kept. |
-| 2  | Closing                 | The X button on the playback window returns to the library. It does not exit the app.                                                                                                                                                        |
-| 3  | Views                   | Two views: **Simple** (compact) and **Maximized**. A button switches between them.                                                                                                                                                           |
-| 4  | Maximized               | The normal maximized window state (title bar and taskbar visible), not exclusive full screen.                                                                                                                                                |
-| 5  | Platform                | Windows only.                                                                                                                                                                                                                                |
-| 6  | Frame                   | Normal OS window frame is kept (not frameless).                                                                                                                                                                                              |
-| 7  | Waveform                | Same behavior as the library view. Click-to-seek only.                                                                                                                                                                                       |
-| 8  | Session timer           | Wall clock. Starts at first playback. Resets when the playlist is fully replaced **or cleared**. Shows nothing until the first playback after a reset.                                                                                       |
-| 9  | Controls                | Play/pause, next, volume, lyrics text size. No shuffle, no previous.                                                                                                                                                                         |
-| 10 | Next while paused       | Starts playing the next track immediately.                                                                                                                                                                                                   |
-| 11 | Up next                 | Next track in playlist order. Artist/album that match the current track are dimmed.                                                                                                                                                          |
-| 12 | Lyrics                  | Scrolls when text overflows. Default text size auto-fits the pane; the size control overrides it. Shows stored lyrics only (no fetching). Shows a "no lyrics" message when absent.                                                           |
-| 13 | Simple view content     | No lyrics, one-line "Up next" with small thumbnail.                                                                                                                                                                                          |
-| 14 | Entry button            | On the library view, next to play/pause. Enabled only while a track is playing or paused; **disabled when stopped or ended**. No keyboard shortcut.                                                                                          |
-| 15 | Persistence             | Window size and position are remembered, **for Simple view only**. Last-used view is not remembered (always opens in Simple).                                                                                                                |
-| 16 | Look                    | Colors derived from album art, including the waveform colors. Color changes between tracks are animated.                                                                                                                                     |
+| #  | Topic                     | Decision                                                                                                                                                                                                                      |
+|----|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1  | Relationship to library   | Separate window. The library window is **hidden** (not destroyed) while the playback window is open and is brought back when the playback window is left, so library state (selection, tabs, playlist, scroll) is kept.       |
+| 2  | Closing                   | The X button on the playback window returns to the library. It does not exit the app.                                                                                                                                         |
+| 3  | Views                     | Two views: **Simple** (compact) and **Maximized**. A button switches between them.                                                                                                                                            |
+| 4  | Maximized                 | The normal maximized window state (title bar and taskbar visible), not exclusive full screen.                                                                                                                                 |
+| 5  | Platform                  | Windows only.                                                                                                                                                                                                                 |
+| 6  | Frame                     | Normal OS window frame is kept (not frameless).                                                                                                                                                                               |
+| 7  | Waveform                  | Same behavior as the library view. Click-to-seek only.                                                                                                                                                                        |
+| 8  | Session timer             | Wall clock. Starts at first playback. Resets when the playlist is fully replaced **or cleared**. Shows nothing until the first playback after a reset.                                                                        |
+| 9  | Controls                  | Play/pause, next, volume, lyrics text size. No shuffle, no previous.                                                                                                                                                          |
+| 10 | Next while paused         | Starts playing the next track immediately.                                                                                                                                                                                    |
+| 11 | Up next                   | Next track in playlist order. Artist/album that match the current track are dimmed.                                                                                                                                           |
+| 12 | Lyrics                    | Scrolls when text overflows. Text size is auto-fitted to the pane first. Size control is a **slider**. A **checkbox** disables the auto-fit. Shows stored lyrics only (no fetching). Shows a "no lyrics" message when absent. |
+| 13 | Simple view content       | No lyrics, one-line "Up next" with small thumbnail.                                                                                                                                                                           |
+| 14 | Entry button              | On the library view, next to play/pause. Enabled only while a track is playing or paused; **disabled when stopped or ended**. No keyboard shortcut.                                                                           |
+| 15 | Persistence               | Window size and position are remembered, **for Simple view only**. Last-used view is not remembered (always opens in Simple).                                                                                                 |
+| 16 | Look                      | Colors derived from album art, including the playback window's waveform colors. Color changes between tracks are animated. The library waveform keeps its current fixed colors.                                               |
+| 17 | Stop/end with window open | The playback window stays open, showing the last track.                                                                                                                                                                       |
+| 18 | Session timer format      | `m:ss`, switching to `h:mm:ss` after one hour.                                                                                                                                                                                |
 
 ## 3. Requirements (mapped to the original list)
 
@@ -49,7 +52,7 @@ layout than the library screen. It is inspired by iTunes but is not a copy of it
 | R11 | Button on library view to open this mode                         |            n/a             |    n/a    |
 | R12 | Play/pause                                                       |            yes             |    yes    |
 | R13 | Volume                                                           |            yes             |    yes    |
-| R14 | Lyrics text size control                                         |            n/a             |    yes    |
+| R14 | Lyrics text size slider + auto-fit checkbox                      |            n/a             |    yes    |
 
 ## 4. Behavior details
 
@@ -57,9 +60,8 @@ layout than the library screen. It is inspired by iTunes but is not a copy of it
 
 - Opening hides the library window; leaving (X button) shows it again. Playback continues uninterrupted either way.
 - The playback window always opens in Simple view.
-- If playback becomes stopped or ended while the window is open, the window stays open showing the last track. *
-  *[PROPOSAL]** Next is disabled and play/pause restarts or resumes as in the library. Tell me if you would rather it
-  close automatically.
+- If playback becomes stopped or ended while the window is open, the window stays open showing the last track. Next is
+  disabled when there is no next item; play/pause behaves as in the library.
 
 **Next button**
 
@@ -79,15 +81,19 @@ layout than the library screen. It is inspired by iTunes but is not a copy of it
   starts again at the next playback.
 - Adding or inserting tracks, or playing a specific track (`PUT_AFTER_CURRENT`), does not reset it.
 - Before the first playback after a reset, the timer area is empty.
-- Display format **[PROPOSAL]**: `m:ss`, switching to `h:mm:ss` after one hour.
+- Display format: `m:ss`, switching to `h:mm:ss` after one hour.
 
 **Lyrics**
 
 - Source: lyrics already stored on the track. No fetching.
 - Missing lyrics: a "No lyrics" message.
-- Text size: auto-fitted to the pane by default; the control sets an explicit size.
-- **[OPEN]** Control type: stepper (A− / A+) or slider?
-- **[OPEN]** Is the chosen size remembered between sessions?
+- Text size control: a slider.
+- A checkbox (e.g. "Auto-fit") disables the automatic fitting.
+- The slider's chosen size is **not** remembered between sessions.
+- **[OPEN]** Your answer was "no, remember - first fit lyrics. btw need a checkbox to disable this." My reading, which I
+  have not treated as a decision: lyrics are auto-fitted first every time (each track, each window open); the checkbox
+  turns auto-fit off, after which the slider sets the size manually; nothing about size is saved. See section 8,
+  question 1.
 
 **Volume**
 
@@ -105,7 +111,7 @@ layout than the library screen. It is inspired by iTunes but is not a copy of it
   readable contrast. The waveform colors (played/unplayed) also follow the palette.
 - Color changes on track change are animated (e.g. a short cross-fade).
 - No art: fall back to a default dark palette.
-- **[PROPOSAL]** The library's waveform keeps its current fixed colors; only the playback window recolors.
+- The library's waveform keeps its current fixed colors; only the playback window recolors.
 
 ## 5. Technical findings that shape the design
 
@@ -155,15 +161,12 @@ These come from reading the current code.
 
 ## 8. Remaining open questions
 
-1. Lyrics text size control: stepper or slider?
-> slider
-2. Is the chosen lyrics size remembered between sessions?
-> no, remember - first fit lyrics. btw need a checkbox to disable this.
-3. Session timer format: `m:ss` then `h:mm:ss` after an hour — OK?
-> ok
-4. When playback stops or ends with the window open: stay open (my proposal) or close automatically?
-> stay
-5. Should the library waveform keep its fixed colors (my proposal), or also follow the album art?
-> keep
-6. Hide (my proposal) vs. destroy the library window while the playback window is open — OK to hide?
-> hide
+1. Lyrics text size, to make sure I read your answer correctly. Which of these is right?
+    - **A.** Nothing about lyrics size is saved. Each time lyrics are shown, they are auto-fitted. The checkbox disables
+      auto-fit, and then the slider sets the size by hand.
+    - **B.** Same as A, but when auto-fit is disabled, the manual slider value *is* remembered (including the checkbox
+      state) between sessions.
+    - **C.** Something else.
+
+   Also, if you move the slider while auto-fit is on, should that automatically turn auto-fit off, or should the slider
+   stay inactive until you uncheck the box?
