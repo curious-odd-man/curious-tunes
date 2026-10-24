@@ -156,8 +156,14 @@ These come from reading the current code.
 ## 8. Remaining open questions
 
 1. Lyrics text size control: stepper or slider?
+> slider
 2. Is the chosen lyrics size remembered between sessions?
+> no, remember - first fit lyrics. btw need a checkbox to disable this.
 3. Session timer format: `m:ss` then `h:mm:ss` after an hour — OK?
+> ok
 4. When playback stops or ends with the window open: stay open (my proposal) or close automatically?
+> stay
 5. Should the library waveform keep its fixed colors (my proposal), or also follow the album art?
+> keep
 6. Hide (my proposal) vs. destroy the library window while the playback window is open — OK to hide?
+> hide
