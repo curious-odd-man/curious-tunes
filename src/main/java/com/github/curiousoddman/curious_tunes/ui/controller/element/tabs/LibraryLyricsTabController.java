@@ -61,7 +61,7 @@ public class LibraryLyricsTabController implements Initializable {
     public void showLyrics(PlaylistItem playlistItem) {
         this.playlistItem = playlistItem;
         String lyrics = playlistItem.getLyrics();
-        lyricsTextArea.setText(lyrics);
+        lyricsTextArea.setText(normalizeNewlines(lyrics));
         editButton.setSelected(false);
         editButton.setDisable(false);
     }
@@ -97,9 +97,13 @@ public class LibraryLyricsTabController implements Initializable {
                 lyrics -> Platform.runLater(() -> {
                     saveButton.setDisable(false);
                     editButton.setSelected(true);
-                    lyricsTextArea.setText(lyrics);
+                    lyricsTextArea.setText(normalizeNewlines(lyrics));
                 }),
                 () -> log.warn("Unable to find lyrics...")
         );
+    }
+
+    public static String normalizeNewlines(String s) {
+        return s == null ? null : s.replaceAll("\\R", "\n");
     }
 }

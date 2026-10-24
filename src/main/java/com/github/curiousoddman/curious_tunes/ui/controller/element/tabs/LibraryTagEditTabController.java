@@ -32,6 +32,7 @@ import java.util.ResourceBundle;
 import java.util.function.Function;
 
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
+import static com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController.normalizeNewlines;
 import static com.github.curiousoddman.curious_tunes.util.ConversionUtils.str;
 
 @Slf4j
@@ -91,7 +92,7 @@ public class LibraryTagEditTabController implements Initializable {
                 trackInfo.getTrackArtist().getName(),
                 trackInfo.getTrackAlbum().getName(),
                 trackInfo.getTitle(),
-                lyrics -> Platform.runLater(() -> lyricsEditArea.setText(lyrics)),
+                lyrics -> Platform.runLater(() -> lyricsEditArea.setText(normalizeNewlines(lyrics))),
                 () -> log.error("Unable to find lyrics online")
         );
     }

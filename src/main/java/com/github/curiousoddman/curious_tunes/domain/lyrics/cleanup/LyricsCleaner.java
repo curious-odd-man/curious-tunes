@@ -32,7 +32,7 @@ public class LyricsCleaner {
             return new CleanerResult(lyrics, lyrics, flags);
         }
 
-        List<String> result = Arrays.asList(lyrics.split("\n"));
+        List<String> result = Arrays.asList(lyrics.split("\\R", -1));
         for (CleaningStep step : steps) {
             result = step.apply(result);
         }
