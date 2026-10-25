@@ -15,6 +15,7 @@ import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEv
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
 import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
+import com.github.curiousoddman.curious_tunes.event.SkipNextEvent;
 import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
@@ -38,6 +39,7 @@ import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.Library
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryTagEditTabController;
 import com.github.curiousoddman.curious_tunes.ui.playback.PlaybackWindow;
+import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.TrackActions;
 import com.github.curiousoddman.curious_tunes.util.VersionService;
@@ -75,12 +77,15 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -167,6 +172,14 @@ public class LibraryController implements Initializable {
     @FXML
     public  Label                  timeRemaining;
     @FXML
+    public  Label                  trackSubtitleSeparator;
+    @FXML
+    public  Label                  volumeIcon;
+    @FXML
+    public  Button                 buttonNext;
+    @FXML
+    public  HBox                   nowPlayingBlock;
+    @FXML
     public  ListView<ArtistRecord> artistListView;
     @FXML
     public  VBox                   letterStrip;
@@ -207,6 +220,11 @@ public class LibraryController implements Initializable {
     private       boolean                      artistsLoaded;
     private       int                          shownArtistId     = -1;
 
+    // ---- transport bar
+    private final Tooltip nowPlayingTooltip = new Tooltip();
+    private       Image   noCoverImage;
+    private       double  volumeBeforeMute  = 30;
+
     // ---- status bar
     private final PauseTransition toastTimer = new PauseTransition(Duration.seconds(5));
     private       int             lastTaskTotal;
@@ -243,6 +261,7 @@ public class LibraryController implements Initializable {
         initArtistList();
         initArtistSearch();
         initStatusBar();
+        initTransportBar();
         initAlbumsView();
         LoadedFxml<LibraryPlaylistController> loadedFxml = fxmlLoader.load(
                 FxmlView.LIBRARY_PLAYLIST,
@@ -273,11 +292,12 @@ public class LibraryController implements Initializable {
                                buttonPlayPause.setText("⏸");
                                PlaylistItem playlistItem = audioPlayer.getPlaylistItemProperty()
                                                                       .get();
-                               currentTrackName.setText(playlistItem.getTitle());
-                               currentTrackAlbum.setText(playlistItem.getAlbumName());
-                               currentTrackArtist.setText(playlistItem.getArtistName());
-                               timeSinceStart.setText(String.valueOf(0));
-                               timeRemaining.setText('-' + String.valueOf(playlistItem.getDuration()));
+                               showTrackInfo(playlistItem.getTitle(), playlistItem.getArtistName(), playlistItem.getAlbumName());
+                               timeSinceStart.setText(TimeUtils.secondsToHumanTime(0));
+                               Long duration = playlistItem.getDuration();
+                               timeRemaining.setText(duration == null ? "--:--" : '-' + TimeUtils.secondsToHumanTime(duration));
+                               currentTrackAlbumImage.setImage(noCoverImage);
+                               ImageUtils.setImageIfPresent(playlistItem.getAlbumImage(), currentTrackAlbumImage);
                                libraryLyricsTabController.showLyrics(playlistItem);
                                nowPlayingMarker.trackIdProperty()
                                                .set(playlistItem.getTrackId());
@@ -289,6 +309,7 @@ public class LibraryController implements Initializable {
                                buttonPlayPause.setText("▶");
                                nowPlayingMarker.trackIdProperty()
                                                .set(null);
+                               showIdle();
                            }
                        }
                    });
@@ -886,6 +907,88 @@ public class LibraryController implements Initializable {
         t.start();
     }
 
+    // =========================================================================
+    // Transport bar
+    // =========================================================================
+
+    private void initTransportBar() {
+        noCoverImage = currentTrackAlbumImage.getImage();       // the placeholder from the FXML
+        currentTrackName.setTooltip(nowPlayingTooltip);
+        nowPlayingBlock.setCursor(javafx.scene.Cursor.HAND);
+
+        buttonNext.disableProperty()
+                  .bind(audioPlayer.getNextPlaylistItemProperty()
+                                   .isNull());
+
+        Tooltip volumeTooltip = new Tooltip();
+        volumeTooltip.textProperty()
+                     .bind(volumeControl.valueProperty()
+                                        .asString("Volume: %.0f%%"));
+        volumeControl.setTooltip(volumeTooltip);
+        volumeControl.valueProperty()
+                     .addListener((obs, oldValue, newValue) -> updateVolumeIcon(newValue.doubleValue()));
+        updateVolumeIcon(volumeControl.getValue());
+
+        showIdle();
+    }
+
+    private void showTrackInfo(String title, String artist, String album) {
+        currentTrackName.setText(title);
+        currentTrackArtist.setText(artist);
+        currentTrackAlbum.setText(album);
+        boolean both = artist != null && !artist.isBlank() && album != null && !album.isBlank();
+        setShown(trackSubtitleSeparator, both);
+
+        StringBuilder tooltip = new StringBuilder(Objects.toString(title, ""));
+        if (artist != null && !artist.isBlank()) {
+            tooltip.append('\n')
+                   .append(artist);
+        }
+        if (album != null && !album.isBlank()) {
+            tooltip.append(" — ")
+                   .append(album);
+        }
+        nowPlayingTooltip.setText(tooltip.toString());
+    }
+
+    private void showIdle() {
+        showTrackInfo("Nothing playing", "", "");
+        timeSinceStart.setText("0:00");
+        timeRemaining.setText("-0:00");
+        currentTrackAlbumImage.setImage(noCoverImage);
+        progressCanvasController.setProgressZero();
+    }
+
+    private void updateVolumeIcon(double volume) {
+        volumeIcon.setText(volume <= 0 ? "🔇" : volume < 34 ? "🔈" : volume < 67 ? "🔉" : "🔊");
+    }
+
+    @FXML
+    public void onVolumeIconClicked(MouseEvent mouseEvent) {
+        double volume = volumeControl.getValue();
+        if (volume > 0) {
+            volumeBeforeMute = volume;
+            volumeControl.setValue(0);
+        } else {
+            volumeControl.setValue(volumeBeforeMute > 0 ? volumeBeforeMute : 30);
+        }
+    }
+
+    @FXML
+    public void onNextClick(ActionEvent actionEvent) {
+        eventPublisher.publishEvent(new SkipNextEvent(this));
+    }
+
+    /**
+     * Clicking the cover or the title opens the playback window (when something is playing).
+     */
+    @FXML
+    public void onNowPlayingBlockClicked(MouseEvent mouseEvent) {
+        if (!buttonPlaybackWindow.isDisabled()) {
+            onPlaybackWindowClick(null);
+        }
+    }
+
     @FXML
     public void onPlayPauseClick(ActionEvent actionEvent) {
         eventPublisher.publishEvent(new PlayPauseEvent(this));
@@ -1019,12 +1122,18 @@ public class LibraryController implements Initializable {
 
     @FXML
     public void onProgressClicked(MouseEvent mouseEvent) {
-        double seekTo = (mouseEvent.getX() - currentTrackProgress.getLayoutX()) / currentTrackProgress.getWidth();
-
-        TrackRecord currentTrack = playlistModel.getCurrentlyPlayingItem()
-                                                .get()
-                                                .getTrackRecord();
-        Long duration = currentTrack.getDuration();
+        Optional<PlaylistItem> current = playlistModel.getCurrentlyPlayingItem();
+        if (current.isEmpty() || currentTrackProgress.getWidth() <= 0) {
+            return;     // nothing to seek in
+        }
+        TrackRecord currentTrack = current.get()
+                                          .getTrackRecord();
+        Long        duration     = currentTrack.getDuration();
+        if (duration == null) {
+            return;
+        }
+        double seekTo = Math.max(0, Math.min(1,
+                (mouseEvent.getX() - currentTrackProgress.getLayoutX()) / currentTrackProgress.getWidth()));
         log.info("Seek to {} : {}", seekTo, duration * seekTo);
         audioPlayer.seek(Duration.seconds(duration * seekTo));
     }

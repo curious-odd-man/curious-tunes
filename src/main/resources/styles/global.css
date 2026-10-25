@@ -186,6 +186,38 @@
     -fx-font-weight: bold;
 }
 
+/* ---- Transport bar (bottom of the library window) ----------------------- */
+
+.transport-bar {
+    -fx-background-color: #f4f5f7;
+    -fx-border-color: -ct-border transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.transport-now-playing {
+    -fx-cursor: hand;
+}
+
+.transport-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.transport-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: -ct-text-dim;
+}
+
+.transport-time {
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 13px;
+}
+
+.transport-volume-icon {
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+}
+
 /* ---- Albums: grid cards, toolbar --------------------------------------- */
 
 .album-card {
