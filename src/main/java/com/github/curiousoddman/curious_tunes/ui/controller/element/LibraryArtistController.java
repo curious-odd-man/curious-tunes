@@ -2,20 +2,15 @@ package com.github.curiousoddman.curious_tunes.ui.controller.element;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
-import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
-import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
-import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
@@ -26,8 +21,6 @@ import java.text.Normalizer;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.BORDERED_ITEM;
-import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.SELECTED_ITEM;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Lazy
@@ -41,34 +34,17 @@ public class LibraryArtistController implements Initializable {
     public Label     artistNameLabel;
     public HBox      pane;
 
-    private ArtistRecord         artistRecord;
-    private ArtistSelectionModel artistSelectionModel;
+    private ArtistRecord artistRecord;
 
 
     @Override
-    @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
-        pane.getStyleClass()
-            .add(BORDERED_ITEM);
-        if (resources instanceof ArtistItemBundle bundle) {
-            ArtistRecord artist = bundle.getArtist();
-            //String icon = bundle.getIcon(); // FIXME:
-            //artistImageView.setImage(new Image(Path.of(icon).toUri().toString()));
-            artistNameLabel.setText(artist.getName());
-            this.artistRecord = artist;
-            this.artistSelectionModel = bundle.getArtistSelectionModel();
-        }
+        // The row is created once per visible list cell and filled by setArtist(...) when the cell shows another artist.
     }
 
-    @FXML
-    public void onArtistClicked(MouseEvent mouseEvent) {
-        artistSelectionModel.getOptionalSelectedItem()
-                            .ifPresent(LibraryArtistController::clearSelection);
-        artistSelectionModel.select(this);
-        artistNameLabel.getParent()
-                       .getStyleClass()
-                       .add(SELECTED_ITEM);
-        eventPublisher.publishEvent(new ShowArtistAlbums(this, artistRecord));
+    public void setArtist(ArtistRecord artist) {
+        this.artistRecord = artist;
+        artistNameLabel.setText(artist.getName());
     }
 
     /**
@@ -81,26 +57,6 @@ public class LibraryArtistController implements Initializable {
         return Normalizer.normalize(text.trim(), Normalizer.Form.NFD)
                          .replaceAll("\\p{M}+", "")
                          .toLowerCase(Locale.ROOT);
-    }
-
-    /**
-     * @param foldedFilter text already processed by {@link #fold(String)}; empty matches everything
-     */
-    public boolean matches(String foldedFilter) {
-        return foldedFilter.isEmpty()
-                || artistRecord == null
-                || fold(artistRecord.getName()).contains(foldedFilter);
-    }
-
-    public void setRowVisible(boolean visible) {
-        pane.setVisible(visible);
-        pane.setManaged(visible);
-    }
-
-    public void clearSelection() {
-        artistNameLabel.getParent()
-                       .getStyleClass()
-                       .remove(SELECTED_ITEM);
     }
 
     @FXML

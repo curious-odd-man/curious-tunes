@@ -8,6 +8,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.domain.player.AudioPlayer;
 import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
+import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.EditTagsForTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEvent;
@@ -16,16 +17,16 @@ import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
 import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
-import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.NowPlayingMarker;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
+import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.TrackSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
-import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
 import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.ui.controller.custom.AlbumCard;
@@ -44,11 +45,16 @@ import com.github.curiousoddman.curious_tunes.util.async.DelayedAction;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -57,6 +63,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
@@ -73,6 +81,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -89,6 +99,8 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,77 +129,83 @@ public class LibraryController implements Initializable {
     private final DataAccess                dataAccess;
 
     @FXML
-    public  Button       buttonPlayPause;
+    public  Button                 buttonPlayPause;
     @FXML
-    public  Button       buttonPlaybackWindow;
+    public  Button                 buttonPlaybackWindow;
     @FXML
-    public  Slider       volumeControl;
+    public  Slider                 volumeControl;
     @FXML
-    public  ImageView    currentTrackAlbumImage;
+    public  ImageView              currentTrackAlbumImage;
     @FXML
-    public  Label        currentTrackName;
+    public  Label                  currentTrackName;
     @FXML
-    public  Label        currentTrackAlbum;
+    public  Label                  currentTrackAlbum;
     @FXML
-    public  Label        currentTrackArtist;
+    public  Label                  currentTrackArtist;
     @FXML
-    public  Canvas       currentTrackProgress;
+    public  Canvas                 currentTrackProgress;
     @FXML
-    public  Label        timeSinceStart;
+    public  Label                  timeSinceStart;
     @FXML
-    public  TextField    searchField;
+    public  TextField              searchField;
     @FXML
-    public  Label        noArtistsLabel;
+    public  Label                  taskLabel;
     @FXML
-    public  Label        taskLabel;
+    public  ProgressBar            taskProgress;
     @FXML
-    public  ProgressBar  taskProgress;
+    public  Button                 taskCancelButton;
     @FXML
-    public  Button       taskCancelButton;
+    public  Label                  toastLabel;
     @FXML
-    public  Label        toastLabel;
+    public  ScrollPane             albumsScroll;
     @FXML
-    public  ScrollPane   albumsScroll;
+    public  ToggleButton           albumsListToggle;
     @FXML
-    public  ToggleButton albumsListToggle;
+    public  ToggleButton           albumsGridToggle;
     @FXML
-    public  ToggleButton albumsGridToggle;
+    public  Slider                 albumCoverSizeSlider;
     @FXML
-    public  Slider       albumCoverSizeSlider;
+    public  Label                  timeRemaining;
     @FXML
-    public  Label        timeRemaining;
+    public  ListView<ArtistRecord> artistListView;
     @FXML
-    public  VBox         artistList;
+    public  VBox                   letterStrip;
     @FXML
-    public  VBox         artistAlbumsView;
+    public  VBox                   artistAlbumsView;
     @FXML
-    public  Label        artistTitle;
+    public  Label                  artistTitle;
     @FXML
-    public  TabPane      tabPane;
+    public  TabPane                tabPane;
     @FXML
-    public  Tab          albumsTab;
+    public  Tab                    albumsTab;
     @FXML
-    public  Tab          historyTab;
+    public  Tab                    historyTab;
     @FXML
-    public  Tab          currentLyricsTab;
+    public  Tab                    currentLyricsTab;
     @FXML
-    public  Tab          editTagsTab;
-    public  StackPane    canvasPane;
-    public  SplitPane    librarySplitPane;
+    public  Tab                    editTagsTab;
+    public  StackPane              canvasPane;
+    public  SplitPane              librarySplitPane;
     @FXML
-    private AnchorPane   playlistAnchorPane;
+    private AnchorPane             playlistAnchorPane;
 
-    private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
-    private final ProgressCanvasController      progressCanvasController;
-    private final PlaylistModel                 playlistModel;
-    private final AudioPlayer                   audioPlayer;
-    private final UserPreferencesService        userPreferencesService;
-    private final PlaybackWindow                playbackWindow;
-    private final VersionService                versionService;
-    private final NowPlayingMarker              nowPlayingMarker;
+    private final ProgressCanvasController progressCanvasController;
+    private final PlaylistModel            playlistModel;
+    private final AudioPlayer              audioPlayer;
+    private final UserPreferencesService   userPreferencesService;
+    private final PlaybackWindow           playbackWindow;
+    private final VersionService           versionService;
+    private final NowPlayingMarker         nowPlayingMarker;
 
-    // ---- artist search
-    private String artistFilter = "";
+    // ---- artists: all of them, and the ones that match the search text
+    private static final String ARTIST_LETTERS = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    private final ObservableList<ArtistRecord> allArtists        = FXCollections.observableArrayList();
+    private final FilteredList<ArtistRecord>   visibleArtists    = new FilteredList<>(allArtists);
+    private final Map<Character, Label>        letterLabels      = new LinkedHashMap<>();
+    private final Label                        artistPlaceholder = new Label("Loading artists…");
+    private       boolean                      artistsLoaded;
+    private       int                          shownArtistId     = -1;
 
     // ---- status bar
     private final PauseTransition toastTimer = new PauseTransition(Duration.seconds(5));
@@ -218,12 +236,11 @@ public class LibraryController implements Initializable {
     private LibraryHistoryTabController libraryHistoryTabController;
     private LibraryLyricsTabController  libraryLyricsTabController;
     private LibraryTagEditTabController libraryTagEditTabController;
-    private ArtistSelectionModel        artistSelectionModel;
 
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
-        artistSelectionModel = new ArtistSelectionModel(artistsControllers);
+        initArtistList();
         initArtistSearch();
         initStatusBar();
         initAlbumsView();
@@ -463,10 +480,10 @@ public class LibraryController implements Initializable {
         albumsListToggle.setSelected(true);
         Platform.runLater(() -> {
             albumsScroll.layout();
-            double content = artistAlbumsView.getHeight();
+            double content  = artistAlbumsView.getHeight();
             double viewport = albumsScroll.getViewportBounds()
                                           .getHeight();
-            double extra = content - viewport;
+            double extra    = content - viewport;
             if (extra > 0) {
                 double top = album.parent()
                                   .getBoundsInParent()
@@ -650,8 +667,11 @@ public class LibraryController implements Initializable {
     private void initArtistSearch() {
         searchField.textProperty()
                    .addListener((obs, oldText, newText) -> {
-                       artistFilter = LibraryArtistController.fold(newText);
-                       applyArtistFilter();
+                       String needle = LibraryArtistController.fold(newText);
+                       visibleArtists.setPredicate(needle.isEmpty()
+                               ? null
+                               : artist -> LibraryArtistController.fold(artist.getName())
+                                                                  .contains(needle));
                    });
         searchField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ESCAPE) {
@@ -670,16 +690,171 @@ public class LibraryController implements Initializable {
         searchField.requestFocus();
     }
 
-    private void applyArtistFilter() {
-        int visible = 0;
-        for (LibraryArtistController artist : artistsControllers) {
-            boolean show = artist.matches(artistFilter);
-            artist.setRowVisible(show);
-            if (show) {
-                visible++;
+    // =========================================================================
+    // Artist list: virtualized ListView with an A-Z strip
+    // =========================================================================
+
+    private void initArtistList() {
+        artistListView.setItems(visibleArtists);
+        artistListView.setCellFactory(_ -> new ArtistCell());
+        artistListView.setPlaceholder(artistPlaceholder);
+        artistPlaceholder.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        artistPlaceholder.getStyleClass()
+                         .add("dim-text");
+
+        // Selecting an artist shows the artist's albums. Re-selecting the artist that is already shown does nothing.
+        artistListView.getSelectionModel()
+                      .selectedItemProperty()
+                      .addListener((obs, previous, current) -> {
+                          if (current != null && current.getId() != shownArtistId) {
+                              shownArtistId = current.getId();
+                              eventPublisher.publishEvent(new ShowArtistAlbums(this, current));
+                          }
+                      });
+
+        // The list handles the arrow keys itself. Space keeps meaning play/pause, Enter plays the selected artist.
+        artistListView.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.SPACE) {
+                eventPublisher.publishEvent(new PlayPauseEvent(this));
+                event.consume();
+            } else if (event.getCode() == KeyCode.ENTER) {
+                ArtistRecord selected = artistListView.getSelectionModel()
+                                                      .getSelectedItem();
+                if (selected != null) {
+                    playArtist(selected);
+                }
+                event.consume();
+            }
+        });
+
+        visibleArtists.addListener((ListChangeListener<ArtistRecord>) change -> refreshArtistListChrome());
+        initLetterStrip();
+    }
+
+    private void playArtist(ArtistRecord artist) {
+        eventPublisher.publishEvent(AddToPlaylistEvent
+                .builder()
+                .source(this)
+                .artistRecord(artist)
+                .shuffle(Shuffle.SKIP)
+                .playlistAddMode(PlaylistAddMode.REPLACE)
+                .build());
+    }
+
+    /**
+     * One row for each visible list cell; a cell shows another artist when the list is scrolled.
+     */
+    private class ArtistCell extends ListCell<ArtistRecord> {
+        private LibraryArtistController rowController;
+        private Parent                  rowRoot;
+
+        ArtistCell() {
+            getStyleClass().add("artist-cell");
+            setPadding(Insets.EMPTY);
+        }
+
+        @Override
+        protected void updateItem(ArtistRecord artist, boolean empty) {
+            super.updateItem(artist, empty);
+            if (empty || artist == null) {
+                setGraphic(null);
+                return;
+            }
+            if (rowRoot == null) {
+                LoadedFxml<LibraryArtistController> loaded = fxmlLoader.load(FxmlView.LIBRARY_ARTIST_ITEM, null);
+                rowController = loaded.controller();
+                rowRoot = loaded.parent();
+                ((Region) rowRoot).prefWidthProperty()
+                                  .bind(artistListView.widthProperty()
+                                                      .subtract(20));
+            }
+            rowController.setArtist(artist);
+            setGraphic(rowRoot);
+        }
+    }
+
+    private void initLetterStrip() {
+        for (char letter : ARTIST_LETTERS.toCharArray()) {
+            Label label = new Label(String.valueOf(letter));
+            label.getStyleClass()
+                 .add("letter-strip-item");
+            label.setAlignment(Pos.CENTER);
+            label.setMaxWidth(Double.MAX_VALUE);
+            label.setMaxHeight(Double.MAX_VALUE);
+            label.setMouseTransparent(true);
+            VBox.setVgrow(label, Priority.ALWAYS);
+            letterLabels.put(letter, label);
+            letterStrip.getChildren()
+                       .add(label);
+        }
+        letterStrip.setOnMousePressed(event -> jumpToLetterAt(event.getY()));
+        letterStrip.setOnMouseDragged(event -> jumpToLetterAt(event.getY()));
+    }
+
+    private void jumpToLetterAt(double y) {
+        double height = letterStrip.getHeight();
+        if (height <= 0) {
+            return;
+        }
+        int index = (int) Math.floor(y / height * ARTIST_LETTERS.length());
+        index = Math.max(0, Math.min(ARTIST_LETTERS.length() - 1, index));
+        jumpToLetter(ARTIST_LETTERS.charAt(index));
+    }
+
+    /**
+     * Scrolls to the first artist of the letter, or of the next letter that has artists.
+     */
+    private void jumpToLetter(char letter) {
+        Map<Character, Integer> firstIndexByLetter = firstIndexByLetter();
+        for (int i = ARTIST_LETTERS.indexOf(letter); i < ARTIST_LETTERS.length(); i++) {
+            Integer index = firstIndexByLetter.get(ARTIST_LETTERS.charAt(i));
+            if (index != null) {
+                artistListView.scrollTo(index);
+                return;
             }
         }
-        setShown(noArtistsLabel, !artistFilter.isEmpty() && visible == 0 && !artistsControllers.isEmpty());
+        if (!visibleArtists.isEmpty()) {
+            artistListView.scrollTo(visibleArtists.size() - 1);
+        }
+    }
+
+    private Map<Character, Integer> firstIndexByLetter() {
+        Map<Character, Integer> result = new LinkedHashMap<>();
+        for (int i = 0; i < visibleArtists.size(); i++) {
+            result.putIfAbsent(letterOf(visibleArtists.get(i)), i);
+        }
+        return result;
+    }
+
+    private static char letterOf(ArtistRecord artist) {
+        String folded = LibraryArtistController.fold(artist.getName());
+        if (folded.isEmpty()) {
+            return '#';
+        }
+        char first = Character.toUpperCase(folded.charAt(0));
+        return first >= 'A' && first <= 'Z' ? first : '#';
+    }
+
+    /**
+     * Letters without artists are dimmed; the placeholder explains an empty list.
+     */
+    private void refreshArtistListChrome() {
+        Map<Character, Integer> firstIndexByLetter = firstIndexByLetter();
+        letterLabels.forEach((letter, label) -> {
+            label.getStyleClass()
+                 .remove("letter-empty");
+            if (!firstIndexByLetter.containsKey(letter)) {
+                label.getStyleClass()
+                     .add("letter-empty");
+            }
+        });
+        if (!artistsLoaded) {
+            artistPlaceholder.setText("Loading artists…");
+        } else if (allArtists.isEmpty()) {
+            artistPlaceholder.setText("No music yet.\nUse File ▸ Rescan library…");
+        } else {
+            artistPlaceholder.setText("No artists match");
+        }
     }
 
     @EventListener
@@ -690,29 +865,24 @@ public class LibraryController implements Initializable {
         libraryTagEditTabController.showTags(trackInfo);
     }
 
-    @SneakyThrows
     private void onLibraryDataUpdated() {
-        artistsControllers.clear();
-        artistList.getChildren()
-                  .clear();
+        int previouslyShown = shownArtistId;     // selected again after the refresh, so its albums are reloaded too
         log.info("Update UI from library in separate thread");
         Thread t = new Thread(() -> {
-            for (ArtistRecord artist : dataAccess.getAllArtists()) {
-                runOnFxThread(() -> {
-                    LoadedFxml<LibraryArtistController> loadedFxml = fxmlLoader.load(
-                            FxmlView.LIBRARY_ARTIST_ITEM,
-                            new ArtistItemBundle(artist, artistSelectionModel)
-                    );
-                    Parent                  parent     = loadedFxml.parent();
-                    LibraryArtistController controller = loadedFxml.controller();
-                    artistsControllers.add(controller);
-                    controller.setRowVisible(controller.matches(artistFilter));
-                    artistList.getChildren()
-                              .add(parent);
-                });
-            }
-            runOnFxThread(this::applyArtistFilter);
-        });
+            List<ArtistRecord> artists = new ArrayList<>(dataAccess.getAllArtists());
+            artists.sort(Comparator.comparing((ArtistRecord artist) -> LibraryArtistController.fold(artist.getName())));
+            runOnFxThread(() -> {
+                shownArtistId = -1;
+                artistsLoaded = true;
+                allArtists.setAll(artists);
+                refreshArtistListChrome();
+                artists.stream()
+                       .filter(artist -> artist.getId() == previouslyShown)
+                       .findFirst()
+                       .ifPresent(artist -> artistListView.getSelectionModel()
+                                                          .select(artist));
+            });
+        }, "Load artists");
         t.start();
     }
 

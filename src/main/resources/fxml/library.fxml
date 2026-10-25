@@ -4,6 +4,7 @@
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -160,20 +161,17 @@
                                                 </Button>
                                             </children>
                                         </HBox>
-                                        <Label fx:id="noArtistsLabel" managed="false" styleClass="dim-text"
-                                               text="No artists match" visible="false"/>
                                     </children>
                                 </VBox>
                             </top>
                             <center>
-                                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" maxHeight="1.7976931348623157E308"
-                                            maxWidth="1.7976931348623157E308">
-                                    <content>
-                                        <VBox fx:id="artistList" alignment="CENTER" maxHeight="1.7976931348623157E308"
-                                              maxWidth="1.7976931348623157E308"/>
-                                    </content>
-                                </ScrollPane>
+                                <ListView fx:id="artistListView" maxHeight="1.7976931348623157E308"
+                                          maxWidth="1.7976931348623157E308" styleClass="artist-list"/>
                             </center>
+                            <right>
+                                <VBox fx:id="letterStrip" alignment="CENTER" prefWidth="18.0"
+                                      styleClass="letter-strip"/>
+                            </right>
                         </BorderPane>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="334.0" prefWidth="314.0">
                             <children>

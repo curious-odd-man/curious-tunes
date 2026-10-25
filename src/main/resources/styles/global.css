@@ -103,6 +103,55 @@
     -fx-background-color: -ct-accent-inactive;
 }
 
+/* ---- Artist list (virtualized ListView) and its A-Z strip --------------- */
+
+.artist-list {
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+}
+
+.artist-cell {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-border-color: rgb(204, 190, 255);
+    -fx-border-width: 0 0 1px 0;
+    -fx-cursor: hand;
+}
+
+.artist-cell:filled:hover {
+    -fx-background-color: -ct-hover;
+}
+
+.artist-cell:filled:selected,
+.artist-cell:filled:selected:hover {
+    -fx-background-color: -ct-accent;
+}
+
+.artist-cell:filled:selected .label {
+    -fx-text-fill: #FFF;
+}
+
+.window-inactive .artist-cell:filled:selected,
+.window-inactive .artist-cell:filled:selected:hover {
+    -fx-background-color: -ct-accent-inactive;
+}
+
+.letter-strip {
+    -fx-padding: 2 2 2 0;
+    -fx-cursor: hand;
+}
+
+.letter-strip-item {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: derive(-ct-accent, -35%);
+}
+
+.letter-strip-item.letter-empty {
+    -fx-text-fill: -ct-text-dim;
+    -fx-opacity: 0.4;
+}
+
 /* ---- Library tracks / discs -------------------------------------------- */
 
 .library-album-track {
