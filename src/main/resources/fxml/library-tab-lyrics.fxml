@@ -9,11 +9,11 @@
                 <content>
                     <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
                <children>
-                  <TextArea fx:id="lyricsTextArea" editable="false" layoutY="33.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="181.0" prefWidth="480.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="120.0" AnchorPane.topAnchor="45.0" />
+                  <TextArea fx:id="lyricsTextArea" editable="false" layoutY="33.0" wrapText="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="181.0" prefWidth="480.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="45.0" />
                   <ButtonBar buttonMinWidth="20.0" buttonOrder="" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
                     <buttons>
                         <ToggleButton fx:id="editButton" mnemonicParsing="false" onAction="#onEditButtonClick" text="🖊 Enable Edit" textAlignment="CENTER" />
-                      <Button fx:id="saveButton" mnemonicParsing="false" onAction="#onSaveButtonClick" text="💾 Save" />
+                      <Button fx:id="saveButton" disable="true" mnemonicParsing="false" onAction="#onSaveButtonClick" text="💾 Save" />
                         <Button fx:id="searchLyricsButton" mnemonicParsing="false" onAction="#onFindLyrics" text="🔍 Find lyrics" />
                         <Slider fx:id="fontSizeSlider" blockIncrement="1.0" majorTickUnit="7.0" max="32.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" min="10.0" minorTickCount="1" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="12.0" />
                     </buttons>

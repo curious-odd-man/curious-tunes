@@ -62,11 +62,9 @@ public class PlaylistItemController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         pane.getStyleClass().add(BORDERED_ITEM);
         contextMenu = new ContextMenu();
-        MenuItem remove = new MenuItem("Remove");
-        MenuItem moveToEnd = new MenuItem("Move to end");
-        MenuItem moveToNext = new MenuItem("Move to next");
-        contextMenu.getItems().addAll(remove, moveToEnd, moveToNext);
-        // FIXME - implement actions
+        MenuItem remove = new MenuItem("Remove from queue");
+        remove.setOnAction(_ -> playlistDragHandler.removeItem(playlistItem));
+        contextMenu.getItems().add(remove);
 
         if (resources instanceof PlaylistItemResourceBundle playlistItemResourceBundle) {
             AlbumRecord albumRecord = playlistItemResourceBundle.getPlaylistItem().getTrackAlbum();

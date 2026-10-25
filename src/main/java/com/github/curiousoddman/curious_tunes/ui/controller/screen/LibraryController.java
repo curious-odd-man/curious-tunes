@@ -11,6 +11,7 @@ import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesS
 import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.EditTagsForTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
+import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
 import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
@@ -32,29 +33,37 @@ import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.Library
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryTagEditTabController;
 import com.github.curiousoddman.curious_tunes.ui.playback.PlaybackWindow;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
+import com.github.curiousoddman.curious_tunes.util.VersionService;
 import com.github.curiousoddman.curious_tunes.util.async.DelayedAction;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBase;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -139,6 +148,16 @@ public class LibraryController implements Initializable {
     private final AudioPlayer                   audioPlayer;
     private final UserPreferencesService        userPreferencesService;
     private final PlaybackWindow                playbackWindow;
+    private final VersionService                versionService;
+
+    /**
+     * The part of the window the user interacted with last. Enter and Delete act on that part's selection.
+     */
+    private enum ActiveArea {LIBRARY, QUEUE}
+
+    private          ActiveArea                activeArea = ActiveArea.LIBRARY;
+    private volatile TrackSelectionModel       currentTrackSelectionModel;
+    private          LibraryPlaylistController playlistController;
 
     private LibraryHistoryTabController libraryHistoryTabController;
     private LibraryLyricsTabController  libraryLyricsTabController;
@@ -153,6 +172,7 @@ public class LibraryController implements Initializable {
                 FxmlView.LIBRARY_PLAYLIST,
                 null
         );
+        playlistController = loadedFxml.controller();
         Parent parent = loadedFxml.parent();
         playlistAnchorPane.getChildren()
                           .add(parent);
@@ -215,9 +235,10 @@ public class LibraryController implements Initializable {
                         .remove(1, artistAlbumsView.getChildren()
                                                    .size());
         Thread t = new Thread(() -> {
-            List<AlbumRecord>       albums              = dataAccess.getArtistAlbums(artistId);
-            TrackSelectionModel     trackSelectionModel = new TrackSelectionModel();
-            List<YearAndLoadedFxml> loadedFxmlsByYear   = new ArrayList<>();
+            List<AlbumRecord>   albums              = dataAccess.getArtistAlbums(artistId);
+            TrackSelectionModel trackSelectionModel = new TrackSelectionModel();
+            currentTrackSelectionModel = trackSelectionModel;
+            List<YearAndLoadedFxml> loadedFxmlsByYear = new ArrayList<>();
             for (AlbumRecord album : albums) {
                 List<TrackRecord> albumTracks    = dataAccess.getAlbumTracks(album.getId());
                 Integer           yearFromTracks = getYearFromTracks(albumTracks);
@@ -396,9 +417,9 @@ public class LibraryController implements Initializable {
     @FXML
     @SneakyThrows
     public void onRescanMenuClicked(ActionEvent actionEvent) {
-        Stage  stage = new Stage();
-        Parent root  = fxmlLoader.load(FxmlView.RESCAN_MODAL, new RescanBundle("D:\\iTunes\\iTunes 1\\iTunes Media\\Music"))
-                                 .parent();
+        Stage stage = new Stage();
+        Parent root = fxmlLoader.load(FxmlView.RESCAN_MODAL, new RescanBundle(userPreferencesService.getLibraryRoot()))
+                                .parent();
         stage.setScene(new Scene(root));
         stage.setTitle("Rescan library");
         stage.initModality(Modality.APPLICATION_MODAL);
@@ -408,13 +429,113 @@ public class LibraryController implements Initializable {
     }
 
     @FXML
+    public void onCloseMenuClicked(ActionEvent actionEvent) {
+        // Goes through the same path as the window's close button (see StageManager).
+        Stage stage = (Stage) buttonPlayPause.getScene()
+                                             .getWindow();
+        stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
+    }
+
+    @FXML
+    public void onAboutMenuClicked(ActionEvent actionEvent) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.initOwner(buttonPlayPause.getScene()
+                                       .getWindow());
+        alert.setTitle("About cTunes");
+        alert.setHeaderText("cTunes");
+        alert.setContentText(versionService.getVersionLabel());
+        alert.showAndWait();
+    }
+
+    /**
+     * Keyboard shortcuts of the library window: Space = play/pause, Enter = play the selected track,
+     * Delete = remove the selected track from the queue.
+     * They are ignored while text is being typed, and while a button has the keyboard focus.
+     */
+    public void installShortcuts(Scene scene) {
+        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            if (isInside(playlistAnchorPane, event.getTarget())) {
+                activeArea = ActiveArea.QUEUE;
+            } else if (isInside(tabPane, event.getTarget())) {
+                activeArea = ActiveArea.LIBRARY;
+            }
+        });
+
+        // A clicked button would keep the keyboard focus, and Space would then activate it again
+        // (e.g. "clear the queue") instead of pausing the music.
+        scene.addEventHandler(MouseEvent.MOUSE_CLICKED, event ->
+                Platform.runLater(() -> {
+                    if (scene.getFocusOwner() instanceof ButtonBase) {
+                        scene.getRoot()
+                             .requestFocus();
+                    }
+                }));
+
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            Node focused = scene.getFocusOwner();
+            if (focused instanceof TextInputControl || focused instanceof ButtonBase) {
+                return;
+            }
+            switch (event.getCode()) {
+                case SPACE -> {
+                    eventPublisher.publishEvent(new PlayPauseEvent(this));
+                    event.consume();
+                }
+                case ENTER -> {
+                    if (playSelected()) {
+                        event.consume();
+                    }
+                }
+                case DELETE -> {
+                    if (activeArea == ActiveArea.QUEUE) {
+                        playlistController.removeSelected();
+                        event.consume();
+                    }
+                }
+                default -> {
+                }
+            }
+        });
+    }
+
+    private boolean playSelected() {
+        if (activeArea == ActiveArea.QUEUE) {
+            PlaylistItem item = playlistModel.getSelected();
+            if (item == null) {
+                return false;
+            }
+            eventPublisher.publishEvent(new PlaySpecificTrackEvent(this, item, false));
+            return true;
+        }
+
+        TrackSelectionModel trackSelectionModel = currentTrackSelectionModel;
+        TrackInfo           track               = trackSelectionModel == null ? null : trackSelectionModel.getSelectedItem();
+        if (track == null) {
+            return false;
+        }
+        eventPublisher.publishEvent(new PlaySpecificTrackEvent(this, track, true));
+        return true;
+    }
+
+    private static boolean isInside(Node ancestor, Object target) {
+        Node node = target instanceof Node n ? n : null;
+        while (node != null) {
+            if (node == ancestor) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
+    }
+
+    @FXML
     public void onProgressClicked(MouseEvent mouseEvent) {
         double seekTo = (mouseEvent.getX() - currentTrackProgress.getLayoutX()) / currentTrackProgress.getWidth();
 
         TrackRecord currentTrack = playlistModel.getCurrentlyPlayingItem()
                                                 .get()
                                                 .getTrackRecord();
-        Long        duration     = currentTrack.getDuration();
+        Long duration = currentTrack.getDuration();
         log.info("Seek to {} : {}", seekTo, duration * seekTo);
         audioPlayer.seek(Duration.seconds(duration * seekTo));
     }

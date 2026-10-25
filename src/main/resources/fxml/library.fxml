@@ -33,6 +33,9 @@
                                     <font>
                                         <Font size="18.0" />
                                     </font>
+                                    <tooltip>
+                                        <Tooltip text="Play / Pause (Space)" />
+                                    </tooltip>
                                 </Button>
                                 <Button fx:id="buttonPlaybackWindow" disable="true" mnemonicParsing="false" onAction="#onPlaybackWindowClick" text="🎵 Now Playing">
                                     <font>
@@ -42,7 +45,11 @@
                                         <Tooltip text="Open the playback window" />
                                     </tooltip>
                                 </Button>
-                                <Slider fx:id="volumeControl" blockIncrement="1.0" majorTickUnit="20.0" minorTickCount="2" showTickLabels="true" showTickMarks="true" value="30.0" />
+                                <Slider fx:id="volumeControl" blockIncrement="1.0" majorTickUnit="20.0" minorTickCount="2" showTickLabels="true" showTickMarks="true" value="30.0">
+                                    <tooltip>
+                                        <Tooltip text="Volume" />
+                                    </tooltip>
+                                </Slider>
                             </children>
                             <BorderPane.margin>
                                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -162,17 +169,12 @@
                 <Menu mnemonicParsing="false" text="File">
                     <items>
                   <MenuItem mnemonicParsing="false" onAction="#onRescanMenuClicked" text="Rescan library..." />
-                        <MenuItem mnemonicParsing="false" text="Close" />
-                    </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Edit">
-                    <items>
-                        <MenuItem mnemonicParsing="false" text="Delete" />
+                        <MenuItem mnemonicParsing="false" onAction="#onCloseMenuClicked" text="Close" />
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Help">
                     <items>
-                        <MenuItem mnemonicParsing="false" text="About" />
+                        <MenuItem mnemonicParsing="false" onAction="#onAboutMenuClicked" text="About" />
                     </items>
                 </Menu>
             </menus>

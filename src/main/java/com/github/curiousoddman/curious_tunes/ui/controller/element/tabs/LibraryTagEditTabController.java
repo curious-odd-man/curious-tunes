@@ -82,11 +82,6 @@ public class LibraryTagEditTabController implements Initializable {
     }
 
     @FXML
-    public void onSyncDatabase(ActionEvent actionEvent) {
-        log.error("Not implemented");
-    }
-
-    @FXML
     public void onFindLyrics(ActionEvent actionEvent) {
         lyricsService.findLyricsAsync(
                 trackInfo.getTrackArtist().getName(),

@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.Path;
+
 
 @Slf4j
 @Service
@@ -23,6 +25,7 @@ public class UserPreferencesService {
     public static final double DEFAULT_LYRICS_FONT_SIZE = 12;
     public static final double DEFAULT_PLAYBACK_WINDOW_WIDTH = 800;
     public static final double DEFAULT_PLAYBACK_WINDOW_HEIGHT = 340;
+    private static final int MAX_PREF_VALUE_LENGTH = 255;     // size of user_preferences.pref_value
 
     private final DataAccess dataAccess;
 
@@ -117,5 +120,24 @@ public class UserPreferencesService {
 
     public double getLyricsFontSize() {
         return getDouble(UserPrefKey.LYRICS_FONT_SIZE, DEFAULT_LYRICS_FONT_SIZE);
+    }
+
+    /**
+     * @return the folder used for the last library scan, or the user's "Music" folder if there was none
+     */
+    public String getLibraryRoot() {
+        String saved = dataAccess.getUserPref(UserPrefKey.LIBRARY_ROOT, null);
+        if (saved != null && !saved.isBlank()) {
+            return saved;
+        }
+        return Path.of(System.getProperty("user.home"), "Music").toString();
+    }
+
+    public void saveLibraryRoot(String libraryRoot) {
+        if (libraryRoot == null || libraryRoot.isBlank() || libraryRoot.length() > MAX_PREF_VALUE_LENGTH) {
+            log.warn("Library root is not saved (empty or longer than {} characters)", MAX_PREF_VALUE_LENGTH);
+            return;
+        }
+        dataAccess.setUserPref(UserPrefKey.LIBRARY_ROOT, libraryRoot);
     }
 }

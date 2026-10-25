@@ -67,6 +67,12 @@ public class LibraryPlaylistController implements Initializable {
         }
 
         @Override
+        public void removeItem(PlaylistItem playlistItem) {
+            playlistModel.selectOnly(playlistItem);
+            removeSelected();
+        }
+
+        @Override
         public void dragDropped(AnchorPane pane) {
             int toIndex = playlistVbox.getChildren().indexOf(pane);
             if (dragFromIndex >= 0 && dragFromIndex != toIndex) {
@@ -155,6 +161,13 @@ public class LibraryPlaylistController implements Initializable {
 
     @FXML
     public void onDeleteClick(ActionEvent actionEvent) {
+        removeSelected();
+    }
+
+    /**
+     * Removes the selected track from the queue. Used by the toolbar button, the Delete key and the context menu.
+     */
+    public void removeSelected() {
         PlaylistItem item = playlistModel.getSelected();
         if (item == null) {
             return;

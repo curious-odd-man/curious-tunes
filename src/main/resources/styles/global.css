@@ -1,5 +1,30 @@
-.selected-item {
-    -fx-background-color: #00F;
+/* Shared colors (looked-up colors, available to every node in the scene). */
+.root {
+    -ct-accent: #3b82f6;
+    -ct-accent-inactive: #9aa7b8;
+    -ct-playing: #1f9d8f;
+    -ct-playing-bg: #dff3f0;
+    -ct-hover: rgba(59, 130, 246, 0.12);
+}
+
+/* ---- Rows: hover ------------------------------------------------------- */
+
+.bordered-item,
+.library-album-track {
+    -fx-cursor: hand;
+}
+
+.bordered-item:hover,
+.library-album-track:hover {
+    -fx-background-color: -ct-hover;
+}
+
+/* ---- Rows: selected ---------------------------------------------------- */
+/* ":hover" variants are needed because a pseudo-class rule is more specific than a plain class rule. */
+
+.selected-item,
+.selected-item:hover {
+    -fx-background-color: -ct-accent;
 }
 
 .selected-item .label {
@@ -11,17 +36,41 @@
     -fx-border-color: rgb(204, 190, 255);
 }
 
-.playlist-item-playing {
-    -fx-background-color: #5AA;
+/* ---- Queue rows: playing / played -------------------------------------- */
+/* Playing = tinted background + accent bar on the left + bold title.
+   Selected = solid accent background. A row can be both: it then keeps the bar and the selected background. */
+
+.playlist-item-playing,
+.playlist-item-playing:hover {
+    -fx-background-color: -ct-playing-bg;
+    -fx-border-color: -ct-playing;
+    -fx-border-width: 1px 1px 1px 5px;
 }
 
-.playlist-item-playing .label {
-    -fx-text-fill: #FFF;
+.playlist-item-playing .playlist-title {
+    -fx-font-weight: bold;
+}
+
+.playlist-item-playing.selected-item,
+.playlist-item-playing.selected-item:hover {
+    -fx-background-color: -ct-accent;
 }
 
 .playlist-item-played {
     -fx-opacity: 0.5;
 }
+
+/* ---- Selection when the window is not focused -------------------------- */
+/* The "window-inactive" style class is toggled on the scene root by StageManager. */
+
+.window-inactive .selected-item,
+.window-inactive .selected-item:hover,
+.window-inactive .playlist-item-playing.selected-item,
+.window-inactive .playlist-item-playing.selected-item:hover {
+    -fx-background-color: -ct-accent-inactive;
+}
+
+/* ---- Library tracks / discs -------------------------------------------- */
 
 .library-album-track {
     -fx-border-width: 1px 0 1px 0;

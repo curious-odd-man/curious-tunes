@@ -3,7 +3,7 @@ package com.github.curiousoddman.curious_tunes.util;
 public class TimeUtils {
     public static String secondsToHumanTime(Long seconds) {
         if (seconds == null) {
-            return "-1";
+            return "--:--";
         }
         return secondsToHumanTime(seconds.intValue());
     }

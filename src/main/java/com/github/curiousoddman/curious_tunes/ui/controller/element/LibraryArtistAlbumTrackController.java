@@ -58,7 +58,7 @@ public class LibraryArtistAlbumTrackController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         if (resources instanceof ArtistAlbumTrackBundle trackBundle) {
             trackInfo = trackBundle.getTrackInfo();
-            trackNumberLabel.setText(String.valueOf(trackInfo.getTrackNumber()));
+            trackNumberLabel.setText(trackInfo.getTrackNumber() == null ? "—" : String.valueOf(trackInfo.getTrackNumber()));
             trackTitleLabel.setText(trackInfo.getTitle());
             trackTimeLabel.setText(secondsToHumanTime(trackInfo.getDuration()));
             if (trackInfo.getLyrics() == null || trackInfo.getLyrics().isBlank()) {

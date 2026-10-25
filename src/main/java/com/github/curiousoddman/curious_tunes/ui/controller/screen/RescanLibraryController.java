@@ -1,11 +1,14 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.screen;
 
+import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
 import com.github.curiousoddman.curious_tunes.event.RescanLibraryEvent;
 import com.github.curiousoddman.curious_tunes.model.bundle.RescanBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
@@ -16,6 +19,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ResourceBundle;
 
 @Lazy
@@ -23,27 +29,83 @@ import java.util.ResourceBundle;
 @RequiredArgsConstructor
 public class RescanLibraryController implements Initializable {
     private final ApplicationEventPublisher eventPublisher;
+    private final UserPreferencesService userPreferencesService;
     @FXML
     public TextField path;
+    @FXML
+    public Label errorLabel;
+    @FXML
+    public Button scanButton;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (resources instanceof RescanBundle bundle) {
             path.setText(bundle.getLibraryRoot());
         }
+        path.textProperty().addListener((obs, oldValue, newValue) -> validatePath());
+        validatePath();
     }
 
     @FXML
     public void onChoosePath(ActionEvent actionEvent) {
         DirectoryChooser fileChooser = new DirectoryChooser();
         fileChooser.setTitle("Select library root directory");
+        if (isDirectory(enteredPath())) {
+            fileChooser.setInitialDirectory(new File(enteredPath()));
+        }
         File result = fileChooser.showDialog(((Node) actionEvent.getSource()).getScene().getWindow());
+        if (result == null) {
+            return;     // the dialog was cancelled
+        }
         path.setText(result.getAbsolutePath());
     }
 
     @FXML
     public void onRescan(ActionEvent actionEvent) {
-        eventPublisher.publishEvent(new RescanLibraryEvent(this, path.getText()));
+        String libraryRoot = enteredPath();
+        if (!isDirectory(libraryRoot)) {
+            return;
+        }
+        userPreferencesService.saveLibraryRoot(libraryRoot);
+        eventPublisher.publishEvent(new RescanLibraryEvent(this, libraryRoot));
+        close();
+    }
+
+    @FXML
+    public void onCancel(ActionEvent actionEvent) {
+        close();
+    }
+
+    private void close() {
         ((Stage) path.getScene().getWindow()).close();
+    }
+
+    /**
+     * Scan is possible only for an existing folder; otherwise the button is disabled and the reason is shown.
+     */
+    private void validatePath() {
+        String text = enteredPath();
+        String error = null;
+        if (!text.isEmpty() && !isDirectory(text)) {
+            error = "This folder does not exist.";
+        }
+        errorLabel.setText(error == null ? "" : error);
+        scanButton.setDisable(text.isEmpty() || error != null);
+    }
+
+    private String enteredPath() {
+        String text = path.getText();
+        return text == null ? "" : text.trim();
+    }
+
+    private static boolean isDirectory(String text) {
+        if (text.isEmpty()) {
+            return false;
+        }
+        try {
+            return Files.isDirectory(Path.of(text));
+        } catch (InvalidPathException e) {
+            return false;
+        }
     }
 }

@@ -28,6 +28,9 @@ public enum UserPrefKey {
     ARTISTS_SPLIT_WIDTH("ui.split.artists"),         // divider position (px)
     PLAYLIST_SPLIT_WIDTH("ui.split.playlist"),        // divider position (px)
 
+    // ── Library ─────────────────────────────────────────────────────────────
+    LIBRARY_ROOT("library.root"),                    // last folder used for "Rescan library"
+
     // ── Session ─────────────────────────────────────────────────────────────
     LAST_PLAYLIST_ID("session.last.playlist.id"); // FK → playlists.id
 

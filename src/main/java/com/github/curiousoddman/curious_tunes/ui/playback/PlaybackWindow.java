@@ -30,8 +30,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -217,6 +219,20 @@ public class PlaybackWindow {
         stage.setTitle("Now Playing");
         stage.getIcons().setAll(libraryStage.getIcons());
         stage.setScene(scene);
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            switch (event.getCode()) {
+                case SPACE -> {
+                    eventPublisher.publishEvent(new PlayPauseEvent(this));
+                    event.consume();
+                }
+                case ESCAPE -> {
+                    close();
+                    event.consume();
+                }
+                default -> {
+                }
+            }
+        });
         stage.setMinWidth(MIN_WIDTH);
         stage.setMinHeight(MIN_HEIGHT);
         restoreBounds();
@@ -268,6 +284,7 @@ public class PlaybackWindow {
 
     private void buildProgressNodes() {
         waveformView = new PlaybackWaveformView(waveformModel, this::seekToFraction);
+        Tooltip.install(waveformView.getNode(), new Tooltip("Click to jump to a position in the track"));
 
         elapsedLabel = label("pw-time");
         remainingLabel = label("pw-time");
@@ -280,24 +297,30 @@ public class PlaybackWindow {
 
         sessionLabel = label("pw-session", DIM);
         sessionLabel.setMinWidth(Region.USE_PREF_SIZE);
+        sessionLabel.setTooltip(new Tooltip("Time listened in this session"));
 
         playPauseButton = button("▶");
         playPauseButton.setMinWidth(54);
+        playPauseButton.setTooltip(new Tooltip("Play / Pause (Space)"));
         playPauseButton.setOnAction(e -> eventPublisher.publishEvent(new PlayPauseEvent(this)));
 
         nextButton = button("⏭");
         nextButton.setMinWidth(54);
+        nextButton.setTooltip(new Tooltip("Next track"));
         nextButton.disableProperty().bind(audioPlayer.getNextPlaylistItemProperty().isNull());
         nextButton.setOnAction(e -> eventPublisher.publishEvent(new SkipNextEvent(this)));
 
         viewToggleButton = button("Maximize", "pw-button-text");
         viewToggleButton.setMinWidth(Region.USE_PREF_SIZE);
+        viewToggleButton.setTooltip(new Tooltip("Maximize the window to show the lyrics, or return to the compact view"));
         viewToggleButton.setOnAction(e -> stage.setMaximized(!stage.isMaximized()));
 
         volumeIcon = label();
         volumeIcon.setText("🔊");
+        volumeIcon.setTooltip(new Tooltip("Volume"));
         volumeSlider = new Slider(0, 100, 30);
         volumeSlider.setPrefWidth(120);
+        volumeSlider.setTooltip(new Tooltip("Volume"));
         volumeSlider.setOnMouseReleased(e ->
                 userPreferencesService.saveVolume((int) Math.round(volumeSlider.getValue())));
 
@@ -362,12 +385,15 @@ public class PlaybackWindow {
 
         lyricsSizeSlider = new Slider(MIN_LYRICS_SIZE, MAX_LYRICS_SIZE, DEFAULT_LYRICS_SIZE);
         lyricsSizeSlider.setPrefWidth(160);
+        lyricsSizeSlider.setTooltip(new Tooltip("Lyrics font size"));
         // Moving the slider only changes the size; it never touches the auto-fit checkbox.
         lyricsSizeSlider.valueProperty().addListener((obs, was, size) ->
                 lyricsLabel.setFont(Font.font(size.doubleValue())));
 
         autoFitCheck = new CheckBox("Auto-fit");
         autoFitCheck.setSelected(true);
+        autoFitCheck.setFocusTraversable(false);        // like the buttons: Space always means play/pause here
+        autoFitCheck.setTooltip(new Tooltip("Choose the largest font size that shows all of the lyrics"));
 
         Label title = label("pw-section");
         title.setText("Lyrics");

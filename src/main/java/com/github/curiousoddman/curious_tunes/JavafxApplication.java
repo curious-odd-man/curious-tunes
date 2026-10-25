@@ -40,6 +40,7 @@ public class JavafxApplication extends Application {
         stageManager = applicationContext.getBean(StageManager.class, primaryStage);
         LibraryController libraryController = stageManager.switchScene(FxmlView.LIBRARY);
         libraryController.setUserPrefs(primaryStage);
+        libraryController.installShortcuts(primaryStage.getScene());
         notifyPreloader(new MainSceneVisible());
     }
 }

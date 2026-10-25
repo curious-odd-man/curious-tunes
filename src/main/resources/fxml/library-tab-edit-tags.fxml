@@ -18,7 +18,6 @@
         <ButtonBar buttonOrder="" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
             <buttons>
                 <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSave" text="💾 Save" />
-            <Button mnemonicParsing="false" onAction="#onSyncDatabase" text="🔁 Update DB from FIle" />
             <Button mnemonicParsing="false" onAction="#onFindLyrics" text="🔎 Find Lyrics" />
             </buttons>
         </ButtonBar>

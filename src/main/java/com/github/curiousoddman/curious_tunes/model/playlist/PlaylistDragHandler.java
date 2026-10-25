@@ -8,4 +8,9 @@ public interface PlaylistDragHandler {
     void dragInitiatedOn(AnchorPane pane);
 
     void dragDropped(AnchorPane pane);
+
+    /**
+     * Removes the item from the queue (context menu action).
+     */
+    void removeItem(PlaylistItem playlistItem);
 }

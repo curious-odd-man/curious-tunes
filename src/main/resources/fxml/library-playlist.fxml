@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
@@ -16,26 +17,41 @@
                     <font>
                         <Font size="14.0" />
                     </font>
+                    <tooltip>
+                        <Tooltip text="Move selected track up" />
+                    </tooltip>
                 </Button>
                 <Button mnemonicParsing="false" onAction="#onDownButtonClick" text="⬇" textFill="#2200ff">
                     <font>
                         <Font size="14.0" />
                     </font>
+                    <tooltip>
+                        <Tooltip text="Move selected track down" />
+                    </tooltip>
                 </Button>
                 <Button mnemonicParsing="false" onAction="#onDeleteClick" text="➖" textFill="RED">
                     <font>
                         <Font size="14.0" />
                     </font>
+                    <tooltip>
+                        <Tooltip text="Remove selected track from the queue (Delete)" />
+                    </tooltip>
                 </Button>
                 <Button mnemonicParsing="false" onAction="#onShuffleClicked" text="🔀" textFill="#2200ff">
                     <font>
                         <Font size="14.0" />
                     </font>
+                    <tooltip>
+                        <Tooltip text="Shuffle the queue" />
+                    </tooltip>
                 </Button>
             <Button mnemonicParsing="false" onAction="#onClearPlaylistClicked" text="❌" textFill="RED">
                <font>
                   <Font size="14.0" />
                </font>
+                    <tooltip>
+                        <Tooltip text="Clear the whole queue" />
+                    </tooltip>
             </Button>
             </items>
          <opaqueInsets>

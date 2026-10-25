@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
@@ -42,10 +43,13 @@ public class LibraryLyricsTabController implements Initializable {
     public Slider fontSizeSlider;
 
     private PlaylistItem playlistItem;
+    private String       savedText = "";      // lyrics as stored; Save is enabled only when the text differs
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         editButton.setDisable(true);
+        saveButton.setDisable(true);
+        lyricsTextArea.textProperty().addListener((obs, oldText, newText) -> updateSaveButton());
         double lyricsFontSize = userPreferencesService.getLyricsFontSize();
         fontSizeSlider.setValue(lyricsFontSize);
         lyricsTextArea.setFont(Font.font(lyricsFontSize));
@@ -60,20 +64,31 @@ public class LibraryLyricsTabController implements Initializable {
 
     public void showLyrics(PlaylistItem playlistItem) {
         this.playlistItem = playlistItem;
-        String lyrics = playlistItem.getLyrics();
-        lyricsTextArea.setText(normalizeNewlines(lyrics));
+        String lyrics = normalizeNewlines(playlistItem.getLyrics());
+        savedText = lyrics == null ? "" : lyrics;
+        lyricsTextArea.setEditable(false);
+        lyricsTextArea.setText(lyrics);
         editButton.setSelected(false);
         editButton.setDisable(false);
+        updateSaveButton();
+    }
+
+    private void updateSaveButton() {
+        boolean edited = playlistItem != null && !Objects.equals(lyricsTextArea.getText(), savedText);
+        saveButton.setDisable(!edited);
     }
 
     @FXML
     public void onEditButtonClick(ActionEvent actionEvent) {
-        lyricsTextArea.setEditable(true);
-        saveButton.setDisable(!editButton.isSelected());
+        lyricsTextArea.setEditable(editButton.isSelected());
     }
 
     @FXML
     public void onSaveButtonClick(ActionEvent actionEvent) {
+        if (playlistItem == null) {
+            return;
+        }
+        savedText = lyricsTextArea.getText();
         lyricsTextArea.setEditable(false);
         saveButton.setDisable(true);
         editButton.setSelected(false);
@@ -90,14 +105,17 @@ public class LibraryLyricsTabController implements Initializable {
 
     @FXML
     public void onFindLyrics(ActionEvent actionEvent) {
+        if (playlistItem == null) {
+            return;
+        }
         lyricsService.findLyricsAsync(
                 playlistItem.getTrackArtist().getName(),
                 playlistItem.getTrackAlbum().getName(),
                 playlistItem.getTrackRecord().getTitle(),
                 lyrics -> Platform.runLater(() -> {
-                    saveButton.setDisable(false);
                     editButton.setSelected(true);
-                    lyricsTextArea.setText(normalizeNewlines(lyrics));
+                    lyricsTextArea.setEditable(true);
+                    lyricsTextArea.setText(normalizeNewlines(lyrics));     // enables Save if the text is different
                 }),
                 () -> log.warn("Unable to find lyrics...")
         );
