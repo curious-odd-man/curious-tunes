@@ -33,7 +33,12 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.*;
+import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.BORDERED_ITEM;
+import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_DRAG_GUIDE;
+import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_DRAG_GUIDE_BELOW;
+import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_ITEM_PLAYED;
+import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_ITEM_PLAYING;
+import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.SELECTED_ITEM;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Lazy
@@ -44,30 +49,33 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 public class PlaylistItemController implements Initializable {
     private final ApplicationEventPublisher eventPublisher;
     @FXML
-    public ImageView image;
+    public        ImageView                 image;
     @FXML
-    public Label rightText;
+    public        Label                     rightText;
     @FXML
-    public Label topText;
+    public        Label                     topText;
     @FXML
-    public Label bottomText;
+    public        Label                     bottomText;
     @FXML
-    public AnchorPane pane;
-    private ContextMenu contextMenu;
-    private PlaylistItem playlistItem;
-    private PlaylistModel playlistSelectionModel;
-    private PlaylistDragHandler playlistDragHandler;
+    public        AnchorPane                pane;
+    private       ContextMenu               contextMenu;
+    private       PlaylistItem              playlistItem;
+    private       PlaylistModel             playlistSelectionModel;
+    private       PlaylistDragHandler       playlistDragHandler;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        pane.getStyleClass().add(BORDERED_ITEM);
+        pane.getStyleClass()
+            .add(BORDERED_ITEM);
         contextMenu = new ContextMenu();
         MenuItem remove = new MenuItem("Remove from queue");
         remove.setOnAction(_ -> playlistDragHandler.removeItem(playlistItem));
-        contextMenu.getItems().add(remove);
+        contextMenu.getItems()
+                   .add(remove);
 
         if (resources instanceof PlaylistItemResourceBundle playlistItemResourceBundle) {
-            AlbumRecord albumRecord = playlistItemResourceBundle.getPlaylistItem().getTrackAlbum();
+            AlbumRecord albumRecord = playlistItemResourceBundle.getPlaylistItem()
+                                                                .getTrackAlbum();
             ImageUtils.setImageIfPresent(albumRecord, image);
             playlistItem = playlistItemResourceBundle.getPlaylistItem();
             TrackRecord trackRecord = playlistItem.getTrackRecord();
@@ -85,12 +93,16 @@ public class PlaylistItemController implements Initializable {
 
     private void onPlaylistSelectionChanged(ListChangeListener.Change<? extends PlaylistItem> change) {
         while (change.next()) {
-            if (change.getRemoved().contains(playlistItem)) {   // Replaced = added + removed
-                pane.getStyleClass().remove(SELECTED_ITEM);
+            if (change.getRemoved()
+                      .contains(playlistItem)) {   // Replaced = added + removed
+                pane.getStyleClass()
+                    .remove(SELECTED_ITEM);
             }
 
-            if (change.getAddedSubList().contains(playlistItem)) {
-                pane.getStyleClass().add(SELECTED_ITEM);
+            if (change.getAddedSubList()
+                      .contains(playlistItem)) {
+                pane.getStyleClass()
+                    .add(SELECTED_ITEM);
             }
         }
     }
@@ -138,37 +150,63 @@ public class PlaylistItemController implements Initializable {
 
     @FXML
     public void onDragDone(DragEvent dragEvent) {
-        pane.getStyleClass().remove(PLAYLIST_DRAG_GUIDE);
+        removeDropGuides();
         playlistDragHandler.dragCompleted();
         dragEvent.consume();
     }
 
     @FXML
     public void onDragDropped(DragEvent dragEvent) {
-        playlistDragHandler.dragDropped(pane);
+        playlistDragHandler.dragDropped(pane, isLowerHalf(dragEvent));
         dragEvent.setDropCompleted(true);
         dragEvent.consume();
     }
 
     @FXML
     public void onDragOver(DragEvent dragEvent) {
-        if (dragEvent.getGestureSource() != pane && dragEvent.getDragboard().hasString()) {
+        if (dragEvent.getGestureSource() != pane && dragEvent.getDragboard()
+                                                             .hasString()) {
             dragEvent.acceptTransferModes(TransferMode.MOVE);
+            updateDropGuide(dragEvent);
         }
         dragEvent.consume();
     }
 
     @FXML
     public void onDragEntered(DragEvent dragEvent) {
-        if (dragEvent.getGestureSource() != pane && dragEvent.getDragboard().hasString()) {
-            pane.getStyleClass().add(PLAYLIST_DRAG_GUIDE);
+        if (dragEvent.getGestureSource() != pane && dragEvent.getDragboard()
+                                                             .hasString()) {
+            updateDropGuide(dragEvent);
         }
         dragEvent.consume();
     }
 
     @FXML
     public void onDragExited(DragEvent dragEvent) {
-        pane.getStyleClass().remove(PLAYLIST_DRAG_GUIDE);
+        removeDropGuides();
         dragEvent.consume();
+    }
+
+    /**
+     * The pointer in the lower half of the row means "drop after this row", in the upper half "drop before it".
+     */
+    private boolean isLowerHalf(DragEvent dragEvent) {
+        return dragEvent.getY() > pane.getHeight() / 2;
+    }
+
+    private void updateDropGuide(DragEvent dragEvent) {
+        boolean                below        = isLowerHalf(dragEvent);
+        String                 wanted       = below ? PLAYLIST_DRAG_GUIDE_BELOW : PLAYLIST_DRAG_GUIDE;
+        String                 other        = below ? PLAYLIST_DRAG_GUIDE : PLAYLIST_DRAG_GUIDE_BELOW;
+        ObservableList<String> styleClasses = pane.getStyleClass();
+        styleClasses.remove(other);
+        if (!styleClasses.contains(wanted)) {
+            styleClasses.add(wanted);
+        }
+    }
+
+    private void removeDropGuides() {
+        pane.getStyleClass()
+            .removeAll(PLAYLIST_DRAG_GUIDE, PLAYLIST_DRAG_GUIDE_BELOW);
     }
 }

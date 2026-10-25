@@ -7,7 +7,15 @@ public interface PlaylistDragHandler {
 
     void dragInitiatedOn(AnchorPane pane);
 
-    void dragDropped(AnchorPane pane);
+    /**
+     * @param below true when the pointer was in the lower half of the row: the track lands after the row, not before it
+     */
+    void dragDropped(AnchorPane pane, boolean below);
+
+    /**
+     * The track was dropped on the free space under the last row: it moves to the end of the queue.
+     */
+    void dragDroppedAtEnd();
 
     /**
      * Removes the item from the queue (context menu action).

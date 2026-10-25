@@ -56,7 +56,8 @@ public class ProgressCanvasController implements TrackProgressController {
 
         graphicsContext = canvas.getGraphicsContext2D();
         clearWaveform(graphicsContext);
-        parentPane.setStyle("-fx-background-color: #0d0d0d; -fx-background-radius: 8;");
+        parentPane.getStyleClass()
+                  .add("waveform-pane");
         setProgressZero();
     }
 

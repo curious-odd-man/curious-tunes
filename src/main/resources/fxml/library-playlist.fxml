@@ -2,70 +2,95 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-
-<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryPlaylistController">
+<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0"
+            xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryPlaylistController">
     <top>
-        <ToolBar maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER_RIGHT">
-            <items>
-                <Button mnemonicParsing="false" onAction="#onUpButtonClick" text="⬆" textFill="#2200ff">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                    <tooltip>
-                        <Tooltip text="Move selected track up" />
-                    </tooltip>
-                </Button>
-                <Button mnemonicParsing="false" onAction="#onDownButtonClick" text="⬇" textFill="#2200ff">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                    <tooltip>
-                        <Tooltip text="Move selected track down" />
-                    </tooltip>
-                </Button>
-                <Button mnemonicParsing="false" onAction="#onDeleteClick" text="➖" textFill="RED">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                    <tooltip>
-                        <Tooltip text="Remove selected track from the queue (Delete)" />
-                    </tooltip>
-                </Button>
-                <Button mnemonicParsing="false" onAction="#onShuffleClicked" text="🔀" textFill="#2200ff">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                    <tooltip>
-                        <Tooltip text="Shuffle the queue" />
-                    </tooltip>
-                </Button>
-            <Button mnemonicParsing="false" onAction="#onClearPlaylistClicked" text="❌" textFill="RED">
-               <font>
-                  <Font size="14.0" />
-               </font>
-                    <tooltip>
-                        <Tooltip text="Clear the whole queue" />
-                    </tooltip>
-            </Button>
-            </items>
-         <opaqueInsets>
-            <Insets />
-         </opaqueInsets>
-        </ToolBar>
+        <VBox>
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="6.0">
+                    <padding>
+                        <Insets bottom="2.0" left="8.0" right="8.0" top="6.0"/>
+                    </padding>
+                    <children>
+                        <Label fx:id="queueSummaryLabel" maxWidth="1.7976931348623157E308" styleClass="dim-text"
+                               HBox.hgrow="ALWAYS"/>
+                        <Button mnemonicParsing="false" onAction="#onScrollToPlayingClick" text="↓ Now playing">
+                            <tooltip>
+                                <Tooltip text="Scroll to the track that is playing"/>
+                            </tooltip>
+                        </Button>
+                    </children>
+                </HBox>
+                <ToolBar maxWidth="1.7976931348623157E308">
+                    <items>
+                        <Button mnemonicParsing="false" onAction="#onUpButtonClick" text="⬆" styleClass="icon-accent">
+                            <font>
+                                <Font size="14.0"/>
+                            </font>
+                            <tooltip>
+                                <Tooltip text="Move selected track up"/>
+                            </tooltip>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#onDownButtonClick" text="⬇" styleClass="icon-accent">
+                            <font>
+                                <Font size="14.0"/>
+                            </font>
+                            <tooltip>
+                                <Tooltip text="Move selected track down"/>
+                            </tooltip>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#onDeleteClick" text="➖" styleClass="icon-danger">
+                            <font>
+                                <Font size="14.0"/>
+                            </font>
+                            <tooltip>
+                                <Tooltip text="Remove selected track from the queue (Delete)"/>
+                            </tooltip>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#onShuffleClicked" text="🔀" styleClass="icon-accent">
+                            <font>
+                                <Font size="14.0"/>
+                            </font>
+                            <tooltip>
+                                <Tooltip text="Shuffle the queue"/>
+                            </tooltip>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#onClearPlaylistClicked" text="❌"
+                                styleClass="icon-danger">
+                            <font>
+                                <Font size="14.0"/>
+                            </font>
+                            <tooltip>
+                                <Tooltip text="Clear the whole queue"/>
+                            </tooltip>
+                        </Button>
+                    </items>
+                    <opaqueInsets>
+                        <Insets/>
+                    </opaqueInsets>
+                </ToolBar>
+            </children>
+        </VBox>
     </top>
     <center>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" vbarPolicy="ALWAYS" BorderPane.alignment="CENTER">
+        <ScrollPane fx:id="playlistScroll" fitToWidth="true" hbarPolicy="NEVER" maxHeight="1.7976931348623157E308"
+                    maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" vbarPolicy="ALWAYS"
+                    BorderPane.alignment="CENTER">
             <content>
-                <VBox fx:id="playlistVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" spacing="2.0" />
+                <VBox fx:id="playlistVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                      minHeight="0.0" minWidth="0.0" spacing="2.0"/>
             </content>
             <padding>
-                <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
             </padding>
         </ScrollPane>
     </center>

@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes.ui.controller.element.tabs;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.LyricsService;
 import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
+import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -15,6 +16,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.text.Font;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
@@ -27,20 +29,21 @@ import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 @Component
 @RequiredArgsConstructor
 public class LibraryLyricsTabController implements Initializable {
-    private final LyricsService lyricsService;
-    private final DataAccess dataAccess;
-    private final UserPreferencesService userPreferencesService;
+    private final LyricsService             lyricsService;
+    private final DataAccess                dataAccess;
+    private final UserPreferencesService    userPreferencesService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @FXML
     public ToggleButton editButton;
     @FXML
-    public Button saveButton;
+    public Button       saveButton;
     @FXML
-    public TextArea lyricsTextArea;
+    public TextArea     lyricsTextArea;
     @FXML
-    public Button searchLyricsButton;
+    public Button       searchLyricsButton;
     @FXML
-    public Slider fontSizeSlider;
+    public Slider       fontSizeSlider;
 
     private PlaylistItem playlistItem;
     private String       savedText = "";      // lyrics as stored; Save is enabled only when the text differs
@@ -49,13 +52,15 @@ public class LibraryLyricsTabController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         editButton.setDisable(true);
         saveButton.setDisable(true);
-        lyricsTextArea.textProperty().addListener((obs, oldText, newText) -> updateSaveButton());
+        lyricsTextArea.textProperty()
+                      .addListener((obs, oldText, newText) -> updateSaveButton());
         double lyricsFontSize = userPreferencesService.getLyricsFontSize();
         fontSizeSlider.setValue(lyricsFontSize);
         lyricsTextArea.setFont(Font.font(lyricsFontSize));
         fontSizeSlider.setOnMouseReleased(event -> {
             double size = fontSizeSlider.getValue();
-            if (size != lyricsTextArea.getFont().getSize()) {
+            if (size != lyricsTextArea.getFont()
+                                      .getSize()) {
                 lyricsTextArea.setFont(Font.font(size));
                 userPreferencesService.saveLyricsFontSize(size);
             }
@@ -97,8 +102,10 @@ public class LibraryLyricsTabController implements Initializable {
             log.info("Saving updated lyrics to {}", playlistItem.getFileLocation());
             dataAccess.storeTrackOverride(playlistItem.getTrackRecord(), TRACK.LYRICS, playlistItem.getLyrics());
             playlistItem.setLyrics(lyricsTextArea.getText());
-            playlistItem.getTrackRecord().update(TRACK.LYRICS);
+            playlistItem.getTrackRecord()
+                        .update(TRACK.LYRICS);
             log.info("Update completed...");
+            eventPublisher.publishEvent(UserNotificationEvent.info(this, "Lyrics saved"));
         }, "Update metadata");
         t.start();
     }
@@ -109,15 +116,22 @@ public class LibraryLyricsTabController implements Initializable {
             return;
         }
         lyricsService.findLyricsAsync(
-                playlistItem.getTrackArtist().getName(),
-                playlistItem.getTrackAlbum().getName(),
-                playlistItem.getTrackRecord().getTitle(),
+                playlistItem.getTrackArtist()
+                            .getName(),
+                playlistItem.getTrackAlbum()
+                            .getName(),
+                playlistItem.getTrackRecord()
+                            .getTitle(),
                 lyrics -> Platform.runLater(() -> {
                     editButton.setSelected(true);
                     lyricsTextArea.setEditable(true);
                     lyricsTextArea.setText(normalizeNewlines(lyrics));     // enables Save if the text is different
+                    eventPublisher.publishEvent(UserNotificationEvent.info(this, "Lyrics found. Review them and press Save."));
                 }),
-                () -> log.warn("Unable to find lyrics...")
+                () -> {
+                    log.warn("Unable to find lyrics...");
+                    eventPublisher.publishEvent(UserNotificationEvent.error(this, "No lyrics found online for this track"));
+                }
         );
     }
 

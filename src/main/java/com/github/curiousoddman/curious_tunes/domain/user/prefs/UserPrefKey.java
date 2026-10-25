@@ -27,6 +27,9 @@ public enum UserPrefKey {
     // ── UI layout ───────────────────────────────────────────────────────────
     ARTISTS_SPLIT_WIDTH("ui.split.artists"),         // divider position (px)
     PLAYLIST_SPLIT_WIDTH("ui.split.playlist"),        // divider position (px)
+    ALBUMS_GRID_VIEW("ui.albums.grid"),               // true = grid of covers, false = list
+    ALBUMS_LIST_COVER_SIZE("ui.albums.list.cover"),   // cover size (px) in the list
+    ALBUMS_GRID_COVER_SIZE("ui.albums.grid.cover"),   // cover size (px) in the grid
 
     // ── Library ─────────────────────────────────────────────────────────────
     LIBRARY_ROOT("library.root"),                    // last folder used for "Rescan library"

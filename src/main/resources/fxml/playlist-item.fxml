@@ -8,46 +8,53 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-
-<AnchorPane fx:id="pane" onDragDetected="#onDragDetected" onDragDone="#onDragDone" onDragDropped="#onDragDropped" onDragEntered="#onDragEntered" onDragExited="#onDragExited" onDragOver="#onDragOver" onMouseClicked="#onPaneClicked" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.PlaylistItemController">
+<AnchorPane fx:id="pane" onDragDetected="#onDragDetected" onDragDone="#onDragDone" onDragDropped="#onDragDropped"
+            onDragEntered="#onDragEntered" onDragExited="#onDragExited" onDragOver="#onDragOver"
+            onMouseClicked="#onPaneClicked" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.PlaylistItemController">
     <children>
-        <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0"
+                    AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <left>
-                <ImageView fx:id="image" fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+                <ImageView fx:id="image" fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true"
+                           BorderPane.alignment="CENTER">
                     <image>
-                        <Image url="@/img/noimage.png" />
+                        <Image url="@/img/noimage.png"/>
                     </image>
-               <BorderPane.margin>
-                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
-               </BorderPane.margin>
+                    <BorderPane.margin>
+                        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
+                    </BorderPane.margin>
                 </ImageView>
             </left>
             <right>
                 <Label fx:id="rightText" contentDisplay="RIGHT" BorderPane.alignment="CENTER_RIGHT">
-               <padding>
-                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
-               </padding></Label>
+                    <padding>
+                        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
+                    </padding>
+                </Label>
             </right>
             <center>
                 <VBox alignment="CENTER_LEFT" spacing="5.0" BorderPane.alignment="CENTER_LEFT">
                     <children>
                         <Label fx:id="topText" styleClass="playlist-title">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
-                     <padding>
-                        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
-                     </padding></Label>
-                        <Label fx:id="bottomText" textFill="#00000080">
-                     <padding>
-                        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
-                     </padding></Label>
+                            <font>
+                                <Font size="14.0"/>
+                            </font>
+                            <padding>
+                                <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
+                            </padding>
+                        </Label>
+                        <Label fx:id="bottomText" styleClass="dim-text">
+                            <padding>
+                                <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
+                            </padding>
+                        </Label>
                     </children>
                 </VBox>
             </center>
         </BorderPane>
     </children>
-   <padding>
-      <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
-   </padding>
+    <padding>
+        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
+    </padding>
 </AnchorPane>

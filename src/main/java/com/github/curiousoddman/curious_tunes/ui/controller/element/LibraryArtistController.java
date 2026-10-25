@@ -4,9 +4,9 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
 import com.github.curiousoddman.curious_tunes.model.ArtistSelectionModel;
-import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistItemBundle;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -22,6 +22,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.text.Normalizer;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.BORDERED_ITEM;
@@ -36,17 +38,18 @@ public class LibraryArtistController implements Initializable {
     private final ApplicationEventPublisher eventPublisher;
 
     public ImageView artistImageView;
-    public Label artistNameLabel;
-    public HBox pane;
+    public Label     artistNameLabel;
+    public HBox      pane;
 
-    private ArtistRecord artistRecord;
+    private ArtistRecord         artistRecord;
     private ArtistSelectionModel artistSelectionModel;
 
 
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
-        pane.getStyleClass().add(BORDERED_ITEM);
+        pane.getStyleClass()
+            .add(BORDERED_ITEM);
         if (resources instanceof ArtistItemBundle bundle) {
             ArtistRecord artist = bundle.getArtist();
             //String icon = bundle.getIcon(); // FIXME:
@@ -59,14 +62,45 @@ public class LibraryArtistController implements Initializable {
 
     @FXML
     public void onArtistClicked(MouseEvent mouseEvent) {
-        artistSelectionModel.getOptionalSelectedItem().ifPresent(LibraryArtistController::clearSelection);
+        artistSelectionModel.getOptionalSelectedItem()
+                            .ifPresent(LibraryArtistController::clearSelection);
         artistSelectionModel.select(this);
-        artistNameLabel.getParent().getStyleClass().add(SELECTED_ITEM);
+        artistNameLabel.getParent()
+                       .getStyleClass()
+                       .add(SELECTED_ITEM);
         eventPublisher.publishEvent(new ShowArtistAlbums(this, artistRecord));
     }
 
+    /**
+     * Lower-cases and strips accents, so that "bjork" finds "Björk".
+     */
+    public static String fold(String text) {
+        if (text == null) {
+            return "";
+        }
+        return Normalizer.normalize(text.trim(), Normalizer.Form.NFD)
+                         .replaceAll("\\p{M}+", "")
+                         .toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * @param foldedFilter text already processed by {@link #fold(String)}; empty matches everything
+     */
+    public boolean matches(String foldedFilter) {
+        return foldedFilter.isEmpty()
+                || artistRecord == null
+                || fold(artistRecord.getName()).contains(foldedFilter);
+    }
+
+    public void setRowVisible(boolean visible) {
+        pane.setVisible(visible);
+        pane.setManaged(visible);
+    }
+
     public void clearSelection() {
-        artistNameLabel.getParent().getStyleClass().remove(SELECTED_ITEM);
+        artistNameLabel.getParent()
+                       .getStyleClass()
+                       .remove(SELECTED_ITEM);
     }
 
     @FXML

@@ -4,28 +4,35 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
-
-<HBox fx:id="rootHbox" fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#onMouseClicked" spacing="10.0" styleClass="library-album-track" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumTrackController">
-   <children>
-      <Label fx:id="warningLabel" text="⚠" textFill="RED" visible="false" HBox.hgrow="NEVER">
-         <font>
-            <Font size="14.0" />
-         </font>
-      </Label>
-      <Label fx:id="trackNumberLabel" HBox.hgrow="NEVER">
-         <font>
-            <Font size="14.0" />
-         </font></Label>
-      <Label fx:id="trackTitleLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
-         <font>
-            <Font size="14.0" />
-         </font></Label>
-      <Label fx:id="trackTimeLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="NEVER">
-         <font>
-            <Font size="14.0" />
-         </font></Label>
-   </children>
-   <padding>
-      <Insets left="10.0" right="10.0" top="2.0" />
-   </padding>
+<HBox fx:id="rootHbox" fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+      onMouseClicked="#onMouseClicked" spacing="10.0" styleClass="library-album-track"
+      xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumTrackController">
+    <children>
+        <Label fx:id="warningLabel" text="⚠" styleClass="warning-icon" visible="false" HBox.hgrow="NEVER">
+            <font>
+                <Font size="14.0"/>
+            </font>
+        </Label>
+        <Label fx:id="trackNumberLabel" HBox.hgrow="NEVER">
+            <font>
+                <Font size="14.0"/>
+            </font>
+        </Label>
+        <Label fx:id="trackTitleLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+               HBox.hgrow="ALWAYS">
+            <font>
+                <Font size="14.0"/>
+            </font>
+        </Label>
+        <Label fx:id="trackTimeLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+               HBox.hgrow="NEVER">
+            <font>
+                <Font size="14.0"/>
+            </font>
+        </Label>
+    </children>
+    <padding>
+        <Insets left="10.0" right="10.0" top="2.0"/>
+    </padding>
 </HBox>

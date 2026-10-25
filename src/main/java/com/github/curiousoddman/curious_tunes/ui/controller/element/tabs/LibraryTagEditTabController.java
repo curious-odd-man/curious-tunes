@@ -6,8 +6,10 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackOverride
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.LyricsService;
+import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.util.ConversionUtils;
+import com.github.curiousoddman.curious_tunes.util.styles.CssClasses;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.TableField;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
@@ -40,32 +43,33 @@ import static com.github.curiousoddman.curious_tunes.util.ConversionUtils.str;
 @RequiredArgsConstructor
 public class LibraryTagEditTabController implements Initializable {
     @FXML
-    public GridPane tagsGrid;
+    public GridPane   tagsGrid;
     @FXML
-    public TextField artistField;
+    public TextField  artistField;
     @FXML
-    public TextField albumField;
+    public TextField  albumField;
     @FXML
-    public TextField titleField;
+    public TextField  titleField;
     @FXML
-    public TextField trackNumberField;
+    public TextField  trackNumberField;
     @FXML
-    public TextField releaseDateField;
+    public TextField  releaseDateField;
     @FXML
-    public TextField diskNumberField;
+    public TextField  diskNumberField;
     @FXML
-    public TextField genreField;
+    public TextField  genreField;
     @FXML
-    public TextField composerField;
+    public TextField  composerField;
     @FXML
-    public ImageView albumCoverImage;
+    public ImageView  albumCoverImage;
     @FXML
-    public TextArea lyricsEditArea;
+    public TextArea   lyricsEditArea;
     @FXML
     public AnchorPane rootPane;
 
-    private final LyricsService lyricsService;
-    private final DataAccess dataAccess;
+    private final LyricsService             lyricsService;
+    private final DataAccess                dataAccess;
+    private final ApplicationEventPublisher eventPublisher;
 
     private TrackInfo trackInfo;
 
@@ -83,12 +87,23 @@ public class LibraryTagEditTabController implements Initializable {
 
     @FXML
     public void onFindLyrics(ActionEvent actionEvent) {
+        if (trackInfo == null) {
+            return;
+        }
         lyricsService.findLyricsAsync(
-                trackInfo.getTrackArtist().getName(),
-                trackInfo.getTrackAlbum().getName(),
+                trackInfo.getTrackArtist()
+                         .getName(),
+                trackInfo.getTrackAlbum()
+                         .getName(),
                 trackInfo.getTitle(),
-                lyrics -> Platform.runLater(() -> lyricsEditArea.setText(normalizeNewlines(lyrics))),
-                () -> log.error("Unable to find lyrics online")
+                lyrics -> Platform.runLater(() -> {
+                    lyricsEditArea.setText(normalizeNewlines(lyrics));
+                    eventPublisher.publishEvent(UserNotificationEvent.info(this, "Lyrics found. Review them and press Save."));
+                }),
+                () -> {
+                    log.error("Unable to find lyrics online");
+                    eventPublisher.publishEvent(UserNotificationEvent.error(this, "No lyrics found online for this track"));
+                }
         );
     }
 
@@ -97,20 +112,36 @@ public class LibraryTagEditTabController implements Initializable {
     }
 
     @FXML
-    @SneakyThrows
     public void onSave(ActionEvent actionEvent) {
+        if (trackInfo == null) {
+            eventPublisher.publishEvent(UserNotificationEvent.error(this, "Choose a track first: right-click it and select \"Edit tags\""));
+            return;
+        }
+        try {
+            saveTags();
+            eventPublisher.publishEvent(UserNotificationEvent.info(this, "Tags saved"));
+        } catch (Exception e) {
+            log.error("Unable to save tags", e);
+            eventPublisher.publishEvent(UserNotificationEvent.error(this, "Unable to save tags: " + e.getMessage()));
+        }
+    }
+
+    @SneakyThrows
+    private void saveTags() {
         log.info("Updating track info \n{}", trackInfo);
         TrackRecord trackRecord = trackInfo.getTrackRecord();
 
         ArtistRecord artist = trackInfo.getTrackArtist();
-        if (!artistField.getText().equals(trackInfo.getArtistName())) {
+        if (!artistField.getText()
+                        .equals(trackInfo.getArtistName())) {
             log.info("Artist name changed!");
             artist = dataAccess.getOrInsertArtist(artistField.getText());
             AlbumRecord album = dataAccess.getOrInsertAlbum(artist.getId(), albumField.getText(), trackInfo.getAlbumImage());
             dataAccess.storeTrackOverride(trackInfo.getTrackRecord(), TRACK.FK_ALBUM, str(trackRecord.getFkAlbum()));
             trackRecord.setFkAlbum(album.getId());
             trackRecord.update(TRACK.FK_ALBUM);
-        } else if (!albumField.getText().equals(trackInfo.getAlbumName())) {
+        } else if (!albumField.getText()
+                              .equals(trackInfo.getAlbumName())) {
             log.info("Album changed");
             AlbumRecord album = dataAccess.getOrInsertAlbum(artist.getId(), albumField.getText(), trackInfo.getAlbumImage());
             dataAccess.storeTrackOverride(trackInfo.getTrackRecord(), TRACK.FK_ALBUM, str(trackRecord.getFkAlbum()));
@@ -171,10 +202,11 @@ public class LibraryTagEditTabController implements Initializable {
                                  List<TrackOverridesHistoryRecord> trackOverrides,
                                  TableField<TrackRecord, ?> field) {
         boolean wasOverridden = wasOverridden(currentValue, trackOverrides, field);
+        inputField.getStyleClass()
+                  .remove(CssClasses.FIELD_OVERRIDDEN);
         if (wasOverridden) {
-            inputField.setStyle("-fx-border-color: orange; -fx-border-width: 2;");
-        } else {
-            inputField.setStyle(null);
+            inputField.getStyleClass()
+                      .add(CssClasses.FIELD_OVERRIDDEN);
         }
     }
 
@@ -182,9 +214,11 @@ public class LibraryTagEditTabController implements Initializable {
         Optional<TrackOverridesHistoryRecord> override = trackOverrides
                 .reversed()
                 .stream()
-                .filter(r -> r.getField().equals(field.getName()))
+                .filter(r -> r.getField()
+                              .equals(field.getName()))
                 .findFirst();
         return override.isPresent()
-                && !Objects.equals(currentValue, override.get().getOldValue());
+                && !Objects.equals(currentValue, override.get()
+                                                         .getOldValue());
     }
 }

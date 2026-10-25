@@ -16,7 +16,13 @@ import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,18 +32,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PlaylistModel {
     @Getter
-    private final List<PlaylistItem> playlistItems = new ArrayList<>();
+    private final List<PlaylistItem>          playlistItems  = new ArrayList<>();
     @Getter
     private final PlaylistMultiSelectionModel selectionModel = new PlaylistMultiSelectionModel(playlistItems);
-    private final DataAccess dataAccess;
-    private final ApplicationEventPublisher eventPublisher;
+    private final DataAccess                  dataAccess;
+    private final ApplicationEventPublisher   eventPublisher;
 
     private PlaylistItem currentlyPlayingItem = null;
 
     public void addItems(AddToPlaylistEvent addToPlaylistEvent) {
-        selectionModel.getSelectedIndices().addListener((InvalidationListener) o -> {
-            logPlaylistItems();
-        });
+        selectionModel.getSelectedIndices()
+                      .addListener((InvalidationListener) o -> {
+                          logPlaylistItems();
+                      });
         List<PlaylistItem> tracksToAdd = new ArrayList<>();
         tracksToAdd.addAll(getTracks(addToPlaylistEvent));
         tracksToAdd.addAll(getTracksForArtist(addToPlaylistEvent));
@@ -149,12 +156,13 @@ public class PlaylistModel {
         if (fromIndex < 0 || fromIndex >= playlistItems.size()) {
             return;
         }
-        if (toIndex < 0 || toIndex >= playlistItems.size()) {
+        if (toIndex < 0 || toIndex > playlistItems.size()) {       // toIndex == size means "to the end"
             return;
         }
 
         // Protect the currently-playing item from being moved
-        if (playlistItems.get(fromIndex).equals(currentlyPlayingItem)) {
+        if (playlistItems.get(fromIndex)
+                         .equals(currentlyPlayingItem)) {
             return;
         }
 
@@ -165,20 +173,22 @@ public class PlaylistModel {
             int pinnedIndex = currentlyPlayingItem == null ? -1
                     : playlistItems.indexOf(currentlyPlayingItem);
             indicesToMove = indicesToMove.stream()
-                    .filter(i -> i != pinnedIndex)
-                    .collect(Collectors.toCollection(ArrayList::new));
+                                         .filter(i -> i != pinnedIndex)
+                                         .collect(Collectors.toCollection(ArrayList::new));
         } else {
             indicesToMove = List.of(fromIndex);
         }
 
         // Extract items, erase from list, re-insert at adjusted target
         List<PlaylistItem> itemsToMove = indicesToMove.stream()
-                .map(playlistItems::get)
-                .toList();
+                                                      .map(playlistItems::get)
+                                                      .toList();
 
         // Count how many selected items sit before toIndex (they shift toIndex left)
-        long before = indicesToMove.stream().filter(i -> i < toIndex).count();
-        int adjustedTo = (int) (toIndex - before);
+        long before     = indicesToMove.stream()
+                                       .filter(i -> i < toIndex)
+                                       .count();
+        int  adjustedTo = (int) (toIndex - before);
 
         playlistItems.removeAll(itemsToMove);
         adjustedTo = Math.max(0, Math.min(adjustedTo, playlistItems.size()));
@@ -195,7 +205,9 @@ public class PlaylistModel {
 
     public OptionalInt deleteSelected() {
         int selectedIndex = selectionModel.getSelectedIndex();
-        if (selectedIndex < 0) return OptionalInt.empty();
+        if (selectedIndex < 0) {
+            return OptionalInt.empty();
+        }
 
         PlaylistItem item = playlistItems.get(selectedIndex);
         playlistItems.remove(selectedIndex);
@@ -212,7 +224,9 @@ public class PlaylistModel {
 
     public List<Integer> deleteAllSelected() {
         List<Integer> sorted = selectionModel.getSortedSelectedIndices();
-        if (sorted.isEmpty()) return List.of();
+        if (sorted.isEmpty()) {
+            return List.of();
+        }
 
         // Remove from back to front so indices stay valid
         List<Integer> reversed = new ArrayList<>(sorted);
@@ -254,7 +268,8 @@ public class PlaylistModel {
 
         if (nextIndex < playlistItems.size()) {
             PlaylistItem playlistItem = playlistItems.get(nextIndex);
-            log.info("▶ Next item to play is: {}", playlistItem.getTrackRecord().getTitle());
+            log.info("▶ Next item to play is: {}", playlistItem.getTrackRecord()
+                                                               .getTitle());
             return Optional.of(playlistItem);
         }
         return Optional.empty();
@@ -304,17 +319,19 @@ public class PlaylistModel {
 
         List<TrackInfo> albumsTracks = dataAccess.getAlbumsTracks(albums);
         Set<Integer> artistFks = albumsTracks.stream()
-                .map(TrackInfo::getTrackAlbum)
-                .map(AlbumRecord::getFkArtist)
-                .collect(Collectors.toSet());
-        Map<Integer, ArtistRecord> artistRecordMap = dataAccess.getArtists(artistFks).stream()
-                .collect(Collectors.toMap(ArtistRecord::getId, Function.identity()));
+                                             .map(TrackInfo::getTrackAlbum)
+                                             .map(AlbumRecord::getFkArtist)
+                                             .collect(Collectors.toSet());
+        Map<Integer, ArtistRecord> artistRecordMap = dataAccess.getArtists(artistFks)
+                                                               .stream()
+                                                               .collect(Collectors.toMap(ArtistRecord::getId, Function.identity()));
         return albumsTracks.stream()
-                .map(trackInfo -> new PlaylistItem(
-                        trackInfo.getTrackRecord(),
-                        artistRecordMap.get(trackInfo.getTrackAlbum().getFkArtist()),
-                        trackInfo.getTrackAlbum()))
-                .toList();
+                           .map(trackInfo -> new PlaylistItem(
+                                   trackInfo.getTrackRecord(),
+                                   artistRecordMap.get(trackInfo.getTrackAlbum()
+                                                                .getFkArtist()),
+                                   trackInfo.getTrackAlbum()))
+                           .toList();
     }
 
     private List<PlaylistItem> getTracksForArtist(AddToPlaylistEvent addToPlaylistEvent) {
@@ -323,29 +340,31 @@ public class PlaylistModel {
         }
         List<TrackInfo> artistTracks = dataAccess.getArtistTracks(addToPlaylistEvent.getArtistRecord());
         return artistTracks.stream()
-                .map(trackInfo -> new PlaylistItem(
-                        trackInfo.getTrackRecord(),
-                        addToPlaylistEvent.getArtistRecord(),
-                        trackInfo.getTrackAlbum()))
-                .toList();
+                           .map(trackInfo -> new PlaylistItem(
+                                   trackInfo.getTrackRecord(),
+                                   addToPlaylistEvent.getArtistRecord(),
+                                   trackInfo.getTrackAlbum()))
+                           .toList();
     }
 
     private static List<PlaylistItem> getTracks(AddToPlaylistEvent addToPlaylistEvent) {
         if (addToPlaylistEvent.getTracks() == null) {
             return List.of();
         }
-        return addToPlaylistEvent.getTracks().stream()
-                .map(tqi -> new PlaylistItem(
-                        tqi.getTrackRecord(), tqi.getTrackArtist(), tqi.getTrackAlbum()))
-                .toList();
+        return addToPlaylistEvent.getTracks()
+                                 .stream()
+                                 .map(tqi -> new PlaylistItem(
+                                         tqi.getTrackRecord(), tqi.getTrackArtist(), tqi.getTrackAlbum()))
+                                 .toList();
     }
 
     private void logPlaylistItems() {
         if (log.isDebugEnabled()) {
             String callerMethod = StackWalker.getInstance()
-                    .walk(frames -> frames.skip(1).findFirst())
-                    .map(StackWalker.StackFrame::getMethodName)
-                    .orElse("unknown");
+                                             .walk(frames -> frames.skip(1)
+                                                                   .findFirst())
+                                             .map(StackWalker.StackFrame::getMethodName)
+                                             .orElse("unknown");
 
             MDC.put(".", "PLAYLIST");
             log.debug("Dumping playlist -------------------- {} items...  from {}", playlistItems.size(), callerMethod);
@@ -356,7 +375,8 @@ public class PlaylistModel {
                         selectedIndices.contains(i) ? "S" : " ",
                         pi.equals(currentlyPlayingItem) ? "P" : " ",
                         pi.getPlaylistItemStatus(),
-                        pi.getTrackRecord().getTitle());
+                        pi.getTrackRecord()
+                          .getTitle());
             }
             log.debug("END");
             MDC.remove(".");

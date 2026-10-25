@@ -5,6 +5,39 @@
     -ct-playing: #1f9d8f;
     -ct-playing-bg: #dff3f0;
     -ct-hover: rgba(59, 130, 246, 0.12);
+    -ct-text-dim: rgba(0, 0, 0, 0.55);
+    -ct-border: rgba(0, 0, 0, 0.15);
+    -ct-danger: #d64545;
+    -ct-override: orange;
+}
+
+/* ---- Text roles -------------------------------------------------------- */
+
+.text-small {
+    -fx-font-size: 12px;
+}
+
+.text-body {
+    -fx-font-size: 14px;
+}
+
+.text-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.dim-text {
+    -fx-text-fill: -ct-text-dim;
+}
+
+.icon-accent {
+    -fx-text-fill: derive(-ct-accent, -35%);
+}
+
+.icon-danger,
+.warning-icon,
+.toast-error {
+    -fx-text-fill: -ct-danger;
 }
 
 /* ---- Rows: hover ------------------------------------------------------- */
@@ -81,7 +114,54 @@
     -fx-background-color: rgb(165, 165, 165);
 }
 
+/* ---- Queue drag and drop: where the dragged track will land ------------ */
+
 .playlist-drag-guide {
-    -fx-border-color: #4a90d9;
+    -fx-border-color: -ct-accent;
     -fx-border-width: 2 0 0 0;
+}
+
+.playlist-drag-guide-below {
+    -fx-border-color: -ct-accent;
+    -fx-border-width: 0 0 2 0;
+}
+
+/* ---- Library: track that is playing now -------------------------------- */
+
+.library-track-playing {
+    -fx-border-color: rgb(202, 202, 202) rgb(202, 202, 202) rgb(202, 202, 202) -ct-playing;
+    -fx-border-width: 1px 0 1px 4px;
+}
+
+.library-track-playing .label {
+    -fx-font-weight: bold;
+}
+
+/* ---- Albums: grid cards, toolbar --------------------------------------- */
+
+.album-card {
+    -fx-padding: 6;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.album-card:hover {
+    -fx-background-color: -ct-hover;
+}
+
+/* ---- Other ------------------------------------------------------------- */
+
+.field-overridden {
+    -fx-border-color: -ct-override;
+    -fx-border-width: 2;
+}
+
+.waveform-pane {
+    -fx-background-color: #0d0d0d;
+    -fx-background-radius: 8;
+}
+
+.status-bar {
+    -fx-border-color: -ct-border transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
 }

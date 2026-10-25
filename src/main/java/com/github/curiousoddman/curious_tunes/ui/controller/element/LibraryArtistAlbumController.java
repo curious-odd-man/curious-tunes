@@ -3,7 +3,6 @@ package com.github.curiousoddman.curious_tunes.ui.controller.element;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
@@ -29,7 +28,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ResourceBundle;
 
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
@@ -42,16 +46,16 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @RequiredArgsConstructor
 public class LibraryArtistAlbumController implements Initializable {
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final FxmlLoader fxmlLoader;
-    public ImageView albumImage;
-    public Label albumTitle;
-    public Label albumDetails;
-    public VBox albumDiscsVbox;
-    public BorderPane pane;
-    public ImageView playImageButton;
+    private final FxmlLoader                fxmlLoader;
+    public        ImageView                 albumImage;
+    public        Label                     albumTitle;
+    public        Label                     albumDetails;
+    public        VBox                      albumDiscsVbox;
+    public        BorderPane                pane;
+    public        ImageView                 playImageButton;
 
     private final List<LibraryArtistAlbumDiscController> discControllers = new ArrayList<>();
-    private AlbumInfo albumInfo;
+    private       AlbumInfo                              albumInfo;
 
     @Override
     @SneakyThrows
@@ -60,7 +64,8 @@ public class LibraryArtistAlbumController implements Initializable {
             albumInfo = albumBundle.getAlbumInfo();
             ImageUtils.setImageIfPresent(albumInfo, albumImage);
 
-            Integer albumYear = albumBundle.getAlbumInfo().getAlbumYear();
+            Integer albumYear = albumBundle.getAlbumInfo()
+                                           .getAlbumYear();
             albumTitle.setText(albumInfo.getName());
             albumDetails.setText(albumYear == null ? "🎵" : String.valueOf(albumYear));
             List<TrackRecord> albumsTracks = albumBundle.getAlbumTracks();
@@ -90,7 +95,8 @@ public class LibraryArtistAlbumController implements Initializable {
                         )
                 );
                 discControllers.add(loaded.controller());
-                albumDiscsVbox.getChildren().add(loaded.parent());
+                albumDiscsVbox.getChildren()
+                              .add(loaded.parent());
             }
         }
     }
@@ -103,7 +109,29 @@ public class LibraryArtistAlbumController implements Initializable {
         fadePlayImageButtonTo(0);
     }
 
+    public AlbumInfo getAlbumInfo() {
+        return albumInfo;
+    }
+
+    /**
+     * Size of the cover in the list view; the play overlay keeps its proportion.
+     */
+    public void setCoverSize(double size) {
+        albumImage.setFitWidth(size);
+        albumImage.setFitHeight(size);
+        double overlay = Math.round(size * 0.57);
+        playImageButton.setFitWidth(overlay);
+        playImageButton.setFitHeight(overlay);
+    }
+
     public void onPlayImageClicked(MouseEvent mouseEvent) {
+        playAlbum();
+    }
+
+    /**
+     * Replaces the queue with this album and starts playing.
+     */
+    public void playAlbum() {
         AddToPlaylistEvent event = AddToPlaylistEvent
                 .builder()
                 .source(this)

@@ -15,17 +15,19 @@ import java.nio.file.Path;
 @Transactional
 @RequiredArgsConstructor
 public class UserPreferencesService {
-    public static final double DEFAULT_WINDOW_X = 100;
-    public static final double DEFAULT_WINDOW_Y = 100;
-    public static final double DEFAULT_WINDOW_WIDTH = 1920;
-    public static final double DEFAULT_WINDOW_HEIGHT = 1080;
-    public static final int DEFAULT_VOLUME = 30;
-    public static final double DEFAULT_ARTISTS_SPLIT_WIDTH = 0.26;
-    public static final double DEFAULT_PLAYLIST_SPLIT_WIDTH = 0.8;
-    public static final double DEFAULT_LYRICS_FONT_SIZE = 12;
-    public static final double DEFAULT_PLAYBACK_WINDOW_WIDTH = 800;
-    public static final double DEFAULT_PLAYBACK_WINDOW_HEIGHT = 340;
-    private static final int MAX_PREF_VALUE_LENGTH = 255;     // size of user_preferences.pref_value
+    public static final  double DEFAULT_WINDOW_X               = 100;
+    public static final  double DEFAULT_WINDOW_Y               = 100;
+    public static final  double DEFAULT_WINDOW_WIDTH           = 1920;
+    public static final  double DEFAULT_WINDOW_HEIGHT          = 1080;
+    public static final  int    DEFAULT_VOLUME                 = 30;
+    public static final  double DEFAULT_ARTISTS_SPLIT_WIDTH    = 0.26;
+    public static final  double DEFAULT_PLAYLIST_SPLIT_WIDTH   = 0.8;
+    public static final  double DEFAULT_LYRICS_FONT_SIZE       = 12;
+    public static final  double DEFAULT_PLAYBACK_WINDOW_WIDTH  = 800;
+    public static final  double DEFAULT_PLAYBACK_WINDOW_HEIGHT = 340;
+    public static final  double DEFAULT_ALBUMS_LIST_COVER_SIZE = 350;
+    public static final  double DEFAULT_ALBUMS_GRID_COVER_SIZE = 180;
+    private static final int    MAX_PREF_VALUE_LENGTH          = 255;     // size of user_preferences.pref_value
 
     private final DataAccess dataAccess;
 
@@ -63,9 +65,9 @@ public class UserPreferencesService {
      * @return {x, y, width, height} of the playback window, or null if it was never saved
      */
     public double[] getPlaybackWindowBounds() {
-        double x = getDouble(UserPrefKey.PLAYBACK_WINDOW_X, Double.NaN);
-        double y = getDouble(UserPrefKey.PLAYBACK_WINDOW_Y, Double.NaN);
-        double width = getDouble(UserPrefKey.PLAYBACK_WINDOW_WIDTH, Double.NaN);
+        double x      = getDouble(UserPrefKey.PLAYBACK_WINDOW_X, Double.NaN);
+        double y      = getDouble(UserPrefKey.PLAYBACK_WINDOW_Y, Double.NaN);
+        double width  = getDouble(UserPrefKey.PLAYBACK_WINDOW_WIDTH, Double.NaN);
         double height = getDouble(UserPrefKey.PLAYBACK_WINDOW_HEIGHT, Double.NaN);
         if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(width) || Double.isNaN(height)) {
             return null;
@@ -79,7 +81,9 @@ public class UserPreferencesService {
 
     private double getDouble(UserPrefKey key, double defaultValue) {
         String raw = dataAccess.getUserPref(key, null);
-        if (raw == null) return defaultValue;
+        if (raw == null) {
+            return defaultValue;
+        }
         try {
             return Double.parseDouble(raw);
         } catch (NumberFormatException e) {
@@ -94,7 +98,9 @@ public class UserPreferencesService {
 
     private boolean getBoolean(UserPrefKey key, boolean defaultValue) {
         String raw = dataAccess.getUserPref(key, null);
-        if (raw == null) return defaultValue;
+        if (raw == null) {
+            return defaultValue;
+        }
         return Boolean.parseBoolean(raw);
     }
 
@@ -122,6 +128,25 @@ public class UserPreferencesService {
         return getDouble(UserPrefKey.LYRICS_FONT_SIZE, DEFAULT_LYRICS_FONT_SIZE);
     }
 
+    public boolean isAlbumsGridView() {
+        return getBoolean(UserPrefKey.ALBUMS_GRID_VIEW, false);
+    }
+
+    public void saveAlbumsGridView(boolean grid) {
+        dataAccess.setUserPref(UserPrefKey.ALBUMS_GRID_VIEW, String.valueOf(grid));
+    }
+
+    public double getAlbumsCoverSize(boolean grid) {
+        return grid
+                ? getDouble(UserPrefKey.ALBUMS_GRID_COVER_SIZE, DEFAULT_ALBUMS_GRID_COVER_SIZE)
+                : getDouble(UserPrefKey.ALBUMS_LIST_COVER_SIZE, DEFAULT_ALBUMS_LIST_COVER_SIZE);
+    }
+
+    public void saveAlbumsCoverSize(boolean grid, double size) {
+        dataAccess.setUserPref(grid ? UserPrefKey.ALBUMS_GRID_COVER_SIZE : UserPrefKey.ALBUMS_LIST_COVER_SIZE,
+                String.valueOf(size));
+    }
+
     /**
      * @return the folder used for the last library scan, or the user's "Music" folder if there was none
      */
@@ -130,7 +155,8 @@ public class UserPreferencesService {
         if (saved != null && !saved.isBlank()) {
             return saved;
         }
-        return Path.of(System.getProperty("user.home"), "Music").toString();
+        return Path.of(System.getProperty("user.home"), "Music")
+                   .toString();
     }
 
     public void saveLibraryRoot(String libraryRoot) {

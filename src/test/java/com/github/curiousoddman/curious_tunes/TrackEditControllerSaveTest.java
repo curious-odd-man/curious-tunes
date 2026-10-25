@@ -83,7 +83,7 @@ class TrackEditControllerSaveTest {
         lenient().when(trackInfo.getLyrics()).thenReturn("Lyrics");
 
         runOnJfxThread(() -> {
-            sut = new LibraryTagEditTabController(mock(), dataAccess);
+            sut = new LibraryTagEditTabController(mock(), dataAccess, mock());
 
             // Wire up real UI fields
             sut.artistField = new TextField();
