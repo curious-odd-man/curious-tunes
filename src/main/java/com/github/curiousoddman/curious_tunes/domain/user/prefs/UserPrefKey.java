@@ -23,6 +23,9 @@ public enum UserPrefKey {
     PLAYBACK_WINDOW_Y("playback.window.y"),
     PLAYBACK_WINDOW_WIDTH("playback.window.width"),
     PLAYBACK_WINDOW_HEIGHT("playback.window.height"),
+    PLAYBACK_LYRICS_OPEN("playback.lyrics.open"),         // lyrics drawer in the compact view
+    PLAYBACK_LYRICS_AUTOFIT("playback.lyrics.autofit"),
+    PLAYBACK_LYRICS_SIZE("playback.lyrics.size"),
 
     // ── UI layout ───────────────────────────────────────────────────────────
     ARTISTS_SPLIT_WIDTH("ui.split.artists"),         // divider position (px)

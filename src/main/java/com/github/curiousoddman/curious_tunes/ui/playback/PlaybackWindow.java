@@ -11,6 +11,7 @@ import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.async.DelayedAction;
+import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -22,6 +23,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -33,7 +35,9 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -69,94 +73,106 @@ import java.util.concurrent.TimeUnit;
 @Component
 @RequiredArgsConstructor
 public class PlaybackWindow {
-    private static final double MIN_WIDTH = 700;
-    private static final double MIN_HEIGHT = 320;
+    private static final double MIN_WIDTH               = 780;
+    private static final double MIN_HEIGHT              = 320;
+    private static final double DRAWER_MIN_HEIGHT       = 480;       // compact view with the lyrics drawer open
+    private static final double DRAWER_OPEN_HEIGHT      = 560;
+    private static final double FULLSCREEN_IDLE_SECONDS = 3;
 
-    private static final double MIN_LYRICS_SIZE = 8;
-    private static final double MAX_LYRICS_SIZE = 48;
+    private static final double MIN_LYRICS_SIZE     = 8;
+    private static final double MAX_LYRICS_SIZE     = 48;
     private static final double DEFAULT_LYRICS_SIZE = 16;
 
-    private static final double SIMPLE_ART_SIZE = 96;
-    private static final double SIMPLE_WAVEFORM_HEIGHT = 56;
+    private static final double SIMPLE_ART_SIZE           = 96;
+    private static final double SIMPLE_WAVEFORM_HEIGHT    = 56;
     private static final double MAXIMIZED_WAVEFORM_HEIGHT = 100;
-    private static final double LEFT_COLUMN_SHARE = 0.38;
+    private static final double LEFT_COLUMN_SHARE         = 0.38;
 
-    private static final String DIM = "pw-dim";
-    private static final String NO_IMAGE = "/img/noimage.png";
+    private static final String DIM        = "pw-dim";
+    private static final String NO_IMAGE   = "/img/noimage.png";
     private static final String STYLESHEET = "/styles/playback-window.css";
 
     private static Image placeholderImage;
 
-    private final AudioPlayer audioPlayer;
-    private final PlaybackSessionTimer sessionTimer;
-    private final WaveformModel waveformModel;
-    private final UserPreferencesService userPreferencesService;
+    private final AudioPlayer               audioPlayer;
+    private final PlaybackSessionTimer      sessionTimer;
+    private final WaveformModel             waveformModel;
+    private final UserPreferencesService    userPreferencesService;
     private final ApplicationEventPublisher eventPublisher;
 
     private final DelayedAction delayedSaveBounds = new DelayedAction(500, TimeUnit.MILLISECONDS);
-    private final List<Pane> layoutPanes = new ArrayList<>();
+    private final List<Pane>    layoutPanes       = new ArrayList<>();
 
     // ── Window ───────────────────────────────────────────────────────────────
-    private Stage stage;
-    private Stage libraryStage;
+    private Stage      stage;
+    private Stage      libraryStage;
     private BorderPane root;
-    private VBox leftPane;
-    private boolean maximized;
+    private VBox       leftPane;
+    private boolean    maximized;
 
     // ── Current track ────────────────────────────────────────────────────────
     private ImageView artView;
-    private Label titleLabel;
-    private Label artistLabel;
-    private Label albumLabel;
-    private Label dotLabel;
+    private Label     titleLabel;
+    private Label     artistLabel;
+    private Label     albumLabel;
+    private Label     dotLabel;
 
     // ── Progress and controls ────────────────────────────────────────────────
     private PlaybackWaveformView waveformView;
-    private Label elapsedLabel;
-    private Label remainingLabel;
-    private Label sessionLabel;
-    private Button playPauseButton;
-    private Button nextButton;
-    private Button viewToggleButton;
-    private Label volumeIcon;
-    private Slider volumeSlider;
-    private boolean volumeBound;
-    private Timeline sessionTicker;
+    private Label                elapsedLabel;
+    private Label                remainingLabel;
+    private Label                sessionLabel;
+    private Button               playPauseButton;
+    private Button               nextButton;
+    private Button               viewToggleButton;
+    private Button               lyricsToggleButton;
+    private Button               fullscreenButton;
+    private Label                volumeIcon;
+    private Slider               volumeSlider;
+    private boolean              volumeBound;
+    private Timeline             sessionTicker;
 
     // ── Up next ──────────────────────────────────────────────────────────────
-    private HBox upNextCard;
-    private ImageView cardArtView;
-    private Label cardTitle;
-    private Label cardArtist;
-    private Label cardAlbum;
-    private HBox upNextLine;
-    private ImageView lineThumb;
-    private Label lineHeader;
-    private Label lineTitle;
-    private Label lineSeparator;
-    private Label lineArtist;
-    private Label lineDot;
-    private Label lineAlbum;
+    private HBox         upNextCard;
+    private ImageView    cardArtView;
+    private Label        cardTitle;
+    private Label        cardArtist;
+    private Label        cardAlbum;
+    private HBox         upNextLine;
+    private ImageView    lineThumb;
+    private Label        lineHeader;
+    private Label        lineTitle;
+    private Label        lineSeparator;
+    private Label        lineArtist;
+    private Label        lineDot;
+    private Label        lineAlbum;
     private PlaylistItem shownNextItem;
-    private Image shownNextImage;
+    private Image        shownNextImage;
 
     // ── Lyrics ───────────────────────────────────────────────────────────────
-    private VBox lyricsPane;
-    private ScrollPane lyricsScroll;
-    private Label lyricsLabel;
-    private Slider lyricsSizeSlider;
-    private CheckBox autoFitCheck;
+    private VBox            lyricsPane;
+    private ScrollPane      lyricsScroll;
+    private Label           lyricsLabel;
+    private Slider          lyricsSizeSlider;
+    private CheckBox        autoFitCheck;
     private PauseTransition fitDebounce;
-    private boolean fitPending;
-    private boolean hasLyrics;
+    private boolean         fitPending;
+    private boolean         hasLyrics;
+    private boolean         lyricsDrawerOpen;      // compact view only; the wide view always shows the lyrics
+    private double          compactHeight;          // window height without the drawer
+
+    // ── Fullscreen: controls and cursor fade out when idle ──────────────────
+    private PauseTransition idleTimer;
+    private FadeTransition  chromeFade;
+    private Node            bottomBar;
 
     // ── State ────────────────────────────────────────────────────────────────
-    private PlaylistItem currentItem;
-    private Duration lastCurrent = Duration.ZERO;
-    private Duration lastTotal;
+    private PlaylistItem    currentItem;
+    private Duration        lastCurrent    = Duration.ZERO;
+    private Duration        lastTotal;
     private PlaybackPalette currentPalette = PlaybackPalette.DEFAULT;
-    private Timeline paletteAnimation;
-    private int paletteToken;
+    private Timeline        paletteAnimation;
+    private int             paletteToken;
 
     // =========================================================================
     // Opening and closing
@@ -177,9 +193,14 @@ public class PlaybackWindow {
             return;
         }
 
+        stage.setFullScreen(false);
         stage.setMaximized(false);
+        compactHeight = stage.getHeight();      // the remembered bounds are the compact ones
+        stage.setMinHeight(MIN_HEIGHT);
+        if (lyricsDrawerOpen) {
+            growForLyricsDrawer();
+        }
         applyLayout(false);
-        autoFitCheck.setSelected(true);
         bindVolume();
         refresh();
 
@@ -190,7 +211,13 @@ public class PlaybackWindow {
     }
 
     private void close() {
+        if (stage.isFullScreen()) {
+            stage.setFullScreen(false);
+        }
         saveBounds();
+        if (lyricsDrawerOpen && !stage.isMaximized()) {
+            stage.setHeight(compactHeight);     // so the next opening starts from the compact size
+        }
         unbindVolume();
         libraryStage.show();
         libraryStage.toFront();
@@ -208,16 +235,20 @@ public class PlaybackWindow {
         buildLyricsNodes();
 
         root = new BorderPane();
-        root.getStyleClass().add("pw-root");
+        root.getStyleClass()
+            .add("pw-root");
         applyPalette(PlaybackPalette.DEFAULT);
 
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(Objects.requireNonNull(
-                getClass().getResource(STYLESHEET), "Missing " + STYLESHEET).toExternalForm());
+        scene.getStylesheets()
+             .add(Objects.requireNonNull(
+                                 getClass().getResource(STYLESHEET), "Missing " + STYLESHEET)
+                         .toExternalForm());
 
         stage = new Stage();
         stage.setTitle("Now Playing");
-        stage.getIcons().setAll(libraryStage.getIcons());
+        stage.getIcons()
+             .setAll(libraryStage.getIcons());
         stage.setScene(scene);
         scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
             switch (event.getCode()) {
@@ -226,7 +257,21 @@ public class PlaybackWindow {
                     event.consume();
                 }
                 case ESCAPE -> {
-                    close();
+                    if (stage.isFullScreen()) {
+                        stage.setFullScreen(false);     // the first Esc leaves fullscreen, the next one the window
+                    } else {
+                        close();
+                    }
+                    event.consume();
+                }
+                case F11 -> {
+                    toggleFullscreen();
+                    event.consume();
+                }
+                case L -> {
+                    if (!wideLayout()) {
+                        setLyricsDrawer(!lyricsDrawerOpen);
+                    }
                     event.consume();
                 }
                 default -> {
@@ -236,36 +281,48 @@ public class PlaybackWindow {
         stage.setMinWidth(MIN_WIDTH);
         stage.setMinHeight(MIN_HEIGHT);
         restoreBounds();
+        loadLyricsPreferences();
+        buildFullscreenSupport(scene);
 
-        stage.maximizedProperty().addListener((obs, was, is) -> applyLayout(is));
+        stage.maximizedProperty()
+             .addListener((obs, was, is) -> applyLayout(wideLayout()));
         stage.setOnCloseRequest(event -> {
             event.consume();
             close();
         });
-        stage.showingProperty().addListener((obs, was, showing) -> {
-            if (showing) {
-                startTickers();
-            } else {
-                stopTickers();
-            }
-        });
+        stage.showingProperty()
+             .addListener((obs, was, showing) -> {
+                 if (showing) {
+                     startTickers();
+                 } else {
+                     stopTickers();
+                 }
+             });
 
         InvalidationListener boundsListener = o ->
                 delayedSaveBounds.reSchedule(() -> Platform.runLater(this::saveBounds));
-        stage.xProperty().addListener(boundsListener);
-        stage.yProperty().addListener(boundsListener);
-        stage.widthProperty().addListener(boundsListener);
-        stage.heightProperty().addListener(boundsListener);
+        stage.xProperty()
+             .addListener(boundsListener);
+        stage.yProperty()
+             .addListener(boundsListener);
+        stage.widthProperty()
+             .addListener(boundsListener);
+        stage.heightProperty()
+             .addListener(boundsListener);
 
-        root.widthProperty().addListener(o -> updateSizes());
-        root.heightProperty().addListener(o -> updateSizes());
+        root.widthProperty()
+            .addListener(o -> updateSizes());
+        root.heightProperty()
+            .addListener(o -> updateSizes());
 
-        audioPlayer.getPlaybackStatusProperty().addListener((obs, oldStatus, newStatus) -> onStatusChanged(newStatus));
-        audioPlayer.getNextPlaylistItemProperty().addListener((obs, oldItem, newItem) -> {
-            if (stage.isShowing()) {
-                updateUpNext();
-            }
-        });
+        audioPlayer.getPlaybackStatusProperty()
+                   .addListener((obs, oldStatus, newStatus) -> onStatusChanged(newStatus));
+        audioPlayer.getNextPlaylistItemProperty()
+                   .addListener((obs, oldItem, newItem) -> {
+                       if (stage.isShowing()) {
+                           updateUpNext();
+                       }
+                   });
         audioPlayer.addProgressListener(this::onProgress);
     }
 
@@ -307,13 +364,31 @@ public class PlaybackWindow {
         nextButton = button("⏭");
         nextButton.setMinWidth(54);
         nextButton.setTooltip(new Tooltip("Next track"));
-        nextButton.disableProperty().bind(audioPlayer.getNextPlaylistItemProperty().isNull());
+        nextButton.disableProperty()
+                  .bind(audioPlayer.getNextPlaylistItemProperty()
+                                   .isNull());
         nextButton.setOnAction(e -> eventPublisher.publishEvent(new SkipNextEvent(this)));
 
         viewToggleButton = button("Maximize", "pw-button-text");
         viewToggleButton.setMinWidth(Region.USE_PREF_SIZE);
         viewToggleButton.setTooltip(new Tooltip("Maximize the window to show the lyrics, or return to the compact view"));
-        viewToggleButton.setOnAction(e -> stage.setMaximized(!stage.isMaximized()));
+        viewToggleButton.setOnAction(e -> {
+            if (stage.isFullScreen()) {
+                stage.setFullScreen(false);
+            } else {
+                stage.setMaximized(!stage.isMaximized());
+            }
+        });
+
+        lyricsToggleButton = button("Lyrics", "pw-button-text");
+        lyricsToggleButton.setMinWidth(Region.USE_PREF_SIZE);
+        lyricsToggleButton.setTooltip(new Tooltip("Show or hide the lyrics (L)"));
+        lyricsToggleButton.setOnAction(e -> setLyricsDrawer(!lyricsDrawerOpen));
+
+        fullscreenButton = button("⛶");
+        fullscreenButton.setMinWidth(Region.USE_PREF_SIZE);
+        fullscreenButton.setTooltip(new Tooltip("Fullscreen (F11)"));
+        fullscreenButton.setOnAction(e -> toggleFullscreen());
 
         volumeIcon = label();
         volumeIcon.setText("🔊");
@@ -380,15 +455,17 @@ public class PlaybackWindow {
         lyricsScroll = new ScrollPane(lyricsLabel);
         lyricsScroll.setFitToWidth(true);
         lyricsScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        lyricsScroll.getStyleClass().add("pw-lyrics-scroll");
+        lyricsScroll.getStyleClass()
+                    .add("pw-lyrics-scroll");
         VBox.setVgrow(lyricsScroll, Priority.ALWAYS);
 
         lyricsSizeSlider = new Slider(MIN_LYRICS_SIZE, MAX_LYRICS_SIZE, DEFAULT_LYRICS_SIZE);
         lyricsSizeSlider.setPrefWidth(160);
         lyricsSizeSlider.setTooltip(new Tooltip("Lyrics font size"));
         // Moving the slider only changes the size; it never touches the auto-fit checkbox.
-        lyricsSizeSlider.valueProperty().addListener((obs, was, size) ->
-                lyricsLabel.setFont(Font.font(size.doubleValue())));
+        lyricsSizeSlider.valueProperty()
+                        .addListener((obs, was, size) ->
+                                lyricsLabel.setFont(Font.font(size.doubleValue())));
 
         autoFitCheck = new CheckBox("Auto-fit");
         autoFitCheck.setSelected(true);
@@ -414,8 +491,10 @@ public class PlaybackWindow {
                 fitDebounce.playFromStart();
             }
         };
-        lyricsScroll.widthProperty().addListener(sizeListener);
-        lyricsScroll.heightProperty().addListener(sizeListener);
+        lyricsScroll.widthProperty()
+                    .addListener(sizeListener);
+        lyricsScroll.heightProperty()
+                    .addListener(sizeListener);
     }
 
     // =========================================================================
@@ -429,14 +508,17 @@ public class PlaybackWindow {
         root.setCenter(null);
         root.setBottom(null);
         for (Pane pane : layoutPanes) {
-            pane.getChildren().clear();
+            pane.getChildren()
+                .clear();
         }
         layoutPanes.clear();
         leftPane = null;
 
-        root.getStyleClass().remove("maximized");
+        root.getStyleClass()
+            .remove("maximized");
         if (maximized) {
-            root.getStyleClass().add("maximized");
+            root.getStyleClass()
+                .add("maximized");
             applyMaximizedLayout();
         } else {
             applySimpleLayout();
@@ -450,7 +532,8 @@ public class PlaybackWindow {
         viewToggleButton.setText("Maximize");
         artView.setFitWidth(SIMPLE_ART_SIZE);
         artView.setFitHeight(SIMPLE_ART_SIZE);
-        waveformView.getNode().setPrefHeight(SIMPLE_WAVEFORM_HEIGHT);
+        waveformView.getNode()
+                    .setPrefHeight(SIMPLE_WAVEFORM_HEIGHT);
 
         HBox metaRow = track(new HBox(8, artistLabel, dotLabel, albumLabel));
         metaRow.setAlignment(Pos.CENTER_LEFT);
@@ -463,13 +546,25 @@ public class PlaybackWindow {
 
         VBox content = track(new VBox(10, topRow, waveformRow(), upNextLine));
         content.setPadding(new Insets(14));
+        if (lyricsDrawerOpen) {
+            lyricsPane.setPadding(Insets.EMPTY);
+            VBox.setVgrow(lyricsPane, Priority.ALWAYS);
+            content.getChildren()
+                   .add(lyricsPane);
+        }
         root.setCenter(content);
+        bottomBar = null;
+        lyricsToggleButton.setVisible(true);
+        lyricsToggleButton.setManaged(true);
+        lyricsToggleButton.setText(lyricsDrawerOpen ? "Hide lyrics" : "Lyrics");
+        updateFullscreenButton();
     }
 
     private void applyMaximizedLayout() {
         titleLabel.setWrapText(true);
         viewToggleButton.setText("Simple view");
-        waveformView.getNode().setPrefHeight(MAXIMIZED_WAVEFORM_HEIGHT);
+        waveformView.getNode()
+                    .setPrefHeight(MAXIMIZED_WAVEFORM_HEIGHT);
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -484,6 +579,10 @@ public class PlaybackWindow {
         VBox bottom = track(new VBox(10, waveformRow(), controlsRow()));
         bottom.setPadding(new Insets(0, 20, 16, 20));
         root.setBottom(bottom);
+        bottomBar = bottom;
+        lyricsToggleButton.setVisible(false);       // the lyrics are always shown in this view
+        lyricsToggleButton.setManaged(false);
+        updateFullscreenButton();
     }
 
     /**
@@ -516,7 +615,7 @@ public class PlaybackWindow {
         volumeBox.setAlignment(Pos.CENTER_LEFT);
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox row = track(new HBox(10, playPauseButton, nextButton, volumeBox, spacer, sessionLabel, viewToggleButton));
+        HBox row = track(new HBox(10, playPauseButton, nextButton, volumeBox, spacer, sessionLabel, lyricsToggleButton, fullscreenButton, viewToggleButton));
         row.setAlignment(Pos.CENTER_LEFT);
         return row;
     }
@@ -534,11 +633,13 @@ public class PlaybackWindow {
      * Fills the whole window from the current state. Called when the window is opened.
      */
     private void refresh() {
-        PlaylistItem item = audioPlayer.getPlaylistItemProperty().get();
+        PlaylistItem item = audioPlayer.getPlaylistItemProperty()
+                                       .get();
         if (item != null) {
             currentItem = item;
         }
-        updatePlayPauseText(audioPlayer.getPlaybackStatusProperty().get());
+        updatePlayPauseText(audioPlayer.getPlaybackStatusProperty()
+                                       .get());
         if (currentItem != null) {
             showTrack(currentItem);
             lastCurrent = audioPlayer.getCurrentTime();
@@ -550,7 +651,8 @@ public class PlaybackWindow {
     private void onStatusChanged(PlaybackState status) {
         updatePlayPauseText(status);
         if (status == PlaybackState.LAUNCHING) {
-            PlaylistItem item = audioPlayer.getPlaylistItemProperty().get();
+            PlaylistItem item = audioPlayer.getPlaylistItemProperty()
+                                           .get();
             if (item != null) {
                 if (stage.isShowing()) {
                     showTrack(item);
@@ -595,7 +697,7 @@ public class PlaybackWindow {
             return;
         }
         int elapsed = (int) lastCurrent.toSeconds();
-        int total = (int) lastTotal.toSeconds();
+        int total   = (int) lastTotal.toSeconds();
         elapsedLabel.setText(TimeUtils.secondsToHumanTime(elapsed));
         remainingLabel.setText("-" + TimeUtils.secondsToHumanTime(Math.max(0, total - elapsed)));
         waveformView.setProgress(lastCurrent, lastTotal);
@@ -614,8 +716,9 @@ public class PlaybackWindow {
     }
 
     private void updateUpNext() {
-        PlaylistItem next = audioPlayer.getNextPlaylistItemProperty().get();
-        boolean hasNext = next != null;
+        PlaylistItem next    = audioPlayer.getNextPlaylistItemProperty()
+                                          .get();
+        boolean      hasNext = next != null;
 
         cardArtView.setVisible(hasNext);
         cardArtView.setManaged(hasNext);
@@ -651,7 +754,7 @@ public class PlaybackWindow {
 
         // Parts that are the same as in the current track are dimmed.
         boolean sameArtist = currentItem != null && Objects.equals(next.getArtistId(), currentItem.getArtistId());
-        boolean sameAlbum = currentItem != null && Objects.equals(next.getAlbumId(), currentItem.getAlbumId());
+        boolean sameAlbum  = currentItem != null && Objects.equals(next.getAlbumId(), currentItem.getAlbumId());
         setDim(cardArtist, sameArtist);
         setDim(lineArtist, sameArtist);
         setDim(cardAlbum, sameAlbum);
@@ -659,9 +762,11 @@ public class PlaybackWindow {
     }
 
     private static void setDim(Label label, boolean dim) {
-        label.getStyleClass().remove(DIM);
+        label.getStyleClass()
+             .remove(DIM);
         if (dim) {
-            label.getStyleClass().add(DIM);
+            label.getStyleClass()
+                 .add(DIM);
         }
     }
 
@@ -693,9 +798,9 @@ public class PlaybackWindow {
         if (!fitPending) {
             return;
         }
-        double width = lyricsScroll.getWidth() - 40;
+        double width  = lyricsScroll.getWidth() - 40;
         double height = lyricsScroll.getHeight() - 20;
-        if (!maximized || width < 50 || height < 50) {
+        if (!(maximized || lyricsDrawerOpen) || width < 50 || height < 50) {
             return;     // not laid out yet; the size listeners will try again
         }
         String text = lyricsLabel.getText();
@@ -709,7 +814,130 @@ public class PlaybackWindow {
         Text measuring = new Text(text);
         measuring.setFont(Font.font(fontSize));
         measuring.setWrappingWidth(wrappingWidth);
-        return measuring.getLayoutBounds().getHeight();
+        return measuring.getLayoutBounds()
+                        .getHeight();
+    }
+
+    // =========================================================================
+    // Lyrics drawer (compact view) and fullscreen
+    // =========================================================================
+
+    /**
+     * The wide layout with the lyrics is used when the window is maximized or fullscreen.
+     */
+    private boolean wideLayout() {
+        return stage.isMaximized() || stage.isFullScreen();
+    }
+
+    private void loadLyricsPreferences() {
+        lyricsDrawerOpen = userPreferencesService.isPlaybackLyricsOpen();
+        lyricsSizeSlider.setValue(userPreferencesService.getPlaybackLyricsSize());
+        autoFitCheck.setSelected(userPreferencesService.isPlaybackLyricsAutoFit());
+
+        autoFitCheck.selectedProperty()
+                    .addListener((obs, was, selected) -> {
+                        userPreferencesService.savePlaybackLyricsAutoFit(selected);
+                        requestFit();
+                    });
+        // Auto-fit also moves the slider; only a drag by the user is remembered.
+        lyricsSizeSlider.valueChangingProperty()
+                        .addListener((obs, was, changing) -> {
+                            if (!changing) {
+                                userPreferencesService.savePlaybackLyricsSize(lyricsSizeSlider.getValue());
+                            }
+                        });
+    }
+
+    private void setLyricsDrawer(boolean open) {
+        if (open == lyricsDrawerOpen) {
+            return;
+        }
+        lyricsDrawerOpen = open;
+        userPreferencesService.savePlaybackLyricsOpen(open);
+        if (!wideLayout() && stage.isShowing()) {
+            if (open) {
+                compactHeight = stage.getHeight();
+                growForLyricsDrawer();
+            } else {
+                stage.setMinHeight(MIN_HEIGHT);
+                if (compactHeight > 0) {
+                    stage.setHeight(compactHeight);
+                }
+            }
+        }
+        applyLayout(wideLayout());
+    }
+
+    private void growForLyricsDrawer() {
+        stage.setMinHeight(DRAWER_MIN_HEIGHT);
+        if (stage.getHeight() < DRAWER_OPEN_HEIGHT) {
+            stage.setHeight(DRAWER_OPEN_HEIGHT);
+        }
+    }
+
+    private void toggleFullscreen() {
+        stage.setFullScreen(!stage.isFullScreen());
+    }
+
+    private void updateFullscreenButton() {
+        fullscreenButton.setText(stage.isFullScreen() ? "Exit fullscreen" : "⛶");
+        fullscreenButton.setTooltip(new Tooltip(stage.isFullScreen() ? "Leave fullscreen (F11 or Esc)" : "Fullscreen (F11)"));
+    }
+
+    /**
+     * In fullscreen the controls and the mouse cursor fade out after a few idle seconds
+     * and come back with the next mouse move or key press.
+     */
+    private void buildFullscreenSupport(Scene scene) {
+        stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);     // Esc is handled above
+        stage.setFullScreenExitHint("Press F11 or Esc to leave fullscreen");
+
+        idleTimer = new PauseTransition(Duration.seconds(FULLSCREEN_IDLE_SECONDS));
+        idleTimer.setOnFinished(e -> hideChrome());
+        scene.addEventFilter(MouseEvent.MOUSE_MOVED, e -> wakeChrome());
+        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> wakeChrome());
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> wakeChrome());
+
+        stage.fullScreenProperty()
+             .addListener((obs, was, fullScreen) -> {
+                 applyLayout(wideLayout());
+                 wakeChrome();
+             });
+    }
+
+    private void wakeChrome() {
+        showChrome();
+        if (stage.isFullScreen()) {
+            idleTimer.playFromStart();
+        } else {
+            idleTimer.stop();
+        }
+    }
+
+    private void showChrome() {
+        if (chromeFade != null) {
+            chromeFade.stop();
+        }
+        stage.getScene()
+             .setCursor(Cursor.DEFAULT);
+        if (bottomBar != null) {
+            bottomBar.setOpacity(1);
+            bottomBar.setMouseTransparent(false);
+        }
+    }
+
+    private void hideChrome() {
+        if (!stage.isFullScreen()) {
+            return;
+        }
+        stage.getScene()
+             .setCursor(Cursor.NONE);
+        if (bottomBar != null) {
+            bottomBar.setMouseTransparent(true);
+            chromeFade = new FadeTransition(Duration.millis(500), bottomBar);
+            chromeFade.setToValue(0);
+            chromeFade.play();
+        }
     }
 
     // =========================================================================
@@ -744,8 +972,8 @@ public class PlaybackWindow {
             return;
         }
 
-        PlaybackPalette from = currentPalette;
-        DoubleProperty progress = new SimpleDoubleProperty(0);
+        PlaybackPalette from     = currentPalette;
+        DoubleProperty  progress = new SimpleDoubleProperty(0);
         progress.addListener((obs, was, t) -> applyPalette(from.interpolate(target, t.doubleValue())));
         paletteAnimation = new Timeline(
                 new KeyFrame(Duration.ZERO, new KeyValue(progress, 0)),
@@ -767,14 +995,16 @@ public class PlaybackWindow {
 
     private void bindVolume() {
         if (!volumeBound) {
-            volumeSlider.valueProperty().bindBidirectional(audioPlayer.getVolumeProperty());
+            volumeSlider.valueProperty()
+                        .bindBidirectional(audioPlayer.getVolumeProperty());
             volumeBound = true;
         }
     }
 
     private void unbindVolume() {
         if (volumeBound) {
-            volumeSlider.valueProperty().unbindBidirectional(audioPlayer.getVolumeProperty());
+            volumeSlider.valueProperty()
+                        .unbindBidirectional(audioPlayer.getVolumeProperty());
             volumeBound = false;
         }
     }
@@ -792,16 +1022,17 @@ public class PlaybackWindow {
     }
 
     private void restoreBounds() {
-        double width = UserPreferencesService.DEFAULT_PLAYBACK_WINDOW_WIDTH;
-        double height = UserPreferencesService.DEFAULT_PLAYBACK_WINDOW_HEIGHT;
-        double[] saved = userPreferencesService.getPlaybackWindowBounds();
+        double   width  = UserPreferencesService.DEFAULT_PLAYBACK_WINDOW_WIDTH;
+        double   height = UserPreferencesService.DEFAULT_PLAYBACK_WINDOW_HEIGHT;
+        double[] saved  = userPreferencesService.getPlaybackWindowBounds();
 
         boolean positioned = false;
         if (saved != null) {
             width = Math.max(MIN_WIDTH, saved[2]);
             height = Math.max(MIN_HEIGHT, saved[3]);
             // Ignore a saved position if that monitor is not connected any more.
-            if (!Screen.getScreensForRectangle(saved[0], saved[1], width, height).isEmpty()) {
+            if (!Screen.getScreensForRectangle(saved[0], saved[1], width, height)
+                       .isEmpty()) {
                 stage.setX(saved[0]);
                 stage.setY(saved[1]);
                 positioned = true;
@@ -818,11 +1049,13 @@ public class PlaybackWindow {
      * Only the simple view is remembered.
      */
     private void saveBounds() {
-        if (stage == null || !stage.isShowing() || stage.isMaximized() || stage.isIconified()) {
+        if (stage == null || !stage.isShowing() || stage.isMaximized() || stage.isFullScreen() || stage.isIconified()) {
             return;
         }
+        // With the lyrics drawer open the window is taller; only the compact height is remembered.
+        double height = lyricsDrawerOpen && compactHeight > 0 ? compactHeight : stage.getHeight();
         userPreferencesService.savePlaybackWindowBounds(
-                stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight());
+                stage.getX(), stage.getY(), stage.getWidth(), height);
     }
 
     // =========================================================================
@@ -831,7 +1064,8 @@ public class PlaybackWindow {
 
     private static Label label(String... styleClasses) {
         Label label = new Label();
-        label.getStyleClass().addAll(styleClasses);
+        label.getStyleClass()
+             .addAll(styleClasses);
         label.setMinWidth(0);
         label.setMaxWidth(Double.MAX_VALUE);
         label.setTextOverrun(OverrunStyle.ELLIPSIS);
@@ -840,8 +1074,10 @@ public class PlaybackWindow {
 
     private static Button button(String text, String... extraStyleClasses) {
         Button button = new Button(text);
-        button.getStyleClass().add("pw-button");
-        button.getStyleClass().addAll(extraStyleClasses);
+        button.getStyleClass()
+              .add("pw-button");
+        button.getStyleClass()
+              .addAll(extraStyleClasses);
         button.setFocusTraversable(false);
         return button;
     }

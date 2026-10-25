@@ -120,6 +120,30 @@ public class UserPreferencesService {
         dataAccess.setUserPref(UserPrefKey.PLAYLIST_SPLIT_WIDTH, String.valueOf(dividerPositions[1]));
     }
 
+    public boolean isPlaybackLyricsOpen() {
+        return getBoolean(UserPrefKey.PLAYBACK_LYRICS_OPEN, false);
+    }
+
+    public void savePlaybackLyricsOpen(boolean open) {
+        dataAccess.setUserPref(UserPrefKey.PLAYBACK_LYRICS_OPEN, String.valueOf(open));
+    }
+
+    public boolean isPlaybackLyricsAutoFit() {
+        return getBoolean(UserPrefKey.PLAYBACK_LYRICS_AUTOFIT, true);
+    }
+
+    public void savePlaybackLyricsAutoFit(boolean autoFit) {
+        dataAccess.setUserPref(UserPrefKey.PLAYBACK_LYRICS_AUTOFIT, String.valueOf(autoFit));
+    }
+
+    public double getPlaybackLyricsSize() {
+        return getDouble(UserPrefKey.PLAYBACK_LYRICS_SIZE, DEFAULT_LYRICS_FONT_SIZE);
+    }
+
+    public void savePlaybackLyricsSize(double size) {
+        dataAccess.setUserPref(UserPrefKey.PLAYBACK_LYRICS_SIZE, String.valueOf(size));
+    }
+
     public void saveLyricsFontSize(double size) {
         dataAccess.setUserPref(UserPrefKey.LYRICS_FONT_SIZE, String.valueOf(size));
     }
