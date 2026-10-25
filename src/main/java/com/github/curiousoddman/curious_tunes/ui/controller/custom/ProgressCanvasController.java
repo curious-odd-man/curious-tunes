@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.custom;
 
+import com.github.curiousoddman.curious_tunes.model.WaveformModel;
 import com.github.curiousoddman.curious_tunes.util.async.WaveformWriter;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
@@ -14,7 +15,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.function.LongConsumer;
 
 
@@ -22,38 +22,37 @@ import java.util.function.LongConsumer;
 @Component
 @RequiredArgsConstructor
 public class ProgressCanvasController implements TrackProgressController {
-    private static final int NUM_BARS = 2000;
-    private static final double BAR_GAP = 0.0;
-    private static final int AUDIO_THRESHOLD_DB = -80;
+    private static final int    NUM_BARS           = WaveformModel.NUM_BARS;
+    private static final double BAR_GAP            = 0.0;
+    private static final int    AUDIO_THRESHOLD_DB = -80;
 
-    private static final Color BG_COLOR = Color.web("#3a4149");
-    private static final Color PLAYED_TOP = Color.web("#ffa500");
-    private static final Color PLAYED_BOT = Color.web("#f0c040");
+    private static final Color BG_COLOR     = Color.web("#3a4149");
+    private static final Color PLAYED_TOP   = Color.web("#ffa500");
+    private static final Color PLAYED_BOT   = Color.web("#f0c040");
     private static final Color UNPLAYED_TOP = Color.web("#8fa5b2");
     private static final Color UNPLAYED_BOT = Color.web("#6d8898");
 
-    private final WaveformWriter waveformWriter;
+    private final WaveformWriter      waveformWriter;
     private final MusicCurveAnimation musicCurveAnimation;
+    private final WaveformModel       waveformModel;
 
-    // ── Waveform data ────────────────────────────────────────────────────────
-    private final double[] waveform = new double[NUM_BARS];
-
-    private Canvas canvas;
+    private Canvas          canvas;
     private GraphicsContext graphicsContext;
-    private WritableImage playedImage;
-    private WritableImage unplayedImage;
-    private Duration currentDuration;
-    private Duration totalDuration;
-    private AnimationTimer timer;
+    private WritableImage   playedImage;
+    private WritableImage   unplayedImage;
+    private Duration        currentDuration;
+    private Duration        totalDuration;
+    private AnimationTimer  timer;
 
     private LongConsumer animation = now -> render();
 
     public void init(StackPane parentPane, Canvas canvas) {
         this.canvas = canvas;
 
-        parentPane.widthProperty().addListener(w -> {
-            canvas.setWidth(parentPane.getWidth());
-        });
+        parentPane.widthProperty()
+                  .addListener(w -> {
+                      canvas.setWidth(parentPane.getWidth());
+                  });
 
         graphicsContext = canvas.getGraphicsContext2D();
         clearWaveform(graphicsContext);
@@ -76,7 +75,7 @@ public class ProgressCanvasController implements TrackProgressController {
         setProgressZero();
         clearWaveform(graphicsContext);
         waveformWriter.stop();
-        Arrays.fill(waveform, 0);
+        waveformModel.reset();
     }
 
     public void setProgressZero() {
@@ -95,12 +94,13 @@ public class ProgressCanvasController implements TrackProgressController {
                                    double duration,
                                    float[] magnitudes,
                                    float[] phases) {
-        double progress = timestamp / totalDuration.toSeconds();
-        int barIndex = Math.min(NUM_BARS - 1, (int) (progress * NUM_BARS));
+        double[] waveform = waveformModel.getBars();
+        double   progress = timestamp / totalDuration.toSeconds();
+        int      barIndex = Math.min(NUM_BARS - 1, (int) (progress * NUM_BARS));
 
         float loudestMagnitude = getLoudestMagnitude(magnitudes);
 
-        double barMagnitude = waveform[barIndex];
+        double barMagnitude     = waveform[barIndex];
         double currentMagnitude = Math.min(1.0, loudestMagnitude / -AUDIO_THRESHOLD_DB);
         if (barMagnitude == 0) {
             barMagnitude = Math.max(0, currentMagnitude);
@@ -109,7 +109,7 @@ public class ProgressCanvasController implements TrackProgressController {
         }
 
         waveformWriter.append(timestamp, duration, magnitudes, phases, loudestMagnitude, barMagnitude);
-        waveform[barIndex] = barMagnitude;
+        waveformModel.set(barIndex, barMagnitude);
         buildImages();
     }
 
@@ -125,8 +125,8 @@ public class ProgressCanvasController implements TrackProgressController {
 
     @Override
     public void startLoadingAnimation() {
-        double width = canvas.getWidth();
-        double height = canvas.getHeight();
+        double          width             = canvas.getWidth();
+        double          height            = canvas.getHeight();
         GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
         animation = now -> {
             musicCurveAnimation.update(now, width, height);
@@ -145,12 +145,13 @@ public class ProgressCanvasController implements TrackProgressController {
     }
 
     private WritableImage renderImage(Color topColor, Color botColor) {
-        double height = canvas.getHeight();
-        double width = canvas.getWidth();
-        WritableImage img = new WritableImage((int) width, (int) height);
-        PixelWriter pw = img.getPixelWriter();
-        double barW = width / NUM_BARS;
-        double centerY = height / 2.0;
+        double        height   = canvas.getHeight();
+        double        width    = canvas.getWidth();
+        WritableImage img      = new WritableImage((int) width, (int) height);
+        PixelWriter   pw       = img.getPixelWriter();
+        double[]      waveform = waveformModel.getBars();
+        double        barW     = width / NUM_BARS;
+        double        centerY  = height / 2.0;
 
         // Background
         int bgArgb = toArgb(BG_COLOR);
@@ -162,17 +163,17 @@ public class ProgressCanvasController implements TrackProgressController {
 
         // Bars
         for (int b = 0; b < NUM_BARS; b++) {
-            double amp = Math.max(0.03, waveform[b]);
-            double halfH = amp * (centerY - 2);
-            int xStart = (int) (b * barW) + 1;
-            int xEnd = (int) Math.min((b + 1) * barW - BAR_GAP, width - 1);
-            int yTop = (int) (centerY - halfH);
-            int yBot = (int) (centerY + halfH);
+            double amp    = Math.max(0.03, waveform[b]);
+            double halfH  = amp * (centerY - 2);
+            int    xStart = (int) (b * barW) + 1;
+            int    xEnd   = (int) Math.min((b + 1) * barW - BAR_GAP, width - 1);
+            int    yTop   = (int) (centerY - halfH);
+            int    yBot   = (int) (centerY + halfH);
 
             for (int x = xStart; x <= xEnd; x++) {
                 for (int y = yTop; y <= yBot && y < height; y++) {
-                    double t = (yBot > yTop) ? (double) (y - yTop) / (yBot - yTop) : 0;
-                    Color color = topColor.interpolate(botColor, t);
+                    double t     = (yBot > yTop) ? (double) (y - yTop) / (yBot - yTop) : 0;
+                    Color  color = topColor.interpolate(botColor, t);
                     pw.setArgb(x, y, toArgb(color));
                 }
             }
@@ -188,11 +189,11 @@ public class ProgressCanvasController implements TrackProgressController {
     }
 
     private void render() {
-        double width = canvas.getWidth();
+        double width  = canvas.getWidth();
         double height = canvas.getHeight();
         clearWaveform(graphicsContext);
         double currentProgress = currentDuration.toMillis() / totalDuration.toMillis();
-        int splitX = (int) (currentProgress * width);
+        int    splitX          = (int) (currentProgress * width);
 
         if (splitX > 0) {
             graphicsContext.drawImage(playedImage,
@@ -208,7 +209,7 @@ public class ProgressCanvasController implements TrackProgressController {
     }
 
     private void clearWaveform(GraphicsContext gc) {
-        double width = canvas.getWidth();
+        double width  = canvas.getWidth();
         double height = canvas.getHeight();
         gc.setFill(BG_COLOR);
         gc.fillRect(0, 0, width, height);

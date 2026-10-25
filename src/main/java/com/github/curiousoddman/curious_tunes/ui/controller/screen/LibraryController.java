@@ -30,6 +30,7 @@ import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryPlayl
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryHistoryTabController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryTagEditTabController;
+import com.github.curiousoddman.curious_tunes.ui.playback.PlaybackWindow;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.async.DelayedAction;
 import javafx.beans.InvalidationListener;
@@ -40,7 +41,13 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -58,13 +65,19 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static com.github.curiousoddman.curious_tunes.domain.tags.FilesScanningService.LIBRARY_SCAN;
 import static com.sun.javafx.util.Utils.runOnFxThread;
-import static java.util.Comparator.*;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsLast;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
@@ -74,60 +87,63 @@ import static java.util.stream.Collectors.groupingBy;
 @RequiredArgsConstructor
 public class LibraryController implements Initializable {
     private final ApplicationEventPublisher eventPublisher;
-    private final FxmlLoader fxmlLoader;
-    private final DataAccess dataAccess;
+    private final FxmlLoader                fxmlLoader;
+    private final DataAccess                dataAccess;
 
     @FXML
-    public Button buttonPlayPause;
+    public  Button     buttonPlayPause;
     @FXML
-    public Slider volumeControl;
+    public  Button     buttonPlaybackWindow;
     @FXML
-    public ImageView currentTrackAlbumImage;
+    public  Slider     volumeControl;
     @FXML
-    public Label currentTrackName;
+    public  ImageView  currentTrackAlbumImage;
     @FXML
-    public Label currentTrackAlbum;
+    public  Label      currentTrackName;
     @FXML
-    public Label currentTrackArtist;
+    public  Label      currentTrackAlbum;
     @FXML
-    public Canvas currentTrackProgress;
+    public  Label      currentTrackArtist;
     @FXML
-    public Label timeSinceStart;
+    public  Canvas     currentTrackProgress;
     @FXML
-    public TextField searchField;
+    public  Label      timeSinceStart;
     @FXML
-    public Label timeRemaining;
+    public  TextField  searchField;
     @FXML
-    public VBox artistList;
+    public  Label      timeRemaining;
     @FXML
-    public VBox artistAlbumsView;
+    public  VBox       artistList;
     @FXML
-    public Label artistTitle;
+    public  VBox       artistAlbumsView;
     @FXML
-    public TabPane tabPane;
+    public  Label      artistTitle;
     @FXML
-    public Tab albumsTab;
+    public  TabPane    tabPane;
     @FXML
-    public Tab historyTab;
+    public  Tab        albumsTab;
     @FXML
-    public Tab currentLyricsTab;
+    public  Tab        historyTab;
     @FXML
-    public Tab editTagsTab;
-    public StackPane canvasPane;
-    public SplitPane librarySplitPane;
+    public  Tab        currentLyricsTab;
+    @FXML
+    public  Tab        editTagsTab;
+    public  StackPane  canvasPane;
+    public  SplitPane  librarySplitPane;
     @FXML
     private AnchorPane playlistAnchorPane;
 
     private final List<LibraryArtistController> artistsControllers = new ArrayList<>();
-    private final ProgressCanvasController progressCanvasController;
-    private final PlaylistModel playlistModel;
-    private final AudioPlayer audioPlayer;
-    private final UserPreferencesService userPreferencesService;
+    private final ProgressCanvasController      progressCanvasController;
+    private final PlaylistModel                 playlistModel;
+    private final AudioPlayer                   audioPlayer;
+    private final UserPreferencesService        userPreferencesService;
+    private final PlaybackWindow                playbackWindow;
 
     private LibraryHistoryTabController libraryHistoryTabController;
-    private LibraryLyricsTabController libraryLyricsTabController;
+    private LibraryLyricsTabController  libraryLyricsTabController;
     private LibraryTagEditTabController libraryTagEditTabController;
-    private ArtistSelectionModel artistSelectionModel;
+    private ArtistSelectionModel        artistSelectionModel;
 
     @Override
     @SneakyThrows
@@ -138,7 +154,8 @@ public class LibraryController implements Initializable {
                 null
         );
         Parent parent = loadedFxml.parent();
-        playlistAnchorPane.getChildren().add(parent);
+        playlistAnchorPane.getChildren()
+                          .add(parent);
         AnchorPane.setTopAnchor(parent, .0);
         AnchorPane.setBottomAnchor(parent, .0);
         AnchorPane.setLeftAnchor(parent, .0);
@@ -151,24 +168,27 @@ public class LibraryController implements Initializable {
         editTagsTab.setContent(loaded.parent());
 
         audioPlayer.getPlaybackStatusProperty()
-                .addListener(observable -> {
-                    PlaybackState status = audioPlayer.getPlaybackStatusProperty().get();
-                    switch (status) {
-                        case LAUNCHING -> {
-                            buttonPlayPause.setText("⏸");
-                            PlaylistItem playlistItem = audioPlayer.getPlaylistItemProperty().get();
-                            currentTrackName.setText(playlistItem.getTitle());
-                            currentTrackAlbum.setText(playlistItem.getAlbumName());
-                            currentTrackArtist.setText(playlistItem.getArtistName());
-                            timeSinceStart.setText(String.valueOf(0));
-                            timeRemaining.setText('-' + String.valueOf(playlistItem.getDuration()));
-                            libraryLyricsTabController.showLyrics(playlistItem);
-                            progressCanvasController.startProgress();
-                        }
-                        case PLAYING -> buttonPlayPause.setText("⏸");
-                        case STOPPED, PAUSED, ENDED -> buttonPlayPause.setText("▶");
-                    }
-                });
+                   .addListener(observable -> {
+                       PlaybackState status = audioPlayer.getPlaybackStatusProperty()
+                                                         .get();
+                       buttonPlaybackWindow.setDisable(status == PlaybackState.STOPPED || status == PlaybackState.ENDED);
+                       switch (status) {
+                           case LAUNCHING -> {
+                               buttonPlayPause.setText("⏸");
+                               PlaylistItem playlistItem = audioPlayer.getPlaylistItemProperty()
+                                                                      .get();
+                               currentTrackName.setText(playlistItem.getTitle());
+                               currentTrackAlbum.setText(playlistItem.getAlbumName());
+                               currentTrackArtist.setText(playlistItem.getArtistName());
+                               timeSinceStart.setText(String.valueOf(0));
+                               timeRemaining.setText('-' + String.valueOf(playlistItem.getDuration()));
+                               libraryLyricsTabController.showLyrics(playlistItem);
+                               progressCanvasController.startProgress();
+                           }
+                           case PLAYING -> buttonPlayPause.setText("⏸");
+                           case STOPPED, PAUSED, ENDED -> buttonPlayPause.setText("▶");
+                       }
+                   });
         audioPlayer.linkWithUi(
                 volumeControl.valueProperty(),
                 (currentDuration, totalDuration) -> {
@@ -188,17 +208,19 @@ public class LibraryController implements Initializable {
     @SneakyThrows
     public void onShowArtistAlbumEvent(ShowArtistAlbums showArtistAlbums) {
         ArtistRecord artistRecord = showArtistAlbums.getArtistRecord();
-        int artistId = artistRecord.getId();
-        String artistName = artistRecord.getName();
+        int          artistId     = artistRecord.getId();
+        String       artistName   = artistRecord.getName();
         artistTitle.setText(artistName);
-        artistAlbumsView.getChildren().remove(1, artistAlbumsView.getChildren().size());
+        artistAlbumsView.getChildren()
+                        .remove(1, artistAlbumsView.getChildren()
+                                                   .size());
         Thread t = new Thread(() -> {
-            List<AlbumRecord> albums = dataAccess.getArtistAlbums(artistId);
-            TrackSelectionModel trackSelectionModel = new TrackSelectionModel();
-            List<YearAndLoadedFxml> loadedFxmlsByYear = new ArrayList<>();
+            List<AlbumRecord>       albums              = dataAccess.getArtistAlbums(artistId);
+            TrackSelectionModel     trackSelectionModel = new TrackSelectionModel();
+            List<YearAndLoadedFxml> loadedFxmlsByYear   = new ArrayList<>();
             for (AlbumRecord album : albums) {
-                List<TrackRecord> albumTracks = dataAccess.getAlbumTracks(album.getId());
-                Integer yearFromTracks = getYearFromTracks(albumTracks);
+                List<TrackRecord> albumTracks    = dataAccess.getAlbumTracks(album.getId());
+                Integer           yearFromTracks = getYearFromTracks(albumTracks);
                 log.debug("For album {} year {}", album.getName(), yearFromTracks);
                 LoadedFxml<LibraryArtistAlbumController> loaded = fxmlLoader.load(
                         FxmlView.LIBRARY_ARTIST_ALBUM,
@@ -220,7 +242,8 @@ public class LibraryController implements Initializable {
                     .map(YearAndLoadedFxml::loadedFxml)
                     .map(LoadedFxml::parent)
                     .toList();
-            runOnFxThread(() -> artistAlbumsView.getChildren().addAll(rootElements));
+            runOnFxThread(() -> artistAlbumsView.getChildren()
+                                                .addAll(rootElements));
         });
         t.start();
     }
@@ -232,11 +255,16 @@ public class LibraryController implements Initializable {
                 delayedSaveWindowSize.reSchedule(() ->
                         userPreferencesService.saveWindowState(primaryStage));
 
-        primaryStage.widthProperty().addListener(invalidationListener);
-        primaryStage.heightProperty().addListener(invalidationListener);
-        primaryStage.xProperty().addListener(invalidationListener);
-        primaryStage.yProperty().addListener(invalidationListener);
-        primaryStage.maximizedProperty().addListener(invalidationListener);
+        primaryStage.widthProperty()
+                    .addListener(invalidationListener);
+        primaryStage.heightProperty()
+                    .addListener(invalidationListener);
+        primaryStage.xProperty()
+                    .addListener(invalidationListener);
+        primaryStage.yProperty()
+                    .addListener(invalidationListener);
+        primaryStage.maximizedProperty()
+                    .addListener(invalidationListener);
 
         volumeControl.setValue(userPreferencesService.getVolume());
         volumeControl.setOnMouseReleased(_ ->
@@ -250,8 +278,14 @@ public class LibraryController implements Initializable {
                 delayedSaveDividerPosition.reSchedule(() ->
                         userPreferencesService.saveSplitPositions(librarySplitPane.getDividerPositions()));
 
-        librarySplitPane.getDividers().getFirst().positionProperty().addListener(splitPanePositionListener);
-        librarySplitPane.getDividers().getLast().positionProperty().addListener(splitPanePositionListener);
+        librarySplitPane.getDividers()
+                        .getFirst()
+                        .positionProperty()
+                        .addListener(splitPanePositionListener);
+        librarySplitPane.getDividers()
+                        .getLast()
+                        .positionProperty()
+                        .addListener(splitPanePositionListener);
     }
 
     record YearAndLoadedFxml(Integer year, LoadedFxml<LibraryArtistAlbumController> loadedFxml) {
@@ -264,7 +298,8 @@ public class LibraryController implements Initializable {
                 .map(TrackRecord::getReleaseDate)
                 .map(text -> {
                     try {
-                        return Optional.ofNullable(text).map(Integer::valueOf);
+                        return Optional.ofNullable(text)
+                                       .map(Integer::valueOf);
                     } catch (Exception e) {
                         log.warn("Album year cannot be extracted");
                         return Optional.<Integer>empty();
@@ -277,12 +312,13 @@ public class LibraryController implements Initializable {
             log.warn("Different release dats found in album {}", countPerYear);
         }
 
-        Integer year = null;
-        long count = 0;
+        Integer year  = null;
+        long    count = 0;
         for (Map.Entry<Optional<Integer>, Long> entry : countPerYear.entrySet()) {
             if (count < entry.getValue()) {
                 count = entry.getValue();
-                year = entry.getKey().orElse(null);
+                year = entry.getKey()
+                            .orElse(null);
             }
         }
         return year;
@@ -306,8 +342,10 @@ public class LibraryController implements Initializable {
             timeSinceStart.setText(String.valueOf(event.getProgress()));
             timeRemaining.setText('-' + String.valueOf(event.getMaxProgress() - event.getProgress()));
 
-            if (event.getProcessName().equals(LIBRARY_SCAN)
-                    && event.getEventType().isTerminal()) {
+            if (event.getProcessName()
+                     .equals(LIBRARY_SCAN)
+                    && event.getEventType()
+                            .isTerminal()) {
                 onLibraryDataUpdated();
             }
         });
@@ -315,7 +353,8 @@ public class LibraryController implements Initializable {
 
     @EventListener
     public void onTagsUiUpdatedEvent(EditTagsForTrackEvent event) {
-        tabPane.getSelectionModel().select(editTagsTab);
+        tabPane.getSelectionModel()
+               .select(editTagsTab);
         TrackInfo trackInfo = event.getTrackInfo();
         libraryTagEditTabController.showTags(trackInfo);
     }
@@ -323,7 +362,8 @@ public class LibraryController implements Initializable {
     @SneakyThrows
     private void onLibraryDataUpdated() {
         artistsControllers.clear();
-        artistList.getChildren().clear();
+        artistList.getChildren()
+                  .clear();
         log.info("Update UI from library in separate thread");
         Thread t = new Thread(() -> {
             for (ArtistRecord artist : dataAccess.getAllArtists()) {
@@ -334,7 +374,8 @@ public class LibraryController implements Initializable {
                     );
                     Parent parent = loadedFxml.parent();
                     artistsControllers.add(loadedFxml.controller());
-                    artistList.getChildren().add(parent);
+                    artistList.getChildren()
+                              .add(parent);
                 });
             }
         });
@@ -347,14 +388,22 @@ public class LibraryController implements Initializable {
     }
 
     @FXML
+    public void onPlaybackWindowClick(ActionEvent actionEvent) {
+        playbackWindow.open((Stage) buttonPlaybackWindow.getScene()
+                                                        .getWindow());
+    }
+
+    @FXML
     @SneakyThrows
     public void onRescanMenuClicked(ActionEvent actionEvent) {
-        Stage stage = new Stage();
-        Parent root = fxmlLoader.load(FxmlView.RESCAN_MODAL, new RescanBundle("D:\\iTunes\\iTunes 1\\iTunes Media\\Music")).parent();
+        Stage  stage = new Stage();
+        Parent root  = fxmlLoader.load(FxmlView.RESCAN_MODAL, new RescanBundle("D:\\iTunes\\iTunes 1\\iTunes Media\\Music"))
+                                 .parent();
         stage.setScene(new Scene(root));
         stage.setTitle("Rescan library");
         stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initOwner(buttonPlayPause.getScene().getWindow());
+        stage.initOwner(buttonPlayPause.getScene()
+                                       .getWindow());
         stage.showAndWait();
     }
 
@@ -362,8 +411,10 @@ public class LibraryController implements Initializable {
     public void onProgressClicked(MouseEvent mouseEvent) {
         double seekTo = (mouseEvent.getX() - currentTrackProgress.getLayoutX()) / currentTrackProgress.getWidth();
 
-        TrackRecord currentTrack = playlistModel.getCurrentlyPlayingItem().get().getTrackRecord();
-        Long duration = currentTrack.getDuration();
+        TrackRecord currentTrack = playlistModel.getCurrentlyPlayingItem()
+                                                .get()
+                                                .getTrackRecord();
+        Long        duration     = currentTrack.getDuration();
         log.info("Seek to {} : {}", seekTo, duration * seekTo);
         audioPlayer.seek(Duration.seconds(duration * seekTo));
     }

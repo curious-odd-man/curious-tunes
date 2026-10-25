@@ -4,6 +4,7 @@ import com.github.curiousoddman.curious_tunes.domain.MediaProvider;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
 import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
+import com.github.curiousoddman.curious_tunes.event.SkipNextEvent;
 import com.github.curiousoddman.curious_tunes.event.UserShutdownApplication;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
@@ -27,26 +28,32 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Component
 public class AudioPlayer {
-    private final ApplicationEventPublisher eventPublisher;
-    private final PlaylistModel playlistModel;
-    private final MediaProvider mediaProvider;
+    private final ApplicationEventPublisher   eventPublisher;
+    private final PlaylistModel               playlistModel;
+    private final MediaProvider               mediaProvider;
     private final MediaPlayerListeningTracker mediaPlayerListeningTracker;
 
-    private MediaPlayer currentPlayer;
-    private MediaPlayer nextPlayer;
+    private MediaPlayer  currentPlayer;
+    private MediaPlayer  nextPlayer;
     private PlaylistItem nextPlaylistItem;
 
-    private DoubleProperty volumeProperty;
-    private TrackPlaybackProgressListener playbackProgressListener;
+    private       DoubleProperty                      volumeProperty;
+    private final List<TrackPlaybackProgressListener> progressListeners        = new CopyOnWriteArrayList<>();
     @Getter
     private final SimpleObjectProperty<PlaybackState> playbackStatusProperty;
     @Getter
-    private final SimpleObjectProperty<PlaylistItem> playlistItemProperty;
-    private TrackProgressController trackProgressController;
+    private final SimpleObjectProperty<PlaylistItem>  playlistItemProperty;
+    /**
+     * The item that will play after the current one (the one that is already preloaded). Empty if there is none.
+     */
+    @Getter
+    private final SimpleObjectProperty<PlaylistItem>  nextPlaylistItemProperty = new SimpleObjectProperty<>();
+    private       TrackProgressController             trackProgressController;
 
     public AudioPlayer(ApplicationEventPublisher eventPublisher,
                        PlaylistModel playlistModel,
@@ -70,15 +77,34 @@ public class AudioPlayer {
                            TrackPlaybackProgressListener playbackProgressListener,
                            TrackProgressController trackProgressController) {
         this.volumeProperty = volumeProperty;
-        this.playbackProgressListener = playbackProgressListener;
+        addProgressListener(playbackProgressListener);
         this.trackProgressController = trackProgressController;
+    }
+
+    public void addProgressListener(TrackPlaybackProgressListener listener) {
+        progressListeners.add(listener);
+    }
+
+    public void removeProgressListener(TrackPlaybackProgressListener listener) {
+        progressListeners.remove(listener);
+    }
+
+    /**
+     * @return the volume (0..100) shared by every volume slider
+     */
+    public DoubleProperty getVolumeProperty() {
+        return volumeProperty;
+    }
+
+    public Duration getCurrentTime() {
+        return currentPlayer == null ? Duration.ZERO : currentPlayer.getCurrentTime();
     }
 
     @EventListener
     public void onPlaySpecificTrack(PlaySpecificTrackEvent event) {
         stop();
-        TrackInfo trackToPlay = event.getTrackToPlay();
-        boolean addToPlaylistFirst = event.isAddToPlaylistFirst();
+        TrackInfo trackToPlay        = event.getTrackToPlay();
+        boolean   addToPlaylistFirst = event.isAddToPlaylistFirst();
         if (addToPlaylistFirst) {
             eventPublisher.publishEvent(new AddToPlaylistEvent(
                     this,
@@ -96,7 +122,7 @@ public class AudioPlayer {
     @EventListener
     public void onPlayPause(PlayPauseEvent playPauseEvent) {
         boolean isPlaying = playbackStatusProperty.get() == PlaybackState.PLAYING;
-        boolean isPaused = playbackStatusProperty.get() == PlaybackState.PAUSED;
+        boolean isPaused  = playbackStatusProperty.get() == PlaybackState.PAUSED;
         log.info("onPlayPause: Currently {}", playbackStatusProperty.get());
 
         if (isPlaying) {
@@ -119,7 +145,8 @@ public class AudioPlayer {
                 return;
             }
             playlistItemProperty.set(currentForPlayback.get());
-            Media media = mediaProvider.getMedia(playlistItemProperty.get().getTrackRecord());
+            Media media = mediaProvider.getMedia(playlistItemProperty.get()
+                                                                     .getTrackRecord());
             currentPlayer = new MediaPlayer(media);
         } else {
             log.info("Not first song in playlist...");
@@ -127,7 +154,7 @@ public class AudioPlayer {
             currentPlayer = nextPlayer;
             playlistItemProperty.set(nextPlaylistItem);
             nextPlayer = null;
-            nextPlaylistItem = null;
+            setNextPlaylistItem(null);
         }
 
         if (playlistItemProperty.get() == null) {
@@ -135,14 +162,15 @@ public class AudioPlayer {
             return;
         }
 
-        mediaPlayerListeningTracker.attachToPlayer(currentPlayer, playlistItemProperty.get().getTrackRecord());
+        mediaPlayerListeningTracker.attachToPlayer(currentPlayer, playlistItemProperty.get()
+                                                                                      .getTrackRecord());
         trackProgressController.startLoadingAnimation();
         playbackStatusProperty.set(PlaybackState.LAUNCHING);
         Optional<PlaylistItem> nextForPlayback = playlistModel.getNextForPlayback();
 
         // Preload next track
         if (nextForPlayback.isPresent()) {
-            nextPlaylistItem = nextForPlayback.get();
+            setNextPlaylistItem(nextForPlayback.get());
             log.info("Preloading: {}", nextPlaylistItem.getTitle());
             Media nextMedia = mediaProvider.getMedia(nextPlaylistItem.getTrackRecord());
             nextPlayer = new MediaPlayer(nextMedia);
@@ -155,12 +183,23 @@ public class AudioPlayer {
             eventPublisher.publishEvent(new PlayPauseEvent(this));
         });
         currentPlayer.setVolume(volumeProperty.getValue() / 100);
-        volumeProperty.addListener(ov -> currentPlayer.setVolume(volumeProperty.getValue() / 100));
-        currentPlayer.currentTimeProperty().addListener(ov ->
-                playbackProgressListener.onProgressUpdated(
-                        currentPlayer.getCurrentTime(),
-                        Duration.seconds(playlistItemProperty.get().getDuration())
-                ));
+        volumeProperty.addListener(ov -> {
+            if (currentPlayer != null) {
+                currentPlayer.setVolume(volumeProperty.getValue() / 100);
+            }
+        });
+        currentPlayer.currentTimeProperty()
+                     .addListener(ov -> {
+                         PlaylistItem item = playlistItemProperty.get();
+                         if (currentPlayer == null || item == null) {
+                             return;
+                         }
+                         Duration current = currentPlayer.getCurrentTime();
+                         Duration total   = Duration.seconds(item.getDuration());
+                         for (TrackPlaybackProgressListener listener : progressListeners) {
+                             listener.onProgressUpdated(current, total);
+                         }
+                     });
         currentPlayer.setAudioSpectrumThreshold(trackProgressController.getAudioSpectrumThreshold());
         currentPlayer.setAudioSpectrumInterval(trackProgressController.getAudioSpectrumInterval());
         currentPlayer.setAudioSpectrumListener(trackProgressController);
@@ -171,8 +210,31 @@ public class AudioPlayer {
         });
     }
 
+    /**
+     * Skips to the next playlist item: the current track is finished the same way as when it ends by itself,
+     * so the already preloaded next track starts (also when the player is paused).
+     * Does nothing if there is no next track.
+     */
+    @EventListener
+    public void onSkipNext(SkipNextEvent event) {
+        if (currentPlayer == null || nextPlayer == null || nextPlaylistItem == null) {
+            log.info("Skip requested, but there is no next track");
+            return;
+        }
+        log.info("Skipping to: {}", nextPlaylistItem.getTitle());
+        playbackStatusProperty.set(PlaybackState.ENDED);
+        onPlayPause(new PlayPauseEvent(this));
+    }
+
     public void seek(Duration duration) {
-        currentPlayer.seek(duration);
+        if (currentPlayer != null) {
+            currentPlayer.seek(duration);
+        }
+    }
+
+    private void setNextPlaylistItem(PlaylistItem item) {
+        nextPlaylistItem = item;
+        nextPlaylistItemProperty.set(item);
     }
 
     private boolean isFirstSong() {
@@ -194,6 +256,7 @@ public class AudioPlayer {
             nextPlayer.dispose();
             nextPlayer = null;
         }
+        setNextPlaylistItem(null);
         playbackStatusProperty.set(PlaybackState.STOPPED);
     }
 }

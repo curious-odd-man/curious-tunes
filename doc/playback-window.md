@@ -1,7 +1,6 @@
 # Playback Window Mode — Requirements & Design Notes
 
-Status: **DRAFT v4 — all review answers incorporated; no open questions. Three small edge-case proposals in section 4
-await a glance. No code yet.**
+Status: **IMPLEMENTED (not yet built or run on a real machine) — see section 9.**
 Items marked **[PROPOSAL]** are my suggestions that have not been explicitly confirmed.
 Items marked **[OPEN]** are still unanswered.
 
@@ -168,3 +167,64 @@ These come from reading the current code.
 ## 8. Open questions
 
 None. Section 4 contains three **[PROPOSAL]** items on lyrics auto-fit edge cases; if you don't object, they stand.
+
+---
+
+## 9. Implementation notes
+
+### What was built
+
+| Area                                                                 | Change                                                                                                                                                                                                |
+|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ui/playback/PlaybackWindow` (new)                                   | The window: stage, Simple and Maximized layouts, controls, up next, lyrics, palette animation, window bounds. Built in code (not FXML) because both views rearrange the same nodes.                   |
+| `ui/playback/PlaybackWaveformView` (new)                             | Draws the shared waveform, click to seek, palette colors. Redraws only when something changed.                                                                                                        |
+| `ui/playback/PlaybackPalette`, `DominantColor`, `LyricsFitter` (new) | Album-art colors (dark theme, light text always), dominant color picking, lyrics auto-fit search.                                                                                                     |
+| `model/WaveformModel` (new)                                          | Waveform data moved out of `ProgressCanvasController` so both windows share it. Library rendering/colors unchanged.                                                                                   |
+| `domain/player/PlaybackSessionTimer`, `SessionClock` (new)           | Session timer. Starts on first `LAUNCHING`/`PLAYING`, reset by `PlaylistResetEvent`.                                                                                                                  |
+| `event/SkipNextEvent`, `event/player/PlaylistResetEvent` (new)       | Skip request; playlist replaced/cleared (published from `PlaylistModel.clear()`, which covers REPLACE and the clear button).                                                                          |
+| `AudioPlayer`                                                        | Skip handler; several progress listeners instead of one; `nextPlaylistItemProperty`; `getVolumeProperty()`, `getCurrentTime()`; null guards in `seek`, the volume listener and the progress listener. |
+| `LibraryController` + `library.fxml`                                 | "🎵 Now Playing" button next to play/pause; disabled when stopped/ended.                                                                                                                              |
+| `UserPrefKey`, `UserPreferencesService`                              | Keys and methods for the Simple view window bounds (key/value table, no migration needed).                                                                                                            |
+| `playback-window.css` (new)                                          | Styles; colors come from `-pw-*` variables set from the palette.                                                                                                                                      |
+| Tests (new)                                                          | `SessionClockTest`, `DominantColorTest`, `LyricsFitterTest`.                                                                                                                                          |
+
+### Details worth knowing
+
+- **View = window state.** Maximized view is simply the maximized window, so the title-bar maximize button and the
+  in-window button do the same thing.
+- **Next** reuses the end-of-track path: the status is set to `ENDED`, then the normal play/pause logic starts the
+  already preloaded next track (this is also what makes it start playing when paused).
+- **Up next** shows the preloaded track, i.e. exactly what will actually play. If the playlist is edited while a track
+  plays, this follows the existing preloading behavior.
+- **Closing (X)** hides the playback window and shows the library; it never exits the app. The new window is shown
+  before the library is hidden so the app never has zero windows.
+- **Lyrics** auto-fit runs at track start, on window open, and when switching to Maximized (the three proposals in
+  section 4), only when the checkbox is checked. The checkbox resets to checked on every open.
+- **Stopped/ended** with the window open: it stays open on the last track; Next is disabled.
+- **Not changed:** the library header, the library waveform colors, the library lyrics tab and its own saved font size.
+
+### Verification status
+
+- Run here: `SessionClock`, `DominantColor`, `LyricsFitter` against the same assertions as the unit tests.
+- Compile-checked here: all new UI/logic classes against the real JavaFX API (JavaFX 11, with small stubs for Spring and
+  project classes).
+- **Not done:** the full Gradle build (Java 25, Spring, jOOQ were unavailable) and any run of the application, so layout
+  and timing have not been seen on screen. One pre-existing line (`LibraryController`, unnamed `_` variable) needs Java
+  22+, which is expected for this project.
+
+### Manual test checklist
+
+1. Button is disabled at start and when playback ended; enabled while playing and paused.
+2. Open: library disappears, Simple view appears with art, titles, waveform filling live, times, controls.
+3. Click the waveform to seek (in both views); library waveform behaves as before after returning.
+4. Next: disabled on the last track; works while playing and while paused (starts playing).
+5. Up next: shows the right track; same artist/album dimmed; "Nothing up next" at the end.
+6. Volume slider moves together with the library slider.
+7. Session time: empty before first play; keeps running when paused; empty again after replacing or clearing the
+   playlist; `h:mm:ss` after an hour.
+8. Maximize (button and title bar): lyrics pane, large art, full up-next card. Lyrics fit the pane at track start;
+   moving the slider does not change the checkbox; unchecked box keeps the manual size on the next track; "No lyrics"
+   message for tracks without lyrics.
+9. Colors follow the art and fade between tracks; default colors for tracks without art.
+10. Move/resize in Simple view, close, reopen: same position/size; always opens in Simple view; X returns to the
+    library; library size/position unchanged.

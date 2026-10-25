@@ -5,6 +5,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
+import com.github.curiousoddman.curious_tunes.event.player.PlaylistResetEvent;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import javafx.beans.InvalidationListener;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -28,6 +30,7 @@ public class PlaylistModel {
     @Getter
     private final PlaylistMultiSelectionModel selectionModel = new PlaylistMultiSelectionModel(playlistItems);
     private final DataAccess dataAccess;
+    private final ApplicationEventPublisher eventPublisher;
 
     private PlaylistItem currentlyPlayingItem = null;
 
@@ -71,6 +74,7 @@ public class PlaylistModel {
         currentlyPlayingItem = null;
         playlistItems.clear();
         logPlaylistItems();
+        eventPublisher.publishEvent(new PlaylistResetEvent(this));
     }
 
     public List<PlaylistItemMovement> moveSelectedUp() {

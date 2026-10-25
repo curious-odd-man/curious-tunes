@@ -21,6 +21,8 @@ public class UserPreferencesService {
     public static final double DEFAULT_ARTISTS_SPLIT_WIDTH = 0.26;
     public static final double DEFAULT_PLAYLIST_SPLIT_WIDTH = 0.8;
     public static final double DEFAULT_LYRICS_FONT_SIZE = 12;
+    public static final double DEFAULT_PLAYBACK_WINDOW_WIDTH = 800;
+    public static final double DEFAULT_PLAYBACK_WINDOW_HEIGHT = 340;
 
     private final DataAccess dataAccess;
 
@@ -42,6 +44,30 @@ public class UserPreferencesService {
         stage.setHeight(getDouble(UserPrefKey.WINDOW_HEIGHT, DEFAULT_WINDOW_HEIGHT));
         stage.setMaximized(getBoolean(UserPrefKey.WINDOW_MAXIMIZED, false));
         log.info("Window state restored");
+    }
+
+    /**
+     * Saves position and size of the playback window in its simple (not maximized) view.
+     */
+    public void savePlaybackWindowBounds(double x, double y, double width, double height) {
+        dataAccess.setUserPref(UserPrefKey.PLAYBACK_WINDOW_X, String.valueOf(x));
+        dataAccess.setUserPref(UserPrefKey.PLAYBACK_WINDOW_Y, String.valueOf(y));
+        dataAccess.setUserPref(UserPrefKey.PLAYBACK_WINDOW_WIDTH, String.valueOf(width));
+        dataAccess.setUserPref(UserPrefKey.PLAYBACK_WINDOW_HEIGHT, String.valueOf(height));
+    }
+
+    /**
+     * @return {x, y, width, height} of the playback window, or null if it was never saved
+     */
+    public double[] getPlaybackWindowBounds() {
+        double x = getDouble(UserPrefKey.PLAYBACK_WINDOW_X, Double.NaN);
+        double y = getDouble(UserPrefKey.PLAYBACK_WINDOW_Y, Double.NaN);
+        double width = getDouble(UserPrefKey.PLAYBACK_WINDOW_WIDTH, Double.NaN);
+        double height = getDouble(UserPrefKey.PLAYBACK_WINDOW_HEIGHT, Double.NaN);
+        if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(width) || Double.isNaN(height)) {
+            return null;
+        }
+        return new double[]{x, y, width, height};
     }
 
     public void saveVolume(int volume) {

@@ -18,6 +18,12 @@ public enum UserPrefKey {
     // ── Playback ────────────────────────────────────────────────────────────
     VOLUME("playback.volume"),          // 0 – 100
 
+    // ── Playback window (simple view only) ──────────────────────────────────
+    PLAYBACK_WINDOW_X("playback.window.x"),
+    PLAYBACK_WINDOW_Y("playback.window.y"),
+    PLAYBACK_WINDOW_WIDTH("playback.window.width"),
+    PLAYBACK_WINDOW_HEIGHT("playback.window.height"),
+
     // ── UI layout ───────────────────────────────────────────────────────────
     ARTISTS_SPLIT_WIDTH("ui.split.artists"),         // divider position (px)
     PLAYLIST_SPLIT_WIDTH("ui.split.playlist"),        // divider position (px)

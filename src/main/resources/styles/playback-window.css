@@ -1,0 +1,115 @@
+/* Playback window. Colors (-pw-*) are set on the root node from the album art palette. */
+
+.pw-root {
+    -fx-background-color: linear-gradient(to bottom, -pw-bg-top, -pw-bg-bottom);
+}
+
+.pw-root .label {
+    -fx-text-fill: -pw-text;
+}
+
+.pw-root .label.pw-dim {
+    -fx-text-fill: -pw-text-dim;
+}
+
+.pw-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.pw-artist {
+    -fx-font-size: 15px;
+}
+
+.pw-album {
+    -fx-font-size: 15px;
+}
+
+.pw-time {
+    -fx-font-size: 14px;
+    -fx-font-family: "Consolas", monospace;
+}
+
+.pw-session {
+    -fx-font-size: 13px;
+}
+
+.pw-small {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.pw-section {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.pw-upnext-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.pw-root.maximized .pw-title {
+    -fx-font-size: 38px;
+}
+
+.pw-root.maximized .pw-artist,
+.pw-root.maximized .pw-album {
+    -fx-font-size: 22px;
+}
+
+.pw-root.maximized .pw-time {
+    -fx-font-size: 18px;
+}
+
+.pw-root.maximized .pw-session {
+    -fx-font-size: 16px;
+}
+
+.pw-root.maximized .pw-upnext-title {
+    -fx-font-size: 18px;
+}
+
+.pw-button {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-text-fill: -pw-text;
+    -fx-background-radius: 8;
+    -fx-font-size: 16px;
+    -fx-padding: 4 14 4 14;
+    -fx-cursor: hand;
+}
+
+.pw-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.26);
+}
+
+.pw-button:disabled {
+    -fx-opacity: 0.35;
+}
+
+.pw-button-text {
+    -fx-font-size: 13px;
+}
+
+.pw-root .check-box {
+    -fx-text-fill: -pw-text;
+}
+
+.pw-root .slider .track {
+    -fx-background-color: rgba(255, 255, 255, 0.28);
+}
+
+.pw-root .slider .thumb {
+    -fx-background-color: -pw-accent;
+}
+
+.pw-lyrics-scroll,
+.pw-lyrics-scroll > .viewport {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+
+.pw-lyrics-scroll {
+    -fx-background-color: rgba(0, 0, 0, 0.18);
+    -fx-background-radius: 10;
+}
