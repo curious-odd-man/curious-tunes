@@ -604,6 +604,8 @@ Do this before anything else; later steps build on it.
 | 1.8 | Fix the "Disk Number" spelling to "Disc Number" in the tag editor (§5.11)                                          | `library-tab-edit-tags.fxml`                           |
 | 1.9 | Replace the `"  ---  "` separator in queue rows with ` · ` (§6.9)                                                  | `PlaylistItemController`                               |
 
+> Exclude 1.1
+
 ### Step 2 — Styling foundation (M–L)
 
 Do this before the screen-by-screen steps so new work uses it. See §2.
@@ -652,6 +654,8 @@ See §4 and §5.
 - [ ] 4.12 Keyboard in the track list: ↑/↓ to move, Shift+Enter to add to queue (§5.9).
 - [ ] 4.13 Drag tracks/albums from the library into the queue (§5.10).
 
+> Exclude 4.3, 4.4, 4.5, 4.9
+
 ### Step 5 — Lyrics tab and Edit Tags tab (M)
 
 See §7 and §8.
@@ -686,6 +690,8 @@ current columns.
 - [ ] 6.4 Stat cards: time listened, songs, albums, artists (§9.1).
 - [ ] 6.5 Row actions: double-click to play, context menu (§9.4).
 - [ ] 6.6 Empty state and date filters (§9.6).
+
+> Exclude 6.5
 
 ### Step 7 — Now Playing window leftovers (M)
 
@@ -733,12 +739,18 @@ These cannot be done in the UI layer alone.
 
 1. **Icons (2.1):** add a library (Ikonli) as a dependency, or use SVG shapes in the project? Either way the emoji go
    away.
+> Ikonli
 2. **Default list-view cover size (4.9):** keep 350 px or reduce to ~200 px?
+> Keep 350px
 3. **Layout by size in Now Playing (7.2):** still wanted now that the lyrics drawer and fullscreen exist?
+> yes
 4. **Queue persistence (Step 10):** wanted? It is the only item that adds a database table.
+> no
 5. **History tab (Step 6):** which parts do you want — all of it, or only the performance fix (6.1) and row actions (
    6.5)?
+> see comment in section
 6. **Settings dialog (8.2):** worth building now, or later?
+> build now
 
 ### Suggested order
 
