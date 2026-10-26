@@ -7,6 +7,7 @@ import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumDiscBundle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumTrackBundle;
 import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
+import com.github.curiousoddman.curious_tunes.util.UiIcons;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
@@ -33,21 +34,25 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @RequiredArgsConstructor
 public class LibraryArtistAlbumDiscController implements Initializable {
     private final FxmlLoader fxmlLoader;
-    public VBox pane;
-    public Label diskNumberLabel;
-    public VBox tracksLeftColumnVbox;
-    public VBox tracksRightColumnVbox;
+    public        VBox       pane;
+    public        Label      diskNumberLabel;
+    public        VBox       tracksLeftColumnVbox;
+    public        VBox       tracksRightColumnVbox;
 
     @Override
     @SneakyThrows
     public void initialize(URL location, ResourceBundle resources) {
-        diskNumberLabel.getStyleClass().add(DISC_NAME);
+        diskNumberLabel.getStyleClass()
+                       .add(DISC_NAME);
         if (resources instanceof ArtistAlbumDiscBundle albumDiscBundle) {
-            log.debug("Album {} disk {}", albumDiscBundle.getAlbumInfo().getName(), albumDiscBundle.getDiscNumber());
+            log.debug("Album {} disk {}", albumDiscBundle.getAlbumInfo()
+                                                         .getName(), albumDiscBundle.getDiscNumber());
             if (albumDiscBundle.getDiscNumber() != null) {
-                diskNumberLabel.setText("💿 " + albumDiscBundle.getDiscNumber());
+                diskNumberLabel.setGraphic(UiIcons.icon(UiIcons.DISC, 16));
+                diskNumberLabel.setText(String.valueOf(albumDiscBundle.getDiscNumber()));
             } else {
-                pane.getChildren().remove(diskNumberLabel);
+                pane.getChildren()
+                    .remove(diskNumberLabel);
             }
 
             List<TrackRecord> discTracks = albumDiscBundle.getTrackRecords();
@@ -55,10 +60,10 @@ public class LibraryArtistAlbumDiscController implements Initializable {
                     ? discTracks.size()
                     : (discTracks.size() / 2);
 
-            AlbumInfo albumInfo = albumDiscBundle.getAlbumInfo();
-            Iterator<TrackRecord> iterator = discTracks.iterator();
-            int row = 0;
-            VBox col = tracksLeftColumnVbox;
+            AlbumInfo             albumInfo = albumDiscBundle.getAlbumInfo();
+            Iterator<TrackRecord> iterator  = discTracks.iterator();
+            int                   row       = 0;
+            VBox                  col       = tracksLeftColumnVbox;
             while (iterator.hasNext()) {
                 TrackRecord trackRecord = iterator.next();
                 LoadedFxml<LibraryArtistAlbumTrackController> loadedFxml = fxmlLoader.load(
@@ -69,7 +74,8 @@ public class LibraryArtistAlbumDiscController implements Initializable {
                         )
                 );
                 Parent parent = loadedFxml.parent();
-                col.getChildren().add(parent);
+                col.getChildren()
+                   .add(parent);
                 if (row + 1 == tracksPerColumn) {
                     col = tracksRightColumnVbox;
                     row = 0;

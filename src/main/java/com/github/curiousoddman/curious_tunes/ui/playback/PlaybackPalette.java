@@ -29,7 +29,7 @@ public record PlaybackPalette(Color bgTop,
             Color.web("#2d353e"),
             Color.web("#161a1e"),
             Color.web("#f2f2f2"),
-            Color.web("#f2f2f2", 0.5),
+            Color.web("#f2f2f2", 0.68),
             Color.web("#ffa500"),
             Color.web("#8fa5b2")
     );
@@ -39,9 +39,9 @@ public record PlaybackPalette(Color bgTop,
      */
     public static PlaybackPalette fromImage(byte[] imageBytes) {
         try (ByteArrayInputStream in = new ByteArrayInputStream(imageBytes)) {
-            Image image = new Image(in, SAMPLE_SIZE, SAMPLE_SIZE, true, false);
-            int width = (int) image.getWidth();
-            int height = (int) image.getHeight();
+            Image       image  = new Image(in, SAMPLE_SIZE, SAMPLE_SIZE, true, false);
+            int         width  = (int) image.getWidth();
+            int         height = (int) image.getHeight();
             PixelReader reader = image.getPixelReader();
             if (image.isError() || reader == null || width <= 0 || height <= 0) {
                 return DEFAULT;
@@ -61,8 +61,8 @@ public record PlaybackPalette(Color bgTop,
     }
 
     public static PlaybackPalette fromRgb(int rgb) {
-        Color base = Color.rgb((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
-        double hue = base.getHue();
+        Color  base       = Color.rgb((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
+        double hue        = base.getHue();
         double saturation = base.getSaturation();
         double brightness = base.getBrightness();
 

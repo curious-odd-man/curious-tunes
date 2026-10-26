@@ -6,6 +6,7 @@ import com.github.curiousoddman.curious_tunes.model.TrackSelectionModel;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumTrackBundle;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.util.TrackActions;
+import com.github.curiousoddman.curious_tunes.util.UiIcons;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ListChangeListener;
@@ -126,7 +127,13 @@ public class LibraryArtistAlbumTrackController implements Initializable {
         if (playing) {
             styleClasses.add(LIBRARY_TRACK_PLAYING);
         }
-        trackNumberLabel.setText(playing ? "▶" : trackNumberText());
+        if (playing) {
+            trackNumberLabel.setText("");
+            trackNumberLabel.setGraphic(UiIcons.icon(UiIcons.PLAY, 14));
+        } else {
+            trackNumberLabel.setGraphic(null);
+            trackNumberLabel.setText(trackNumberText());
+        }
     }
 
     private String trackNumberText() {

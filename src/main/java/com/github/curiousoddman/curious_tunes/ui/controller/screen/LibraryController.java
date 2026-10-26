@@ -42,6 +42,8 @@ import com.github.curiousoddman.curious_tunes.ui.playback.PlaybackWindow;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.TrackActions;
+import com.github.curiousoddman.curious_tunes.util.UiIcons;
+import com.github.curiousoddman.curious_tunes.util.UiStyles;
 import com.github.curiousoddman.curious_tunes.util.VersionService;
 import com.github.curiousoddman.curious_tunes.util.async.DelayedAction;
 import javafx.animation.PauseTransition;
@@ -289,7 +291,7 @@ public class LibraryController implements Initializable {
                        buttonPlaybackWindow.setDisable(status == PlaybackState.STOPPED || status == PlaybackState.ENDED);
                        switch (status) {
                            case LAUNCHING -> {
-                               buttonPlayPause.setText("⏸");
+                               UiIcons.set(buttonPlayPause, UiIcons.PAUSE);
                                PlaylistItem playlistItem = audioPlayer.getPlaylistItemProperty()
                                                                       .get();
                                showTrackInfo(playlistItem.getTitle(), playlistItem.getArtistName(), playlistItem.getAlbumName());
@@ -303,10 +305,10 @@ public class LibraryController implements Initializable {
                                                .set(playlistItem.getTrackId());
                                progressCanvasController.startProgress();
                            }
-                           case PLAYING -> buttonPlayPause.setText("⏸");
-                           case PAUSED -> buttonPlayPause.setText("▶");
+                           case PLAYING -> UiIcons.set(buttonPlayPause, UiIcons.PAUSE);
+                           case PAUSED -> UiIcons.set(buttonPlayPause, UiIcons.PLAY);
                            case STOPPED, ENDED -> {
-                               buttonPlayPause.setText("▶");
+                               UiIcons.set(buttonPlayPause, UiIcons.PLAY);
                                nowPlayingMarker.trackIdProperty()
                                                .set(null);
                                showIdle();
@@ -967,7 +969,7 @@ public class LibraryController implements Initializable {
     }
 
     private void updateVolumeIcon(double volume) {
-        volumeIcon.setText(volume <= 0 ? "🔇" : volume < 34 ? "🔈" : volume < 67 ? "🔉" : "🔊");
+        UiIcons.set(volumeIcon, UiIcons.volume(volume));
     }
 
     @FXML
@@ -1013,7 +1015,9 @@ public class LibraryController implements Initializable {
         Stage stage = new Stage();
         Parent root = fxmlLoader.load(FxmlView.RESCAN_MODAL, new RescanBundle(userPreferencesService.getLibraryRoot()))
                                 .parent();
-        stage.setScene(new Scene(root));
+        Scene rescanScene = new Scene(root);
+        UiStyles.apply(rescanScene);
+        stage.setScene(rescanScene);
         stage.setTitle("Rescan library");
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.initOwner(buttonPlayPause.getScene()
@@ -1037,6 +1041,7 @@ public class LibraryController implements Initializable {
         alert.setTitle("About cTunes");
         alert.setHeaderText("cTunes");
         alert.setContentText(versionService.getVersionLabel());
+        UiStyles.apply(alert);
         alert.showAndWait();
     }
 

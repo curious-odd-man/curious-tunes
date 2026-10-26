@@ -614,17 +614,28 @@ the dead `ArtistSelectionModel` and `ArtistItemBundle` files were deleted.
 
 Do this before the screen-by-screen steps so new work uses it. See §2.
 
-- [ ] 2.1 **Icons instead of emoji** (M): choose an icon source (Ikonli or SVG shapes — *decision needed*, see below),
+- [x] 2.1 **Icons instead of emoji** (M): choose an icon source (Ikonli or SVG shapes — *decision needed*, see below),
   replace emoji in buttons, and colour destructive actions through CSS.
-- [ ] 2.2 **Apply the type scale** (S–M): replace `<Font size=…>` nodes and the remaining `Consolas Bold` (artist row)
+- [x] 2.2 **Apply the type scale** (S–M): replace `<Font size=…>` nodes and the remaining `Consolas Bold` (artist row)
   with `.text-small / .text-body / .text-title`.
-- [ ] 2.3 **Load `global.css` on every Scene** (S): Rescan dialog, About dialog, confirmation dialogs; use
+- [x] 2.3 **Load `global.css` on every Scene** (S): Rescan dialog, About dialog, confirmation dialogs; use
   `getResource(...).toExternalForm()` instead of the relative path in `StageManager`.
-- [ ] 2.4 **Minimum size for the library window** (S): set a sensible minimum so the three panes cannot collapse (§2.7).
-- [ ] 2.5 **Seek bar colours from tokens/palette** (S): `ProgressCanvasController` still uses hard-coded orange/grey (
+- [x] 2.4 **Minimum size for the library window** (S): set a sensible minimum so the three panes cannot collapse (§2.7).
+- [x] 2.5 **Seek bar colours from tokens/palette** (S): `ProgressCanvasController` still uses hard-coded orange/grey (
   §3.10).
-- [ ] 2.6 **Contrast review** (S): lavender borders, dim text on selected/playing rows, `textDim` in Now Playing (
+- [x] 2.6 **Contrast review** (S): lavender borders, dim text on selected/playing rows, `textDim` in Now Playing (
   §11.11, §13).
+
+**Status: DONE (step 2).** Notes:
+- Icons: Ikonli 12.4.0 (`ikonli-javafx` + `ikonli-materialdesign2-pack`, added to `build.gradle`). All literals were checked
+  against the pack's source. `UiIcons` holds the constants/helpers; icons follow the text colour through CSS
+  (`.ikonli-font-icon`), and the Now Playing window uses its palette colour (`-pw-text`).
+- Type scale: `.text-small/-body/-large/-section/-heading/-title/-strong`; no `<Font>` nodes left in the FXML.
+- `UiStyles.apply(...)` puts `global.css` on every Scene and Dialog (Rescan dialog, About, queue confirmation, Now Playing).
+- Library window minimum size: 900 × 560.
+- Seek bar: colours are the `-ct-seek-*` tokens, read back from the stylesheet through invisible probe nodes.
+- Contrast: accent `#2563eb` (white text on it ≈ 5:1), inactive selection `#64748b`, danger `#c62f2f`, dim text 62 %
+  (Now Playing: 68 %). The lavender row borders are decorative separators and were left as they are.
 
 ### Step 3 — Queue leftovers (M)
 

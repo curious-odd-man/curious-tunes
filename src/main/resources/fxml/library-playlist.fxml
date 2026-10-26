@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -9,7 +10,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0"
             xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryPlaylistController">
@@ -23,7 +24,10 @@
                     <children>
                         <Label fx:id="queueSummaryLabel" maxWidth="1.7976931348623157E308" styleClass="dim-text"
                                HBox.hgrow="ALWAYS"/>
-                        <Button mnemonicParsing="false" onAction="#onScrollToPlayingClick" text="↓ Now playing">
+                        <Button mnemonicParsing="false" onAction="#onScrollToPlayingClick" text="Now playing">
+                            <graphic>
+                                <FontIcon iconLiteral="mdi2a-arrow-down" iconSize="14"/>
+                            </graphic>
                             <tooltip>
                                 <Tooltip text="Scroll to the track that is playing"/>
                             </tooltip>
@@ -32,43 +36,43 @@
                 </HBox>
                 <ToolBar maxWidth="1.7976931348623157E308">
                     <items>
-                        <Button mnemonicParsing="false" onAction="#onUpButtonClick" text="⬆" styleClass="icon-accent">
-                            <font>
-                                <Font size="14.0"/>
-                            </font>
+                        <Button mnemonicParsing="false" onAction="#onUpButtonClick" styleClass="icon-accent">
+                            <graphic>
+                                <FontIcon iconLiteral="mdi2a-arrow-up" iconSize="16"/>
+                            </graphic>
                             <tooltip>
                                 <Tooltip text="Move selected track up"/>
                             </tooltip>
                         </Button>
-                        <Button mnemonicParsing="false" onAction="#onDownButtonClick" text="⬇" styleClass="icon-accent">
-                            <font>
-                                <Font size="14.0"/>
-                            </font>
+                        <Button mnemonicParsing="false" onAction="#onDownButtonClick" styleClass="icon-accent">
+                            <graphic>
+                                <FontIcon iconLiteral="mdi2a-arrow-down" iconSize="16"/>
+                            </graphic>
                             <tooltip>
                                 <Tooltip text="Move selected track down"/>
                             </tooltip>
                         </Button>
-                        <Button mnemonicParsing="false" onAction="#onDeleteClick" text="➖" styleClass="icon-danger">
-                            <font>
-                                <Font size="14.0"/>
-                            </font>
+                        <Button mnemonicParsing="false" onAction="#onDeleteClick" styleClass="icon-danger">
+                            <graphic>
+                                <FontIcon iconLiteral="mdi2p-playlist-remove" iconSize="18"/>
+                            </graphic>
                             <tooltip>
                                 <Tooltip text="Remove selected track from the queue (Delete)"/>
                             </tooltip>
                         </Button>
-                        <Button mnemonicParsing="false" onAction="#onShuffleClicked" text="🔀" styleClass="icon-accent">
-                            <font>
-                                <Font size="14.0"/>
-                            </font>
+                        <Button mnemonicParsing="false" onAction="#onShuffleClicked" styleClass="icon-accent">
+                            <graphic>
+                                <FontIcon iconLiteral="mdi2s-shuffle-variant" iconSize="16"/>
+                            </graphic>
                             <tooltip>
                                 <Tooltip text="Shuffle the queue"/>
                             </tooltip>
                         </Button>
-                        <Button mnemonicParsing="false" onAction="#onClearPlaylistClicked" text="❌"
+                        <Button mnemonicParsing="false" onAction="#onClearPlaylistClicked"
                                 styleClass="icon-danger">
-                            <font>
-                                <Font size="14.0"/>
-                            </font>
+                            <graphic>
+                                <FontIcon iconLiteral="mdi2d-delete-sweep" iconSize="18"/>
+                            </graphic>
                             <tooltip>
                                 <Tooltip text="Clear the whole queue"/>
                             </tooltip>

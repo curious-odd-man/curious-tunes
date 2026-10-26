@@ -8,6 +8,10 @@
     -fx-text-fill: -pw-text;
 }
 
+.pw-root .ikonli-font-icon {
+    -fx-icon-color: -pw-text;
+}
+
 .pw-root .label.pw-dim {
     -fx-text-fill: -pw-text-dim;
 }

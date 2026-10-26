@@ -3,10 +3,13 @@ package com.github.curiousoddman.curious_tunes.ui.controller.custom;
 import com.github.curiousoddman.curious_tunes.model.WaveformModel;
 import com.github.curiousoddman.curious_tunes.util.async.WaveformWriter;
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
@@ -26,11 +29,12 @@ public class ProgressCanvasController implements TrackProgressController {
     private static final double BAR_GAP            = 0.0;
     private static final int    AUDIO_THRESHOLD_DB = -80;
 
-    private static final Color BG_COLOR     = Color.web("#3a4149");
-    private static final Color PLAYED_TOP   = Color.web("#ffa500");
-    private static final Color PLAYED_BOT   = Color.web("#f0c040");
-    private static final Color UNPLAYED_TOP = Color.web("#8fa5b2");
-    private static final Color UNPLAYED_BOT = Color.web("#6d8898");
+    // Defaults; the real colors come from the -ct-seek-* tokens of global.css (see loadColorsFromCss).
+    private Color bgColor     = Color.web("#3a4149");
+    private Color playedTop   = Color.web("#ffa500");
+    private Color playedBot   = Color.web("#f0c040");
+    private Color unplayedTop = Color.web("#8fa5b2");
+    private Color unplayedBot = Color.web("#6d8898");
 
     private final WaveformWriter      waveformWriter;
     private final MusicCurveAnimation musicCurveAnimation;
@@ -58,7 +62,60 @@ public class ProgressCanvasController implements TrackProgressController {
         clearWaveform(graphicsContext);
         parentPane.getStyleClass()
                   .add("waveform-pane");
+        parentPane.sceneProperty()
+                  .addListener((obs, oldScene, newScene) -> {
+                      if (newScene != null) {
+                          Platform.runLater(() -> loadColorsFromCss(parentPane));
+                      }
+                  });
         setProgressZero();
+    }
+
+    /**
+     * Canvas drawing cannot use CSS directly, so the colors are read from small invisible nodes
+     * that are styled by the same stylesheet as everything else.
+     */
+    private void loadColorsFromCss(StackPane parentPane) {
+        Region bg           = colorProbe("seek-probe-bg");
+        Region playedTopP   = colorProbe("seek-probe-played-top");
+        Region playedBotP   = colorProbe("seek-probe-played-bottom");
+        Region unplayedTopP = colorProbe("seek-probe-unplayed-top");
+        Region unplayedBotP = colorProbe("seek-probe-unplayed-bottom");
+        parentPane.getChildren()
+                  .addAll(bg, playedTopP, playedBotP, unplayedTopP, unplayedBotP);
+        try {
+            bgColor = readColor(bg, bgColor);
+            playedTop = readColor(playedTopP, playedTop);
+            playedBot = readColor(playedBotP, playedBot);
+            unplayedTop = readColor(unplayedTopP, unplayedTop);
+            unplayedBot = readColor(unplayedBotP, unplayedBot);
+        } finally {
+            parentPane.getChildren()
+                      .removeAll(bg, playedTopP, playedBotP, unplayedTopP, unplayedBotP);
+        }
+    }
+
+    private static Region colorProbe(String styleClass) {
+        Region probe = new Region();
+        probe.getStyleClass()
+             .add(styleClass);
+        probe.setManaged(false);
+        probe.setMouseTransparent(true);
+        probe.setPrefSize(0, 0);
+        return probe;
+    }
+
+    private static Color readColor(Region probe, Color fallback) {
+        probe.applyCss();
+        Background background = probe.getBackground();
+        if (background != null && !background.getFills()
+                                             .isEmpty()
+                && background.getFills()
+                             .getFirst()
+                             .getFill() instanceof Color color) {
+            return color;
+        }
+        return fallback;
     }
 
     @SneakyThrows
@@ -141,8 +198,8 @@ public class ProgressCanvasController implements TrackProgressController {
     }
 
     private void buildImages() {
-        playedImage = renderImage(PLAYED_TOP, PLAYED_BOT);
-        unplayedImage = renderImage(UNPLAYED_TOP, UNPLAYED_BOT);
+        playedImage = renderImage(playedTop, playedBot);
+        unplayedImage = renderImage(unplayedTop, unplayedBot);
     }
 
     private WritableImage renderImage(Color topColor, Color botColor) {
@@ -155,7 +212,7 @@ public class ProgressCanvasController implements TrackProgressController {
         double        centerY  = height / 2.0;
 
         // Background
-        int bgArgb = toArgb(BG_COLOR);
+        int bgArgb = toArgb(bgColor);
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 pw.setArgb(x, y, bgArgb);
@@ -212,7 +269,7 @@ public class ProgressCanvasController implements TrackProgressController {
     private void clearWaveform(GraphicsContext gc) {
         double width  = canvas.getWidth();
         double height = canvas.getHeight();
-        gc.setFill(BG_COLOR);
+        gc.setFill(bgColor);
         gc.fillRect(0, 0, width, height);
     }
 

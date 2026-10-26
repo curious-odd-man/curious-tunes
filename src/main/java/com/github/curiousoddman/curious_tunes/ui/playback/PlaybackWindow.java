@@ -10,6 +10,8 @@ import com.github.curiousoddman.curious_tunes.model.WaveformModel;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
+import com.github.curiousoddman.curious_tunes.util.UiIcons;
+import com.github.curiousoddman.curious_tunes.util.UiStyles;
 import com.github.curiousoddman.curious_tunes.util.async.DelayedAction;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
@@ -241,6 +243,7 @@ public class PlaybackWindow {
         applyPalette(PlaybackPalette.DEFAULT);
 
         Scene scene = new Scene(root);
+        UiStyles.apply(scene);
         scene.getStylesheets()
              .add(Objects.requireNonNull(
                                  getClass().getResource(STYLESHEET), "Missing " + STYLESHEET)
@@ -357,12 +360,12 @@ public class PlaybackWindow {
         sessionLabel.setMinWidth(Region.USE_PREF_SIZE);
         sessionLabel.setTooltip(new Tooltip("Time listened in this session"));
 
-        playPauseButton = button("▶");
+        playPauseButton = iconButton(UiIcons.PLAY, 22);
         playPauseButton.setMinWidth(54);
         playPauseButton.setTooltip(new Tooltip("Play / Pause (Space)"));
         playPauseButton.setOnAction(e -> eventPublisher.publishEvent(new PlayPauseEvent(this)));
 
-        nextButton = button("⏭");
+        nextButton = iconButton(UiIcons.SKIP_NEXT, 22);
         nextButton.setMinWidth(54);
         nextButton.setTooltip(new Tooltip("Next track"));
         nextButton.disableProperty()
@@ -386,13 +389,13 @@ public class PlaybackWindow {
         lyricsToggleButton.setTooltip(new Tooltip("Show or hide the lyrics (L)"));
         lyricsToggleButton.setOnAction(e -> setLyricsDrawer(!lyricsDrawerOpen));
 
-        fullscreenButton = button("⛶");
+        fullscreenButton = iconButton(UiIcons.FULLSCREEN, 18);
         fullscreenButton.setMinWidth(Region.USE_PREF_SIZE);
         fullscreenButton.setTooltip(new Tooltip("Fullscreen (F11)"));
         fullscreenButton.setOnAction(e -> toggleFullscreen());
 
         volumeIcon = label();
-        volumeIcon.setText("🔊");
+        volumeIcon.setGraphic(UiIcons.icon(UiIcons.VOLUME_HIGH, 18));
         volumeIcon.setTooltip(new Tooltip("Click to mute / unmute"));
         volumeIcon.setCursor(Cursor.HAND);
         volumeIcon.setOnMouseClicked(e -> toggleMute());
@@ -674,7 +677,7 @@ public class PlaybackWindow {
 
     private void updatePlayPauseText(PlaybackState status) {
         boolean playing = status == PlaybackState.LAUNCHING || status == PlaybackState.PLAYING;
-        playPauseButton.setText(playing ? "⏸" : "▶");
+        UiIcons.set(playPauseButton, playing ? UiIcons.PAUSE : UiIcons.PLAY);
     }
 
     private void showTrack(PlaylistItem item) {
@@ -889,7 +892,8 @@ public class PlaybackWindow {
     }
 
     private void updateFullscreenButton() {
-        fullscreenButton.setText(stage.isFullScreen() ? "Exit fullscreen" : "⛶");
+        fullscreenButton.setText(stage.isFullScreen() ? "Exit fullscreen" : "");
+        UiIcons.set(fullscreenButton, stage.isFullScreen() ? UiIcons.FULLSCREEN_EXIT : UiIcons.FULLSCREEN);
         fullscreenButton.setTooltip(new Tooltip(stage.isFullScreen() ? "Leave fullscreen (F11 or Esc)" : "Fullscreen (F11)"));
     }
 
@@ -1003,7 +1007,7 @@ public class PlaybackWindow {
     // =========================================================================
 
     private void updateVolumeIcon(double volume) {
-        volumeIcon.setText(volume <= 0 ? "🔇" : volume < 34 ? "🔈" : volume < 67 ? "🔉" : "🔊");
+        UiIcons.set(volumeIcon, UiIcons.volume(volume));
     }
 
     private void toggleMute() {
@@ -1093,6 +1097,12 @@ public class PlaybackWindow {
         label.setMaxWidth(Double.MAX_VALUE);
         label.setTextOverrun(OverrunStyle.ELLIPSIS);
         return label;
+    }
+
+    private static Button iconButton(String iconLiteral, int iconSize, String... extraStyleClasses) {
+        Button button = button("", extraStyleClasses);
+        button.setGraphic(UiIcons.icon(iconLiteral, iconSize));
+        return button;
     }
 
     private static Button button(String text, String... extraStyleClasses) {

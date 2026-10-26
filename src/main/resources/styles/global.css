@@ -1,14 +1,41 @@
 /* Shared colors (looked-up colors, available to every node in the scene). */
 .root {
-    -ct-accent: #3b82f6;
-    -ct-accent-inactive: #9aa7b8;
+    -ct-accent: #2563eb;
+    -ct-accent-inactive: #64748b;
     -ct-playing: #1f9d8f;
     -ct-playing-bg: #dff3f0;
-    -ct-hover: rgba(59, 130, 246, 0.12);
-    -ct-text-dim: rgba(0, 0, 0, 0.55);
+    -ct-hover: rgba(37, 99, 235, 0.12);
+    -ct-text-dim: rgba(0, 0, 0, 0.62);
     -ct-border: rgba(0, 0, 0, 0.15);
-    -ct-danger: #d64545;
+    -ct-danger: #c62f2f;
     -ct-override: orange;
+
+    /* seek bar (drawn on a canvas; read back through the probes below) */
+    -ct-seek-bg: #3a4149;
+    -ct-seek-played-top: #ffa500;
+    -ct-seek-played-bottom: #f0c040;
+    -ct-seek-unplayed-top: #8fa5b2;
+    -ct-seek-unplayed-bottom: #6d8898;
+}
+
+.seek-probe-bg {
+    -fx-background-color: -ct-seek-bg;
+}
+
+.seek-probe-played-top {
+    -fx-background-color: -ct-seek-played-top;
+}
+
+.seek-probe-played-bottom {
+    -fx-background-color: -ct-seek-played-bottom;
+}
+
+.seek-probe-unplayed-top {
+    -fx-background-color: -ct-seek-unplayed-top;
+}
+
+.seek-probe-unplayed-bottom {
+    -fx-background-color: -ct-seek-unplayed-bottom;
 }
 
 /* ---- Text roles -------------------------------------------------------- */
@@ -21,8 +48,25 @@
     -fx-font-size: 14px;
 }
 
+.text-large {
+    -fx-font-size: 18px;
+}
+
+.text-section {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.text-heading {
+    -fx-font-size: 24px;
+}
+
 .text-title {
     -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.text-strong {
     -fx-font-weight: bold;
 }
 
@@ -32,6 +76,29 @@
 
 .icon-accent {
     -fx-text-fill: derive(-ct-accent, -35%);
+}
+
+/* ---- Icons (Ikonli FontIcon): follow the text color of the control ------- */
+
+.ikonli-font-icon {
+    -fx-icon-color: -fx-text-background-color;
+}
+
+.icon-accent .ikonli-font-icon {
+    -fx-icon-color: derive(-ct-accent, -35%);
+}
+
+.icon-danger .ikonli-font-icon {
+    -fx-icon-color: -ct-danger;
+}
+
+.no-lyrics-hint .ikonli-font-icon {
+    -fx-icon-color: -ct-text-dim;
+}
+
+.selected-item .ikonli-font-icon,
+.artist-cell:filled:selected .ikonli-font-icon {
+    -fx-icon-color: #FFF;
 }
 
 .no-lyrics-hint {

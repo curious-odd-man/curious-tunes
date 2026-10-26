@@ -12,6 +12,7 @@ import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItemMovement;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
+import com.github.curiousoddman.curious_tunes.util.UiStyles;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -169,9 +170,9 @@ public class LibraryPlaylistController implements Initializable {
      * @param onlyIfHidden when true the list is scrolled only if the row is not fully visible
      */
     private void scrollToItem(PlaylistItem item, boolean onlyIfHidden) {
-        int                  index = playlistModel.getPlaylistItems()
-                                                  .indexOf(item);
-        ObservableList<Node> rows  = playlistVbox.getChildren();
+        int index = playlistModel.getPlaylistItems()
+                                 .indexOf(item);
+        ObservableList<Node> rows = playlistVbox.getChildren();
         if (index < 0 || index >= rows.size()) {
             return;
         }
@@ -180,16 +181,16 @@ public class LibraryPlaylistController implements Initializable {
 
         double viewport = playlistScroll.getViewportBounds()
                                         .getHeight();
-        double extra    = playlistVbox.getHeight() - viewport;
+        double extra = playlistVbox.getHeight() - viewport;
         if (extra <= 0) {
             return;     // everything fits
         }
-        Node   row       = rows.get(index);
-        double rowTop    = row.getBoundsInParent()
-                              .getMinY();
+        Node row = rows.get(index);
+        double rowTop = row.getBoundsInParent()
+                           .getMinY();
         double rowBottom = row.getBoundsInParent()
                               .getMaxY();
-        double viewTop   = playlistScroll.getVvalue() * extra;
+        double viewTop = playlistScroll.getVvalue() * extra;
         if (onlyIfHidden && rowTop >= viewTop && rowBottom <= viewTop + viewport) {
             return;
         }
@@ -201,7 +202,7 @@ public class LibraryPlaylistController implements Initializable {
         List<PlaylistItem> items = playlistModel.getPlaylistItems();
         if (items.isEmpty()) {
             queueSummaryLabel.setText("Queue is empty");
-            queueSummaryLabel.setTooltip(new Tooltip("Double-click a track, or press ▶ on an artist or an album, to fill the queue"));
+            queueSummaryLabel.setTooltip(new Tooltip("Double-click a track, or use the play buttons on an artist or an album, to fill the queue"));
             return;
         }
         long totalSeconds = items.stream()
@@ -316,6 +317,7 @@ public class LibraryPlaylistController implements Initializable {
         alert.setHeaderText("Clear the queue?");
         alert.initOwner(playlistVbox.getScene()
                                     .getWindow());
+        UiStyles.apply(alert);
         if (alert.showAndWait()
                  .filter(button -> button == ButtonType.OK)
                  .isEmpty()) {

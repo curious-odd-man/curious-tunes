@@ -11,6 +11,7 @@ import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumDiscBundle
 import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
+import com.github.curiousoddman.curious_tunes.util.UiIcons;
 import javafx.animation.FadeTransition;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -67,7 +68,11 @@ public class LibraryArtistAlbumController implements Initializable {
             Integer albumYear = albumBundle.getAlbumInfo()
                                            .getAlbumYear();
             albumTitle.setText(albumInfo.getName());
-            albumDetails.setText(albumYear == null ? "🎵" : String.valueOf(albumYear));
+            if (albumYear == null) {
+                albumDetails.setGraphic(UiIcons.icon(UiIcons.MUSIC_NOTE, 14));
+            } else {
+                albumDetails.setText(String.valueOf(albumYear));
+            }
             List<TrackRecord> albumsTracks = albumBundle.getAlbumTracks();
 
             Map<Optional<Integer>, List<TrackRecord>> groupedByDiscNumber = albumsTracks

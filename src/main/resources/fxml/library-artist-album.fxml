@@ -7,43 +7,43 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
-
-<BorderPane fx:id="pane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumController">
+<BorderPane fx:id="pane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+            xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumController">
     <left>
-      <StackPane onMouseEntered="#onAlbumImageHover" onMouseExited="#onAlbumImageUnhover" BorderPane.alignment="CENTER">
-         <children>
-              <ImageView fx:id="albumImage" fitHeight="350.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="TOP_CENTER">
-               <image>
-                  <Image url="@/img/noimage.png" />
-               </image>
-            </ImageView>
-            <ImageView fx:id="playImageButton" fitHeight="200.0" fitWidth="200.0" onMouseClicked="#onPlayImageClicked" opacity="0.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER">
-               <image>
-                  <Image url="@/img/album-play-button.png" />
-               </image>
-            </ImageView>
-         </children>
-      </StackPane>
+        <StackPane onMouseEntered="#onAlbumImageHover" onMouseExited="#onAlbumImageUnhover"
+                   BorderPane.alignment="CENTER">
+            <children>
+                <ImageView fx:id="albumImage" fitHeight="350.0" fitWidth="350.0" pickOnBounds="true"
+                           preserveRatio="true" StackPane.alignment="TOP_CENTER">
+                    <image>
+                        <Image url="@/img/noimage.png"/>
+                    </image>
+                </ImageView>
+                <ImageView fx:id="playImageButton" fitHeight="200.0" fitWidth="200.0"
+                           onMouseClicked="#onPlayImageClicked" opacity="0.0" pickOnBounds="true" preserveRatio="true"
+                           StackPane.alignment="CENTER">
+                    <image>
+                        <Image url="@/img/album-play-button.png"/>
+                    </image>
+                </ImageView>
+            </children>
+        </StackPane>
     </left>
-   <center>
-          <VBox fx:id="contentsVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="TOP_LEFT">
-              <children>
-                  <Label fx:id="albumTitle" VBox.vgrow="NEVER">
-                      <font>
-                          <Font size="24.0" />
-                      </font>
-                  </Label>
-                  <Label fx:id="albumDetails" layoutX="10.0" layoutY="10.0" VBox.vgrow="NEVER">
-                      <font>
-                          <Font size="14.0" />
-                      </font>
-                  </Label>
-            <VBox fx:id="albumDiscsVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="25.0" VBox.vgrow="ALWAYS" />
-              </children>
-         <BorderPane.margin>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </BorderPane.margin>
-          </VBox>
-   </center>
+    <center>
+        <VBox fx:id="contentsVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+              BorderPane.alignment="TOP_LEFT">
+            <children>
+                <Label fx:id="albumTitle" VBox.vgrow="NEVER" styleClass="text-heading">
+                </Label>
+                <Label fx:id="albumDetails" layoutX="10.0" layoutY="10.0" VBox.vgrow="NEVER" styleClass="text-body">
+                </Label>
+                <VBox fx:id="albumDiscsVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                      spacing="25.0" VBox.vgrow="ALWAYS"/>
+            </children>
+            <BorderPane.margin>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+            </BorderPane.margin>
+        </VBox>
+    </center>
 </BorderPane>
