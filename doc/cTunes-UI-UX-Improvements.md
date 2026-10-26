@@ -606,6 +606,10 @@ Do this before anything else; later steps build on it.
 
 > Exclude 1.1
 
+**Status: DONE (step 1).** 1.1 skipped as requested. Notes: the volume is saved 0.5 s after the last change from any
+source (library slider, keyboard, mute, Now Playing slider); the scanner now reports "N added, M updated, K unchanged";
+the dead `ArtistSelectionModel` and `ArtistItemBundle` files were deleted.
+
 ### Step 2 — Styling foundation (M–L)
 
 Do this before the screen-by-screen steps so new work uses it. See §2.

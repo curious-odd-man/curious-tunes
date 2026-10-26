@@ -11,7 +11,6 @@ import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEv
 import com.github.curiousoddman.curious_tunes.event.RescanLibraryEvent;
 import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
 import com.github.curiousoddman.curious_tunes.model.TrackStatus;
-import com.github.curiousoddman.curious_tunes.util.StartupRunnable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -37,12 +36,12 @@ import static com.github.curiousoddman.curious_tunes.util.FileUtils.audioMd5;
 @Component
 @RequiredArgsConstructor
 public class FilesScanningService /*implements StartupRunnable*/ {
-    private static final int APPROXIMATE_SIZE_OF_MY_LIBRARY = 5000;
-    public static final String LIBRARY_SCAN = "Library Scan";
-    private final ApplicationEventPublisher applicationEventPublisher;
-    private final DataAccess dataAccess;
-    private final MetadataManager metadataManager;
-    private final LyricsCleaner lyricsCleaner;
+    private static final int                       APPROXIMATE_SIZE_OF_MY_LIBRARY = 5000;
+    public static final  String                    LIBRARY_SCAN                   = "Library Scan";
+    private final        ApplicationEventPublisher applicationEventPublisher;
+    private final        DataAccess                dataAccess;
+    private final        MetadataManager           metadataManager;
+    private final        LyricsCleaner             lyricsCleaner;
 
     private boolean shouldInterrupt;
 
@@ -58,6 +57,9 @@ public class FilesScanningService /*implements StartupRunnable*/ {
                 List<Path> paths = doScan(Path.of(libraryRoot));
                 log.info("Discovered {} files. Started processing", paths.size());
                 publishInProgressEvent(paths);
+                int added     = 0;
+                int updated   = 0;
+                int unchanged = 0;
                 for (int i = 0; i < paths.size(); i++) {
                     Path file = paths.get(i);
                     MDC.put("file", String.valueOf(i));
@@ -68,10 +70,14 @@ public class FilesScanningService /*implements StartupRunnable*/ {
                         return;
                     }
 
-                    extractMetadataAndUpdateDatabase(file);
+                    switch (extractMetadataAndUpdateDatabase(file)) {
+                        case ADDED -> added++;
+                        case UPDATED -> updated++;
+                        case UNCHANGED -> unchanged++;
+                    }
                     publishInProgressStatusEvent(i, paths);
                 }
-                publishCompletedEvent();
+                publishCompletedEvent(added, updated, unchanged);
                 log.info("Scanning completed...");
             } catch (Exception e) {
                 publishFailedEvent(e);
@@ -83,14 +89,19 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         rescanThread.start();
     }
 
-    private void extractMetadataAndUpdateDatabase(Path file) {
-        MetadataTags metadata = metadataManager.getMetadata(file);
-        ArtistRecord artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
-        AlbumCover albumCover = metadata.getAlbumCover();
-        AlbumRecord albumRecord = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum(), albumCover == null ? null : albumCover.getData());
-        Optional<TrackRecord> trackRecord = dataAccess.getTrack(file);
+    private enum ScanOutcome {
+        ADDED, UPDATED, UNCHANGED
+    }
+
+    private ScanOutcome extractMetadataAndUpdateDatabase(Path file) {
+        MetadataTags          metadata     = metadataManager.getMetadata(file);
+        ArtistRecord          artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
+        AlbumCover            albumCover   = metadata.getAlbumCover();
+        AlbumRecord           albumRecord  = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum(), albumCover == null ? null : albumCover.getData());
+        Optional<TrackRecord> trackRecord  = dataAccess.getTrack(file);
 
         TrackRecord newTrackRecord;
+        ScanOutcome outcome;
         if (trackRecord.isEmpty()) {
             newTrackRecord = new TrackRecord(
                     null,
@@ -110,23 +121,34 @@ public class FilesScanningService /*implements StartupRunnable*/ {
                     metadata.getLyrics()
             );
             newTrackRecord = dataAccess.insertTrack(newTrackRecord);
+            outcome = ScanOutcome.ADDED;
         } else {
             newTrackRecord = trackRecord.get();
+            outcome = ScanOutcome.UNCHANGED;
             if (metadata.updateTrackIfChanged(newTrackRecord, albumRecord.getId())) {
                 newTrackRecord.update();
+                outcome = ScanOutcome.UPDATED;
             }
         }
-        autoFixLyrics(newTrackRecord);
+        if (autoFixLyrics(newTrackRecord) && outcome == ScanOutcome.UNCHANGED) {
+            outcome = ScanOutcome.UPDATED;
+        }
+        return outcome;
     }
 
-    private void autoFixLyrics(TrackRecord trackRecord) {
-        String lyrics = trackRecord.getLyrics();
+    /**
+     * @return true when the lyrics were changed
+     */
+    private boolean autoFixLyrics(TrackRecord trackRecord) {
+        String        lyrics        = trackRecord.getLyrics();
         CleanerResult cleanerResult = lyricsCleaner.clean(lyrics);
         if (cleanerResult.wasModified()) {
             dataAccess.storeTrackOverride(trackRecord, TRACK.LYRICS, lyrics);
             trackRecord.setLyrics(cleanerResult.cleaned());
             trackRecord.update(TRACK.LYRICS);
+            return true;
         }
+        return false;
     }
 
     @EventListener
@@ -158,11 +180,11 @@ public class FilesScanningService /*implements StartupRunnable*/ {
                         .build());
     }
 
-    private void publishCompletedEvent() {
+    private void publishCompletedEvent(int added, int updated, int unchanged) {
         applicationEventPublisher.publishEvent(
                 getBackgroundProcessEventBuilder()
                         .eventType(BackgroundProcessEventType.ENDED)
-                        .description("Interrupted")
+                        .description("%d added, %d updated, %d unchanged".formatted(added, updated, unchanged))
                         .build());
     }
 

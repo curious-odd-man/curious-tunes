@@ -9,7 +9,7 @@
       xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumTrackController">
     <children>
-        <Label fx:id="warningLabel" text="⚠" styleClass="warning-icon" visible="false" HBox.hgrow="NEVER">
+        <Label fx:id="warningLabel" text="⚠" styleClass="no-lyrics-hint" visible="false" HBox.hgrow="NEVER">
             <font>
                 <Font size="14.0"/>
             </font>

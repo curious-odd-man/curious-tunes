@@ -130,6 +130,7 @@ public class PlaybackWindow {
     private Label                volumeIcon;
     private Slider               volumeSlider;
     private boolean              volumeBound;
+    private double               volumeBeforeMute = 30;
     private Timeline             sessionTicker;
 
     // ── Up next ──────────────────────────────────────────────────────────────
@@ -392,10 +393,18 @@ public class PlaybackWindow {
 
         volumeIcon = label();
         volumeIcon.setText("🔊");
-        volumeIcon.setTooltip(new Tooltip("Volume"));
+        volumeIcon.setTooltip(new Tooltip("Click to mute / unmute"));
+        volumeIcon.setCursor(Cursor.HAND);
+        volumeIcon.setOnMouseClicked(e -> toggleMute());
         volumeSlider = new Slider(0, 100, 30);
         volumeSlider.setPrefWidth(120);
-        volumeSlider.setTooltip(new Tooltip("Volume"));
+        Tooltip volumeTooltip = new Tooltip();
+        volumeTooltip.textProperty()
+                     .bind(volumeSlider.valueProperty()
+                                       .asString("Volume: %.0f%%"));
+        volumeSlider.setTooltip(volumeTooltip);
+        volumeSlider.valueProperty()
+                    .addListener((obs, oldValue, newValue) -> updateVolumeIcon(newValue.doubleValue()));
         volumeSlider.setOnMouseReleased(e ->
                 userPreferencesService.saveVolume((int) Math.round(volumeSlider.getValue())));
 
@@ -716,9 +725,9 @@ public class PlaybackWindow {
     }
 
     private void updateUpNext() {
-        PlaylistItem next    = audioPlayer.getNextPlaylistItemProperty()
-                                          .get();
-        boolean      hasNext = next != null;
+        PlaylistItem next = audioPlayer.getNextPlaylistItemProperty()
+                                       .get();
+        boolean hasNext = next != null;
 
         cardArtView.setVisible(hasNext);
         cardArtView.setManaged(hasNext);
@@ -992,6 +1001,20 @@ public class PlaybackWindow {
     // =========================================================================
     // Volume, tickers, window bounds
     // =========================================================================
+
+    private void updateVolumeIcon(double volume) {
+        volumeIcon.setText(volume <= 0 ? "🔇" : volume < 34 ? "🔈" : volume < 67 ? "🔉" : "🔊");
+    }
+
+    private void toggleMute() {
+        double volume = volumeSlider.getValue();
+        if (volume > 0) {
+            volumeBeforeMute = volume;
+            volumeSlider.setValue(0);
+        } else {
+            volumeSlider.setValue(volumeBeforeMute > 0 ? volumeBeforeMute : 30);
+        }
+    }
 
     private void bindVolume() {
         if (!volumeBound) {

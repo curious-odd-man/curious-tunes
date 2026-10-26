@@ -213,12 +213,13 @@ public class LibraryController implements Initializable {
     // ---- artists: all of them, and the ones that match the search text
     private static final String ARTIST_LETTERS = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    private final ObservableList<ArtistRecord> allArtists        = FXCollections.observableArrayList();
-    private final FilteredList<ArtistRecord>   visibleArtists    = new FilteredList<>(allArtists);
-    private final Map<Character, Label>        letterLabels      = new LinkedHashMap<>();
-    private final Label                        artistPlaceholder = new Label("Loading artists…");
+    private final ObservableList<ArtistRecord> allArtists           = FXCollections.observableArrayList();
+    private final FilteredList<ArtistRecord>   visibleArtists       = new FilteredList<>(allArtists);
+    private final Map<Character, Label>        letterLabels         = new LinkedHashMap<>();
+    private final Label                        artistPlaceholder    = new Label("Loading artists…");
+    private final Button                       addMusicFolderButton = new Button("Add music folder…");
     private       boolean                      artistsLoaded;
-    private       int                          shownArtistId     = -1;
+    private       int                          shownArtistId        = -1;
 
     // ---- transport bar
     private final Tooltip nowPlayingTooltip = new Tooltip();
@@ -227,7 +228,6 @@ public class LibraryController implements Initializable {
 
     // ---- status bar
     private final PauseTransition toastTimer = new PauseTransition(Duration.seconds(5));
-    private       int             lastTaskTotal;
 
     // ---- albums view (list / grid)
     private final AtomicInteger                                  albumsRequestId = new AtomicInteger();
@@ -501,10 +501,10 @@ public class LibraryController implements Initializable {
         albumsListToggle.setSelected(true);
         Platform.runLater(() -> {
             albumsScroll.layout();
-            double content  = artistAlbumsView.getHeight();
+            double content = artistAlbumsView.getHeight();
             double viewport = albumsScroll.getViewportBounds()
                                           .getHeight();
-            double extra    = content - viewport;
+            double extra = content - viewport;
             if (extra > 0) {
                 double top = album.parent()
                                   .getBoundsInParent()
@@ -533,9 +533,12 @@ public class LibraryController implements Initializable {
                     .addListener(invalidationListener);
 
         volumeControl.setValue(userPreferencesService.getVolume());
-        volumeControl.setOnMouseReleased(_ ->
-                userPreferencesService.saveVolume((int) Math.round(volumeControl.getValue()))
-        );
+        // Mouse, keyboard, mute and the Now Playing slider all change this value; save once it settles.
+        DelayedAction delayedSaveVolume = new DelayedAction(500, TimeUnit.MILLISECONDS);
+        volumeControl.valueProperty()
+                     .addListener((obs, oldValue, newValue) ->
+                             delayedSaveVolume.reSchedule(() ->
+                                     userPreferencesService.saveVolume((int) Math.round(newValue.doubleValue()))));
 
         librarySplitPane.setDividerPositions(userPreferencesService.getDividerPositions());
         DelayedAction delayedSaveDividerPosition = new DelayedAction(500, TimeUnit.MILLISECONDS);
@@ -620,10 +623,6 @@ public class LibraryController implements Initializable {
     private void showTask(BackgroundProcessEvent event, BackgroundProcessEventType type) {
         if (type == BackgroundProcessEventType.STARTED) {
             taskCancelButton.setDisable(false);
-            lastTaskTotal = 0;
-        }
-        if (event.getMaxProgress() > 0) {
-            lastTaskTotal = event.getMaxProgress();
         }
         String text = Objects.toString(event.getProcessName(), "") + ": " + Objects.toString(event.getDescription(), "");
         if (event.getMaxProgress() > 0) {
@@ -641,9 +640,12 @@ public class LibraryController implements Initializable {
     private void reportTaskResult(BackgroundProcessEvent event, BackgroundProcessEventType type) {
         String name = Objects.toString(event.getProcessName(), "Task");
         switch (type) {
-            case ENDED -> showToast(lastTaskTotal > 0
-                    ? name + " finished (" + lastTaskTotal + " files)"
-                    : name + " finished", false);
+            case ENDED -> {
+                String summary = event.getDescription();
+                showToast(summary == null || summary.isBlank()
+                        ? name + " finished"
+                        : name + " finished: " + summary, false);
+            }
             case INTERRUPTED -> showToast(name + " was cancelled", false);
             case FAILED -> showToast(name + " failed" + (event.getError() == null || event.getError()
                                                                                           .getMessage() == null
@@ -718,7 +720,11 @@ public class LibraryController implements Initializable {
     private void initArtistList() {
         artistListView.setItems(visibleArtists);
         artistListView.setCellFactory(_ -> new ArtistCell());
-        artistListView.setPlaceholder(artistPlaceholder);
+        addMusicFolderButton.setOnAction(this::onRescanMenuClicked);
+        setShown(addMusicFolderButton, false);
+        VBox placeholderBox = new VBox(10, artistPlaceholder, addMusicFolderButton);
+        placeholderBox.setAlignment(Pos.CENTER);
+        artistListView.setPlaceholder(placeholderBox);
         artistPlaceholder.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
         artistPlaceholder.getStyleClass()
                          .add("dim-text");
@@ -869,10 +875,11 @@ public class LibraryController implements Initializable {
                      .add("letter-empty");
             }
         });
+        setShown(addMusicFolderButton, artistsLoaded && allArtists.isEmpty());
         if (!artistsLoaded) {
             artistPlaceholder.setText("Loading artists…");
         } else if (allArtists.isEmpty()) {
-            artistPlaceholder.setText("No music yet.\nUse File ▸ Rescan library…");
+            artistPlaceholder.setText("No music yet");
         } else {
             artistPlaceholder.setText("No artists match");
         }
@@ -1128,7 +1135,7 @@ public class LibraryController implements Initializable {
         }
         TrackRecord currentTrack = current.get()
                                           .getTrackRecord();
-        Long        duration     = currentTrack.getDuration();
+        Long duration = currentTrack.getDuration();
         if (duration == null) {
             return;
         }

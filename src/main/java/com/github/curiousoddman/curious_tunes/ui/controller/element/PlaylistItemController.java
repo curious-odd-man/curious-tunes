@@ -81,7 +81,7 @@ public class PlaylistItemController implements Initializable {
             TrackRecord trackRecord = playlistItem.getTrackRecord();
             rightText.setText(TimeUtils.secondsToHumanTime(trackRecord.getDuration()));
             topText.setText(trackRecord.getTitle());
-            bottomText.setText(playlistItemResourceBundle.getArtist() + "  ---  " + albumRecord.getName());
+            bottomText.setText(playlistItemResourceBundle.getArtist() + " · " + albumRecord.getName());
             playlistSelectionModel = playlistItemResourceBundle.getPlaylistModel();
             playlistSelectionModel
                     .getSelectionModel()
