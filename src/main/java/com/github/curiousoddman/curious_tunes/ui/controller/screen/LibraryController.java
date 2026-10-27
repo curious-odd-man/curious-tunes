@@ -15,6 +15,7 @@ import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEv
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
 import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
+import com.github.curiousoddman.curious_tunes.event.ShowInLibraryEvent;
 import com.github.curiousoddman.curious_tunes.event.SkipNextEvent;
 import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
@@ -222,6 +223,7 @@ public class LibraryController implements Initializable {
     private final Button                       addMusicFolderButton = new Button("Add music folder…");
     private       boolean                      artistsLoaded;
     private       int                          shownArtistId        = -1;
+    private       TrackInfo                    pendingRevealTrack;       // "Show in library": select this track when its albums are shown
 
     // ---- transport bar
     private final Tooltip nowPlayingTooltip = new Tooltip();
@@ -411,6 +413,59 @@ public class LibraryController implements Initializable {
                      .add(card);
         }
         applyCoverSize();
+        revealPendingTrack();
+    }
+
+    /**
+     * "Show in library" from the queue: select the artist, then the track once the albums are shown.
+     */
+    @EventListener
+    public void onShowInLibrary(ShowInLibraryEvent event) {
+        runOnFxThread(() -> {
+            TrackInfo track = event.getTrackInfo();
+            if (track.getTrackArtist() == null) {
+                return;
+            }
+            int artistId = track.getTrackArtist()
+                                .getId();
+            ArtistRecord artist = allArtists.stream()
+                                            .filter(a -> a.getId() == artistId)
+                                            .findFirst()
+                                            .orElse(null);
+            if (artist == null) {
+                return;
+            }
+            tabPane.getSelectionModel()
+                   .select(0);
+            searchField.clear();        // a filter could hide the artist
+            pendingRevealTrack = track;
+            if (shownArtistId == artistId && !currentAlbums.isEmpty()) {
+                revealPendingTrack();
+            } else {
+                artistListView.getSelectionModel()
+                              .select(artist);
+                artistListView.scrollTo(artist);
+            }
+        });
+    }
+
+    private void revealPendingTrack() {
+        TrackInfo track = pendingRevealTrack;
+        if (track == null) {
+            return;
+        }
+        pendingRevealTrack = null;
+        TrackSelectionModel trackSelection = currentTrackSelectionModel;
+        TrackInfo           found          = trackSelection == null ? null : trackSelection.findByTrackId(track.getTrackId());
+        if (found != null) {
+            trackSelection.selectOnly(found);
+        }
+        currentAlbums.stream()
+                     .filter(album -> Objects.equals(album.controller()
+                                                          .getAlbumInfo()
+                                                          .getId(), track.getAlbumId()))
+                     .findFirst()
+                     .ifPresent(this::openAlbumInList);
     }
 
     // =========================================================================
@@ -1068,6 +1123,24 @@ public class LibraryController implements Initializable {
                              .requestFocus();
                     }
                 }));
+
+        // Alt+Up/Down move the selected queue rows, Ctrl+A selects all of them. A filter: otherwise the
+        // scroll pane of the queue would use the keys itself.
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (activeArea != ActiveArea.QUEUE || scene.getFocusOwner() instanceof TextInputControl) {
+                return;
+            }
+            if (event.isAltDown() && event.getCode() == KeyCode.UP) {
+                playlistController.moveSelectedUp();
+                event.consume();
+            } else if (event.isAltDown() && event.getCode() == KeyCode.DOWN) {
+                playlistController.moveSelectedDown();
+                event.consume();
+            } else if (event.isShortcutDown() && event.getCode() == KeyCode.A) {
+                playlistController.selectAll();
+                event.consume();
+            }
+        });
 
         scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.F && event.isShortcutDown()) {

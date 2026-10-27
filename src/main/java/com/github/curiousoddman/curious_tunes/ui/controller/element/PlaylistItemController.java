@@ -6,16 +6,21 @@ import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistDragHandler;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItemStatus;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
+import com.github.curiousoddman.curious_tunes.util.UiIcons;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseButton;
@@ -31,13 +36,14 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.Set;
 
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.BORDERED_ITEM;
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_DRAG_GUIDE;
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_DRAG_GUIDE_BELOW;
+import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_ITEM_MISSING;
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_ITEM_PLAYED;
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_ITEM_PLAYING;
+import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_ITEM_SKIPPED;
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.SELECTED_ITEM;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
@@ -47,6 +53,8 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class PlaylistItemController implements Initializable {
+    private static final double COVER_MIN_ROW_WIDTH = 230;
+
     private final ApplicationEventPublisher eventPublisher;
     @FXML
     public        ImageView                 image;
@@ -62,16 +70,39 @@ public class PlaylistItemController implements Initializable {
     private       PlaylistItem              playlistItem;
     private       PlaylistModel             playlistSelectionModel;
     private       PlaylistDragHandler       playlistDragHandler;
+    private final Tooltip                   missingFileTooltip = new Tooltip();
+    private       boolean                   missingFileTooltipInstalled;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         pane.getStyleClass()
             .add(BORDERED_ITEM);
         contextMenu = new ContextMenu();
-        MenuItem remove = new MenuItem("Remove from queue");
+        MenuItem playNext      = new MenuItem("Play next");
+        MenuItem moveToEnd     = new MenuItem("Move to end");
+        MenuItem showInLibrary = new MenuItem("Show in library");
+        MenuItem remove        = new MenuItem("Remove from queue");
+        playNext.setOnAction(_ -> playlistDragHandler.moveToNext(playlistItem));
+        moveToEnd.setOnAction(_ -> playlistDragHandler.moveToEnd(playlistItem));
+        showInLibrary.setOnAction(_ -> playlistDragHandler.showInLibrary(playlistItem));
         remove.setOnAction(_ -> playlistDragHandler.removeItem(playlistItem));
         contextMenu.getItems()
-                   .add(remove);
+                   .addAll(playNext, moveToEnd, showInLibrary, new SeparatorMenuItem(), remove);
+        // The track that is playing stays where it is.
+        contextMenu.setOnShowing(_ -> {
+            boolean playing = playlistItem.getPlaylistItemStatus() == PlaylistItemStatus.PLAYING;
+            playNext.setDisable(playing);
+            moveToEnd.setDisable(playing);
+        });
+
+        // In a narrow queue pane the cover is dropped to leave room for the text.
+        pane.widthProperty()
+            .addListener((obs, oldWidth, width) -> {
+                boolean showCover = width.doubleValue() >= COVER_MIN_ROW_WIDTH;
+                image.setVisible(showCover);
+                image.setManaged(showCover);
+            });
+        rightText.setContentDisplay(ContentDisplay.LEFT);
 
         if (resources instanceof PlaylistItemResourceBundle playlistItemResourceBundle) {
             AlbumRecord albumRecord = playlistItemResourceBundle.getPlaylistItem()
@@ -127,15 +158,35 @@ public class PlaylistItemController implements Initializable {
     }
 
     public void updateStyleFromPlayerStatus() {
-        String styleClass = switch (playlistItem.getPlaylistItemStatus()) {
-            case PLAYING -> PLAYLIST_ITEM_PLAYING;
-            case SKIPPED, QUEUED, FILE_NOT_FOUND, TO_BE_SKIPPED -> null;
-            case PLAYED -> PLAYLIST_ITEM_PLAYED;
-        };
-        if (styleClass != null) {
-            ObservableList<String> styleClassList = pane.getStyleClass();
-            styleClassList.removeAll(Set.of(PLAYLIST_ITEM_PLAYING, PLAYLIST_ITEM_PLAYED));     // FIXME
-            styleClassList.add(styleClass);
+        PlaylistItemStatus     status         = playlistItem.getPlaylistItemStatus();
+        ObservableList<String> styleClassList = pane.getStyleClass();
+        styleClassList.removeAll(PLAYLIST_ITEM_PLAYING, PLAYLIST_ITEM_PLAYED, PLAYLIST_ITEM_MISSING, PLAYLIST_ITEM_SKIPPED);
+        switch (status) {
+            case PLAYING -> styleClassList.add(PLAYLIST_ITEM_PLAYING);
+            case PLAYED -> styleClassList.add(PLAYLIST_ITEM_PLAYED);
+            case FILE_NOT_FOUND -> styleClassList.add(PLAYLIST_ITEM_MISSING);
+            case SKIPPED, TO_BE_SKIPPED -> styleClassList.add(PLAYLIST_ITEM_SKIPPED);
+            case QUEUED -> {
+            }
+        }
+
+        // The icon next to the duration: play for the track that is playing, a warning for a missing file.
+        switch (status) {
+            case PLAYING -> rightText.setGraphic(UiIcons.icon(UiIcons.PLAY, 14));
+            case FILE_NOT_FOUND -> rightText.setGraphic(UiIcons.icon("mdi2a-alert-circle-outline", 14));
+            default -> rightText.setGraphic(null);
+        }
+
+        boolean missing = status == PlaylistItemStatus.FILE_NOT_FOUND;
+        if (missing) {
+            missingFileTooltip.setText("File not found:\n" + playlistItem.getFileLocation());
+            if (!missingFileTooltipInstalled) {
+                Tooltip.install(pane, missingFileTooltip);
+                missingFileTooltipInstalled = true;
+            }
+        } else if (missingFileTooltipInstalled) {
+            Tooltip.uninstall(pane, missingFileTooltip);
+            missingFileTooltipInstalled = false;
         }
     }
 

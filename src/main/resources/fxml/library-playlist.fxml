@@ -87,7 +87,7 @@
     </top>
     <center>
         <ScrollPane fx:id="playlistScroll" fitToWidth="true" hbarPolicy="NEVER" maxHeight="1.7976931348623157E308"
-                    maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" vbarPolicy="ALWAYS"
+                    maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" vbarPolicy="AS_NEEDED"
                     BorderPane.alignment="CENTER">
             <content>
                 <VBox fx:id="playlistVbox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"

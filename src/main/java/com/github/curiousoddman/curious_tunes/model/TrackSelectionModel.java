@@ -22,6 +22,20 @@ public class TrackSelectionModel {
         registered.add(trackInfo);
     }
 
+    /**
+     * @return the registered track with this id, or null
+     */
+    public TrackInfo findByTrackId(Integer trackId) {
+        synchronized (registered) {
+            for (TrackInfo track : registered) {
+                if (Objects.equals(track.getTrackId(), trackId)) {
+                    return track;
+                }
+            }
+        }
+        return null;
+    }
+
     public ObservableList<TrackInfo> getSelectedItems() {
         return FXCollections.unmodifiableObservableList(selected);
     }

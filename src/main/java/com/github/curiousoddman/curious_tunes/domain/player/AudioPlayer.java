@@ -7,6 +7,7 @@ import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.SkipNextEvent;
 import com.github.curiousoddman.curious_tunes.event.UserShutdownApplication;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
+import com.github.curiousoddman.curious_tunes.event.player.PlaylistChangedEvent;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
@@ -169,13 +170,7 @@ public class AudioPlayer {
         Optional<PlaylistItem> nextForPlayback = playlistModel.getNextForPlayback();
 
         // Preload next track
-        if (nextForPlayback.isPresent()) {
-            setNextPlaylistItem(nextForPlayback.get());
-            log.info("Preloading: {}", nextPlaylistItem.getTitle());
-            Media nextMedia = mediaProvider.getMedia(nextPlaylistItem.getTrackRecord());
-            nextPlayer = new MediaPlayer(nextMedia);
-            nextPlayer.setOnError(() -> log.error("Error loading next track:", nextPlayer.getError()));
-        }
+        nextForPlayback.ifPresent(this::preloadNext);
 
         // Set up transition to next track
         currentPlayer.setOnEndOfMedia(() -> {
@@ -229,6 +224,39 @@ public class AudioPlayer {
     public void seek(Duration duration) {
         if (currentPlayer != null) {
             currentPlayer.seek(duration);
+        }
+    }
+
+    private void preloadNext(PlaylistItem item) {
+        setNextPlaylistItem(item);
+        log.info("Preloading: {}", item.getTitle());
+        Media       nextMedia = mediaProvider.getMedia(item.getTrackRecord());
+        MediaPlayer preloaded = new MediaPlayer(nextMedia);
+        preloaded.setOnError(() -> log.error("Error loading next track:", preloaded.getError()));
+        nextPlayer = preloaded;
+    }
+
+    /**
+     * The queue was reordered, or tracks were added or removed: preload the track that is next now,
+     * so that the track that plays after the current one is the one the user sees in the queue.
+     */
+    @EventListener
+    public void onPlaylistChanged(PlaylistChangedEvent event) {
+        if (currentPlayer == null) {
+            return;     // nothing is playing; the next track is picked when playback starts
+        }
+        PlaylistItem wanted = playlistModel.getNextForPlayback()
+                                           .orElse(null);
+        if (wanted == nextPlaylistItem) {
+            return;     // the same track object is already preloaded
+        }
+        if (nextPlayer != null) {
+            nextPlayer.dispose();
+            nextPlayer = null;
+        }
+        setNextPlaylistItem(null);
+        if (wanted != null) {
+            preloadNext(wanted);
         }
     }
 

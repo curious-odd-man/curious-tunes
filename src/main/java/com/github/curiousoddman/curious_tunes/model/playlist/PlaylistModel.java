@@ -5,6 +5,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
+import com.github.curiousoddman.curious_tunes.event.player.PlaylistChangedEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlaylistResetEvent;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
@@ -74,6 +75,7 @@ public class PlaylistModel {
 
         selectionModel.clearSelection();
         logPlaylistItems();
+        changed();
     }
 
     public void clear() {
@@ -82,6 +84,7 @@ public class PlaylistModel {
         playlistItems.clear();
         logPlaylistItems();
         eventPublisher.publishEvent(new PlaylistResetEvent(this));
+        changed();
     }
 
     public List<PlaylistItemMovement> moveSelectedUp() {
@@ -115,6 +118,9 @@ public class PlaylistModel {
         }
 
         logPlaylistItems();
+        if (!movements.isEmpty()) {
+            changed();
+        }
         return movements;
     }
 
@@ -146,6 +152,9 @@ public class PlaylistModel {
         }
 
         logPlaylistItems();
+        if (!movements.isEmpty()) {
+            changed();
+        }
         return movements;
     }
 
@@ -185,10 +194,10 @@ public class PlaylistModel {
                                                       .toList();
 
         // Count how many selected items sit before toIndex (they shift toIndex left)
-        long before     = indicesToMove.stream()
-                                       .filter(i -> i < toIndex)
-                                       .count();
-        int  adjustedTo = (int) (toIndex - before);
+        long before = indicesToMove.stream()
+                                   .filter(i -> i < toIndex)
+                                   .count();
+        int adjustedTo = (int) (toIndex - before);
 
         playlistItems.removeAll(itemsToMove);
         adjustedTo = Math.max(0, Math.min(adjustedTo, playlistItems.size()));
@@ -201,6 +210,46 @@ public class PlaylistModel {
         }
 
         logPlaylistItems();
+        changed();
+    }
+
+    /**
+     * Puts the item right after the track that is playing now (or first, when nothing has played).
+     *
+     * @return false when the item is not in the queue or is the track that is playing
+     */
+    public boolean moveToNext(PlaylistItem item) {
+        int from = playlistItems.indexOf(item);
+        if (from < 0 || item.equals(currentlyPlayingItem)) {
+            return false;
+        }
+        playlistItems.remove(from);
+        int current = currentlyPlayingItem == null ? -1 : playlistItems.indexOf(currentlyPlayingItem);
+        playlistItems.add(current + 1, item);
+        selectionModel.clearAndSelect(item);
+        logPlaylistItems();
+        changed();
+        return true;
+    }
+
+    /**
+     * @return false when the item is not in the queue or is the track that is playing
+     */
+    public boolean moveToEnd(PlaylistItem item) {
+        int from = playlistItems.indexOf(item);
+        if (from < 0 || item.equals(currentlyPlayingItem)) {
+            return false;
+        }
+        playlistItems.remove(from);
+        playlistItems.add(item);
+        selectionModel.clearAndSelect(item);
+        logPlaylistItems();
+        changed();
+        return true;
+    }
+
+    private void changed() {
+        eventPublisher.publishEvent(new PlaylistChangedEvent(this));
     }
 
     public OptionalInt deleteSelected() {
@@ -219,6 +268,7 @@ public class PlaylistModel {
         }
 
         logPlaylistItems();
+        changed();
         return OptionalInt.of(selectedIndex);
     }
 
@@ -240,6 +290,7 @@ public class PlaylistModel {
         }
         selectionModel.clearSelection();
         logPlaylistItems();
+        changed();
         return sorted;
     }
 
@@ -247,6 +298,7 @@ public class PlaylistModel {
         shuffleKeepingCurrent();
         selectionModel.clearSelection();
         logPlaylistItems();
+        changed();
     }
 
     private void shuffleKeepingCurrent() {

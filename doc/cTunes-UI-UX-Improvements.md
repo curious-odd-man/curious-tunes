@@ -627,11 +627,14 @@ Do this before the screen-by-screen steps so new work uses it. See §2.
   §11.11, §13).
 
 **Status: DONE (step 2).** Notes:
-- Icons: Ikonli 12.4.0 (`ikonli-javafx` + `ikonli-materialdesign2-pack`, added to `build.gradle`). All literals were checked
+
+- Icons: Ikonli 12.4.0 (`ikonli-javafx` + `ikonli-materialdesign2-pack`, added to `build.gradle`). All literals were
+  checked
   against the pack's source. `UiIcons` holds the constants/helpers; icons follow the text colour through CSS
   (`.ikonli-font-icon`), and the Now Playing window uses its palette colour (`-pw-text`).
 - Type scale: `.text-small/-body/-large/-section/-heading/-title/-strong`; no `<Font>` nodes left in the FXML.
-- `UiStyles.apply(...)` puts `global.css` on every Scene and Dialog (Rescan dialog, About, queue confirmation, Now Playing).
+- `UiStyles.apply(...)` puts `global.css` on every Scene and Dialog (Rescan dialog, About, queue confirmation, Now
+  Playing).
 - Library window minimum size: 900 × 560.
 - Seek bar: colours are the `-ct-seek-*` tokens, read back from the stylesheet through invisible probe nodes.
 - Contrast: accent `#2563eb` (white text on it ≈ 5:1), inactive selection `#64748b`, danger `#c62f2f`, dim text 62 %
@@ -641,14 +644,27 @@ Do this before the screen-by-screen steps so new work uses it. See §2.
 
 See §6.
 
-- [ ] 3.1 Style for missing-file and skipped tracks (strikethrough/warning icon + tooltip) and a ▶ icon on the playing
+- [x] 3.1 Style for missing-file and skipped tracks (strikethrough/warning icon + tooltip) and a ▶ icon on the playing
   row (§6.5).
-- [ ] 3.2 Scrollbar `AS_NEEDED` and optional hidden cover in the narrow pane (§6.8).
-- [ ] 3.3 Keyboard: Alt+↑/↓ move, Ctrl+A select all (§6.10).
-- [ ] 3.4 Drag several selected rows at once with a count badge (§6.6).
-- [ ] 3.5 Update the queue incrementally instead of rebuilding (keeps scroll position and selection) (§6.4).
-- [ ] 3.6 Context menu: *Play next*, *Move to end*, *Show in library*. **Blocked by** the player's preloaded next
+- [x] 3.2 Scrollbar `AS_NEEDED` and optional hidden cover in the narrow pane (§6.8).
+- [x] 3.3 Keyboard: Alt+↑/↓ move, Ctrl+A select all (§6.10).
+- [x] 3.4 Drag several selected rows at once with a count badge (§6.6).
+- [x] 3.5 Update the queue incrementally instead of rebuilding (keeps scroll position and selection) (§6.4).
+- [x] 3.6 Context menu: *Play next*, *Move to end*, *Show in library*. **Blocked by** the player's preloaded next
   track (see Step 10).
+
+**Status: DONE (step 3).** Notes:
+
+- 3.6 needed the player change from Step 10: the model now publishes a `PlaylistChangedEvent` after every change of
+  the queue, and `AudioPlayer` re-preloads the next track when it is no longer the right one
+  (reordering, removing, "Play next", "Move to end", shuffle, adding after the current track). This also fixes
+  drag-and-drop and Remove, which could leave a stale preloaded track.
+- Queue rows are kept when the queue changes (selection, style and scroll position stay); only new tracks get new rows.
+  Remove (button, Delete key) now removes all selected rows, not just one.
+- Missing-file and skipped tracks have styles (and a tooltip with the path), but nothing sets `FILE_NOT_FOUND` yet —
+  that comes with step 9.4.
+- Keys in the queue: Alt+↑/↓ move the selected rows, Ctrl+A selects all.
+- Context menu: Play next, Move to end, Show in library, Remove from queue.
 
 ### Step 4 — Library lists: artists, albums, tracks (M–L)
 
@@ -743,28 +759,39 @@ See §13.
 
 These cannot be done in the UI layer alone.
 
-| Item                                                                            | What is needed                                                                                                                                                                                                            |
-|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Previous track** (§3.4, §11.6)                                                | The player only supports "skip next". Needs a notion of "go back" in the queue (or "restart the track").                                                                                                                  |
-| **Queue reordering that affects the next track** (§6.3: Play next, Move to end) | The player preloads the next track; reordering or removing it leaves the preloaded one stale. Needs the player to re-evaluate the next track when the queue changes. This already affects drag-and-drop and Remove today. |
-| **Save the queue across restarts** (§6.11)                                      | No table exists for it in the migrations (`V001`–`V005`). Needs a schema addition and load/save logic. Confirm first that it really is not stored.                                                                        |
-| **Scan result counts** (1.5)                                                    | The scanner reports progress but not added/updated counts.                                                                                                                                                                |
+| Item                                                                                               | What is needed                                                                                                                                                                                                            |
+|----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Previous track** (§3.4, §11.6)                                                                   | The player only supports "skip next". Needs a notion of "go back" in the queue (or "restart the track").                                                                                                                  |
+| **Queue reordering that affects the next track** *(DONE in step 3)* (§6.3: Play next, Move to end) | The player preloads the next track; reordering or removing it leaves the preloaded one stale. Needs the player to re-evaluate the next track when the queue changes. This already affects drag-and-drop and Remove today. |
+| **Save the queue across restarts** (§6.11)                                                         | No table exists for it in the migrations (`V001`–`V005`). Needs a schema addition and load/save logic. Confirm first that it really is not stored.                                                                        |
+| **Scan result counts** (1.5)                                                                       | The scanner reports progress but not added/updated counts.                                                                                                                                                                |
 
 ### Decisions needed from you
 
 1. **Icons (2.1):** add a library (Ikonli) as a dependency, or use SVG shapes in the project? Either way the emoji go
    away.
+
 > Ikonli
+
 2. **Default list-view cover size (4.9):** keep 350 px or reduce to ~200 px?
+
 > Keep 350px
+
 3. **Layout by size in Now Playing (7.2):** still wanted now that the lyrics drawer and fullscreen exist?
+
 > yes
+
 4. **Queue persistence (Step 10):** wanted? It is the only item that adds a database table.
+
 > no
+
 5. **History tab (Step 6):** which parts do you want — all of it, or only the performance fix (6.1) and row actions (
    6.5)?
+
 > see comment in section
+
 6. **Settings dialog (8.2):** worth building now, or later?
+
 > build now
 
 ### Suggested order

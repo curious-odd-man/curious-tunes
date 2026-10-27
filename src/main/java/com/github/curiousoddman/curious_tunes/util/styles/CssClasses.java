@@ -12,4 +12,6 @@ public class CssClasses {
     public static final String LIBRARY_TRACK_PLAYING     = "library-track-playing";
     public static final String FIELD_OVERRIDDEN          = "field-overridden";
     public static final String TOAST_ERROR               = "toast-error";
+    public static final String PLAYLIST_ITEM_MISSING     = "playlist-item-missing";
+    public static final String PLAYLIST_ITEM_SKIPPED     = "playlist-item-skipped";
 }

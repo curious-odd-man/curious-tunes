@@ -21,4 +21,19 @@ public interface PlaylistDragHandler {
      * Removes the item from the queue (context menu action).
      */
     void removeItem(PlaylistItem playlistItem);
+
+    /**
+     * Puts the item right after the track that is playing (context menu action).
+     */
+    void moveToNext(PlaylistItem playlistItem);
+
+    /**
+     * Puts the item at the end of the queue (context menu action).
+     */
+    void moveToEnd(PlaylistItem playlistItem);
+
+    /**
+     * Shows the track in the library: its artist and album (context menu action).
+     */
+    void showInLibrary(PlaylistItem playlistItem);
 }

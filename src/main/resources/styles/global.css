@@ -165,6 +165,43 @@
     -fx-opacity: 0.5;
 }
 
+/* A track whose file is missing: struck through with a warning; a skipped track is dimmed. */
+.playlist-item-missing {
+    -fx-opacity: 0.75;
+}
+
+.playlist-item-missing .label {
+    -fx-strikethrough: true;
+}
+
+.playlist-item-missing .ikonli-font-icon {
+    -fx-icon-color: -ct-danger;
+}
+
+.playlist-item-skipped {
+    -fx-opacity: 0.5;
+}
+
+.playlist-item-skipped .playlist-title {
+    -fx-strikethrough: true;
+}
+
+.playlist-item-playing .ikonli-font-icon {
+    -fx-icon-color: -ct-playing;
+}
+
+.playlist-item-playing.selected-item .ikonli-font-icon {
+    -fx-icon-color: #FFF;
+}
+
+.drag-badge {
+    -fx-background-color: -ct-accent;
+    -fx-background-radius: 10;
+    -fx-text-fill: #FFF;
+    -fx-font-weight: bold;
+    -fx-padding: 1 7 1 7;
+}
+
 /* ---- Selection when the window is not focused -------------------------- */
 /* The "window-inactive" style class is toggled on the scene root by StageManager. */
 
