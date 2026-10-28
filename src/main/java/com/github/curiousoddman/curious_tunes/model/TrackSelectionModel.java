@@ -3,11 +3,14 @@ package com.github.curiousoddman.curious_tunes.model;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Selection of the tracks shown for one artist: single, Ctrl-toggle and Shift-range (within one album).
@@ -17,9 +20,46 @@ public class TrackSelectionModel {
     private final List<TrackInfo>           registered = Collections.synchronizedList(new ArrayList<>());
     private final ObservableList<TrackInfo> selected   = FXCollections.observableArrayList();
     private       TrackInfo                 anchor;
+    private final Map<Integer, Node>        rows       = new ConcurrentHashMap<>();
 
     public void register(TrackInfo trackInfo) {
         registered.add(trackInfo);
+    }
+
+    /**
+     * Registers a track together with the row that shows it (used to scroll to the row).
+     */
+    public void register(TrackInfo trackInfo, Node row) {
+        registered.add(trackInfo);
+        if (trackInfo.getTrackId() != null) {
+            rows.put(trackInfo.getTrackId(), row);
+        }
+    }
+
+    public Node rowOf(TrackInfo trackInfo) {
+        return trackInfo.getTrackId() == null ? null : rows.get(trackInfo.getTrackId());
+    }
+
+    public TrackInfo getAnchor() {
+        return anchor;
+    }
+
+    /**
+     * All tracks in the order they are shown: album by album (in the given order of albums), each album in its
+     * own track order.
+     */
+    public List<TrackInfo> inDisplayOrder(List<Integer> albumIds) {
+        List<TrackInfo> result = new ArrayList<>();
+        synchronized (registered) {
+            for (Integer albumId : albumIds) {
+                for (TrackInfo track : registered) {
+                    if (Objects.equals(track.getAlbumId(), albumId)) {
+                        result.add(track);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**

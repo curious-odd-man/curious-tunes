@@ -4,12 +4,14 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
+import com.github.curiousoddman.curious_tunes.util.Avatar;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Circle;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
@@ -30,7 +32,11 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 public class LibraryArtistController implements Initializable {
     private final ApplicationEventPublisher eventPublisher;
 
-    public ImageView artistImageView;
+    public StackPane avatar;
+    @FXML
+    public Circle    avatarCircle;
+    @FXML
+    public Label     avatarInitials;
     public Label     artistNameLabel;
     public HBox      pane;
 
@@ -45,6 +51,8 @@ public class LibraryArtistController implements Initializable {
     public void setArtist(ArtistRecord artist) {
         this.artistRecord = artist;
         artistNameLabel.setText(artist.getName());
+        avatarInitials.setText(Avatar.initials(artist.getName()));
+        avatarCircle.setFill(Avatar.color(artist.getName()));
     }
 
     /**

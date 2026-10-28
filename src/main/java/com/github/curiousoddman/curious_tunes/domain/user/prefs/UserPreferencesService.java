@@ -1,6 +1,7 @@
 package com.github.curiousoddman.curious_tunes.domain.user.prefs;
 
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
+import com.github.curiousoddman.curious_tunes.model.AlbumSort;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -150,6 +151,14 @@ public class UserPreferencesService {
 
     public double getLyricsFontSize() {
         return getDouble(UserPrefKey.LYRICS_FONT_SIZE, DEFAULT_LYRICS_FONT_SIZE);
+    }
+
+    public AlbumSort getAlbumSort() {
+        return AlbumSort.fromName(dataAccess.getUserPref(UserPrefKey.ALBUMS_SORT, null));
+    }
+
+    public void saveAlbumSort(AlbumSort sort) {
+        dataAccess.setUserPref(UserPrefKey.ALBUMS_SORT, sort.name());
     }
 
     public boolean isAlbumsGridView() {

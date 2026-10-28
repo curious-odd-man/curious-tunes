@@ -245,6 +245,22 @@
     -fx-background-color: -ct-accent-inactive;
 }
 
+.avatar-initials {
+    -fx-text-fill: #FFF;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
+/* The row buttons appear when the pointer is over the row or the row is selected. */
+.artist-actions {
+    -fx-opacity: 0;
+}
+
+.artist-cell:hover .artist-actions,
+.artist-cell:selected .artist-actions {
+    -fx-opacity: 1;
+}
+
 .letter-strip {
     -fx-padding: 2 2 2 0;
     -fx-cursor: hand;

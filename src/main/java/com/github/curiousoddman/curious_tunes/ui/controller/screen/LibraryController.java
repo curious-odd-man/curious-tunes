@@ -11,6 +11,7 @@ import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesS
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.EditTagsForTrackEvent;
+import com.github.curiousoddman.curious_tunes.event.FindLyricsForTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
 import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
@@ -19,6 +20,8 @@ import com.github.curiousoddman.curious_tunes.event.ShowInLibraryEvent;
 import com.github.curiousoddman.curious_tunes.event.SkipNextEvent;
 import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
+import com.github.curiousoddman.curious_tunes.model.AlbumSort;
+import com.github.curiousoddman.curious_tunes.model.LibraryDragPayload;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.NowPlayingMarker;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
@@ -67,6 +70,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBase;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -83,9 +87,12 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -108,8 +115,10 @@ import org.springframework.stereotype.Component;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -173,6 +182,8 @@ public class LibraryController implements Initializable {
     @FXML
     public  Slider                 albumCoverSizeSlider;
     @FXML
+    public  ComboBox<AlbumSort>    albumSortBox;
+    @FXML
     public  Label                  timeRemaining;
     @FXML
     public  Label                  trackSubtitleSeparator;
@@ -212,6 +223,7 @@ public class LibraryController implements Initializable {
     private final PlaybackWindow           playbackWindow;
     private final VersionService           versionService;
     private final NowPlayingMarker         nowPlayingMarker;
+    private final LibraryDragPayload       dragPayload;
 
     // ---- artists: all of them, and the ones that match the search text
     private static final String ARTIST_LETTERS = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -234,17 +246,19 @@ public class LibraryController implements Initializable {
     private final PauseTransition toastTimer = new PauseTransition(Duration.seconds(5));
 
     // ---- albums view (list / grid)
-    private final AtomicInteger                                  albumsRequestId = new AtomicInteger();
-    private final List<LoadedFxml<LibraryArtistAlbumController>> currentAlbums   = new ArrayList<>();
-    private final List<AlbumCard>                                albumCards      = new ArrayList<>();
-    private       VBox                                           albumGridBox;
-    private       FlowPane                                       albumGrid;
-    private       Label                                          albumsLoadingListLabel;
-    private       Label                                          albumsLoadingGridLabel;
-    private       boolean                                        albumsGridMode;
-    private       boolean                                        updatingCoverSlider;
-    private       double                                         albumListCoverSize;
-    private       double                                         albumGridCoverSize;
+    private final AtomicInteger                                            albumsRequestId  = new AtomicInteger();
+    private final List<LoadedFxml<LibraryArtistAlbumController>>           currentAlbums    = new ArrayList<>();
+    private final List<AlbumCard>                                          albumCards       = new ArrayList<>();
+    private final Map<LoadedFxml<LibraryArtistAlbumController>, AlbumCard> albumCardByAlbum = new IdentityHashMap<>();
+    private       AlbumSort                                                albumSort        = AlbumSort.YEAR_ASC;
+    private       VBox                                                     albumGridBox;
+    private       FlowPane                                                 albumGrid;
+    private       Label                                                    albumsLoadingListLabel;
+    private       Label                                                    albumsLoadingGridLabel;
+    private       boolean                                                  albumsGridMode;
+    private       boolean                                                  updatingCoverSlider;
+    private       double                                                   albumListCoverSize;
+    private       double                                                   albumGridCoverSize;
 
     /**
      * The part of the window the user interacted with last. Enter and Delete act on that part's selection.
@@ -348,6 +362,7 @@ public class LibraryController implements Initializable {
         albumGrid.getChildren()
                  .clear();
         albumCards.clear();
+        albumCardByAlbum.clear();
         currentAlbums.clear();
         artistAlbumsView.getChildren()
                         .add(albumsLoadingListLabel);
@@ -396,8 +411,10 @@ public class LibraryController implements Initializable {
         albumGrid.getChildren()
                  .remove(albumsLoadingGridLabel);
 
-        currentAlbums.addAll(sortedAlbums);
-        for (LoadedFxml<LibraryArtistAlbumController> album : sortedAlbums) {
+        List<LoadedFxml<LibraryArtistAlbumController>> ordered = new ArrayList<>(sortedAlbums);
+        ordered.sort(albumComparator());
+        currentAlbums.addAll(ordered);
+        for (LoadedFxml<LibraryArtistAlbumController> album : ordered) {
             artistAlbumsView.getChildren()
                             .add(album.parent());
 
@@ -408,7 +425,10 @@ public class LibraryController implements Initializable {
                     () -> openAlbumInList(album),
                     controller::playAlbum
             );
+            card.setOnDragDetected(event -> startAlbumCardDrag(card, controller, event));
+            card.setOnDragDone(_ -> dragPayload.clear());
             albumCards.add(card);
+            albumCardByAlbum.put(album, card);
             albumGrid.getChildren()
                      .add(card);
         }
@@ -526,7 +546,60 @@ public class LibraryController implements Initializable {
                                 }
                             });
         albumCoverSizeSlider.setTooltip(new javafx.scene.control.Tooltip("Cover size"));
+
+        albumSort = userPreferencesService.getAlbumSort();
+        albumSortBox.getItems()
+                    .setAll(AlbumSort.values());
+        albumSortBox.setValue(albumSort);
+        albumSortBox.valueProperty()
+                    .addListener((obs, previous, current) -> {
+                        if (current != null) {
+                            albumSort = current;
+                            userPreferencesService.saveAlbumSort(current);
+                            resortAlbums();
+                        }
+                    });
         applyAlbumsMode();
+    }
+
+    private Comparator<LoadedFxml<LibraryArtistAlbumController>> albumComparator() {
+        Comparator<AlbumInfo> byName = Comparator.comparing(album -> album.getName() == null ? "" : album.getName()
+                                                                                                         .toLowerCase(Locale.ROOT));
+        Comparator<AlbumInfo> byYear           = Comparator.comparing(AlbumInfo::getAlbumYear, Comparator.nullsLast(Comparator.naturalOrder()));
+        Comparator<AlbumInfo> byYearDescending = Comparator.comparing(AlbumInfo::getAlbumYear, Comparator.nullsLast(Comparator.reverseOrder()));
+        Comparator<AlbumInfo> chosen = switch (albumSort) {
+            case YEAR_ASC -> byYear.thenComparing(byName);
+            case YEAR_DESC -> byYearDescending.thenComparing(byName);
+            case NAME -> byName;
+        };
+        return Comparator.comparing(album -> album.controller()
+                                                  .getAlbumInfo(), chosen);
+    }
+
+    private void resortAlbums() {
+        if (currentAlbums.isEmpty()) {
+            return;
+        }
+        currentAlbums.sort(albumComparator());
+        ObservableList<Node> children = artistAlbumsView.getChildren();
+        children.remove(1, children.size());        // keeps the artist title
+        currentAlbums.forEach(album -> children.add(album.parent()));
+        albumGrid.getChildren()
+                 .setAll(currentAlbums.stream()
+                                      .map(albumCardByAlbum::get)
+                                      .filter(Objects::nonNull)
+                                      .toList());
+    }
+
+    private void startAlbumCardDrag(AlbumCard card, LibraryArtistAlbumController controller, MouseEvent event) {
+        Dragboard        dragboard = card.startDragAndDrop(TransferMode.COPY);
+        ClipboardContent content   = new ClipboardContent();
+        content.putString(controller.getAlbumInfo()
+                                    .getName());
+        dragboard.setContent(content);
+        dragPayload.setAlbums(List.of(controller.getAlbumInfo()
+                                                .getAlbumRecord()));
+        event.consume();
     }
 
     private void applyAlbumsMode() {
@@ -950,6 +1023,16 @@ public class LibraryController implements Initializable {
         libraryTagEditTabController.showTags(trackInfo);
     }
 
+    @EventListener
+    public void onFindLyricsForTrack(FindLyricsForTrackEvent event) {
+        runOnFxThread(() -> {
+            tabPane.getSelectionModel()
+                   .select(editTagsTab);
+            libraryTagEditTabController.showTags(event.getTrackInfo());
+            libraryTagEditTabController.onFindLyrics(null);
+        });
+    }
+
     private void onLibraryDataUpdated() {
         int previouslyShown = shownArtistId;     // selected again after the refresh, so its albums are reloaded too
         log.info("Update UI from library in separate thread");
@@ -1111,6 +1194,46 @@ public class LibraryController implements Initializable {
                 activeArea = ActiveArea.QUEUE;
             } else if (isInside(tabPane, event.getTarget())) {
                 activeArea = ActiveArea.LIBRARY;
+                // The arrow keys should now move between the tracks, not between the artists.
+                if (isInside(artistListView, scene.getFocusOwner())) {
+                    scene.getRoot()
+                         .requestFocus();
+                }
+            }
+        });
+
+        // Up/Down move the track selection, Shift+Enter adds the selected tracks to the queue.
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (activeArea != ActiveArea.LIBRARY || albumsGridMode
+                    || tabPane.getSelectionModel()
+                              .getSelectedIndex() != 0) {
+                return;
+            }
+            Node focused = scene.getFocusOwner();
+            if (focused instanceof TextInputControl || isInside(artistListView, focused)
+                    || event.isAltDown() || event.isShortcutDown()) {
+                return;
+            }
+            switch (event.getCode()) {
+                case UP -> {
+                    moveTrackSelection(-1);
+                    event.consume();
+                }
+                case DOWN -> {
+                    moveTrackSelection(1);
+                    event.consume();
+                }
+                case ENTER -> {
+                    if (event.isShiftDown()) {
+                        TrackSelectionModel model = currentTrackSelectionModel;
+                        if (model != null) {
+                            TrackActions.addToQueue(eventPublisher, this, model.getSelectedInOrder());
+                        }
+                        event.consume();
+                    }
+                }
+                default -> {
+                }
             }
         });
 
@@ -1173,6 +1296,66 @@ public class LibraryController implements Initializable {
                 }
             }
         });
+    }
+
+    /**
+     * Moves the selection to the previous or next track in the order the tracks are shown.
+     */
+    private void moveTrackSelection(int delta) {
+        TrackSelectionModel model = currentTrackSelectionModel;
+        if (model == null) {
+            return;
+        }
+        List<Integer> albumOrder = currentAlbums.stream()
+                                                .map(album -> album.controller()
+                                                                   .getAlbumInfo()
+                                                                   .getId())
+                                                .toList();
+        List<TrackInfo> ordered = model.inDisplayOrder(albumOrder);
+        if (ordered.isEmpty()) {
+            return;
+        }
+        int       current = -1;
+        TrackInfo anchor  = model.getAnchor();
+        if (anchor != null && model.isSelected(anchor)) {
+            for (int i = 0; i < ordered.size(); i++) {
+                if (Objects.equals(ordered.get(i)
+                                          .getTrackId(), anchor.getTrackId())) {
+                    current = i;
+                    break;
+                }
+            }
+        }
+        int next = current < 0
+                ? (delta > 0 ? 0 : ordered.size() - 1)
+                : Math.max(0, Math.min(ordered.size() - 1, current + delta));
+        TrackInfo target = ordered.get(next);
+        model.selectOnly(target);
+        ensureVisible(albumsScroll, model.rowOf(target));
+    }
+
+    /**
+     * Scrolls the pane just enough to show the node.
+     */
+    private static void ensureVisible(ScrollPane scrollPane, Node node) {
+        if (node == null || scrollPane.getContent() == null) {
+            return;
+        }
+        Node content = scrollPane.getContent();
+        double viewport = scrollPane.getViewportBounds()
+                                    .getHeight();
+        double extra = content.getLayoutBounds()
+                              .getHeight() - viewport;
+        if (extra <= 0) {
+            return;
+        }
+        var    bounds = content.sceneToLocal(node.localToScene(node.getBoundsInLocal()));
+        double top    = scrollPane.getVvalue() * extra;
+        if (bounds.getMinY() < top) {
+            scrollPane.setVvalue(Math.max(0, bounds.getMinY() / extra));
+        } else if (bounds.getMaxY() > top + viewport) {
+            scrollPane.setVvalue(Math.min(1, (bounds.getMaxY() - viewport) / extra));
+        }
     }
 
     private boolean playSelected() {

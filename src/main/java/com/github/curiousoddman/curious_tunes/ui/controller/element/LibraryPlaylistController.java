@@ -5,6 +5,7 @@ import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowInLibraryEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
+import com.github.curiousoddman.curious_tunes.model.LibraryDragPayload;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
 import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
@@ -75,6 +76,7 @@ public class LibraryPlaylistController implements Initializable {
     private final PlaylistModel             playlistModel;
     private final FxmlLoader                fxmlLoader;
     private final ApplicationEventPublisher eventPublisher;
+    private final LibraryDragPayload        libraryDragPayload;
 
     @FXML
     private VBox       playlistVbox;
@@ -142,6 +144,10 @@ public class LibraryPlaylistController implements Initializable {
         public void dragDropped(AnchorPane pane, boolean below) {
             int toIndex = playlistVbox.getChildren()
                                       .indexOf(pane) + (below ? 1 : 0);
+            if (libraryDragPayload.isActive()) {
+                insertFromLibrary(toIndex);
+                return;
+            }
             if (dragFromIndex >= 0 && dragFromIndex != toIndex) {
                 playlistModel.moveItemTo(dragFromIndex, toIndex);
                 updatePlaylist(); // rebuild to reflect new order
@@ -150,6 +156,11 @@ public class LibraryPlaylistController implements Initializable {
 
         @Override
         public void dragDroppedAtEnd() {
+            if (libraryDragPayload.isActive()) {
+                insertFromLibrary(playlistVbox.getChildren()
+                                              .size());
+                return;
+            }
             if (dragFromIndex >= 0) {
                 playlistModel.moveItemTo(dragFromIndex, playlistVbox.getChildren()
                                                                     .size());
@@ -176,9 +187,10 @@ public class LibraryPlaylistController implements Initializable {
         // Free space under the last row: drop here to move the track to the end.
         // (Rows consume the drag events themselves, so only the free space reaches these handlers.)
         playlistScroll.setOnDragOver(event -> {
-            if (dragFromIndex >= 0 && event.getDragboard()
-                                           .hasString()) {
-                event.acceptTransferModes(TransferMode.MOVE);
+            boolean fromLibrary = libraryDragPayload.isActive();
+            if ((dragFromIndex >= 0 || fromLibrary) && event.getDragboard()
+                                                            .hasString()) {
+                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
             }
             event.consume();
         });
@@ -219,6 +231,15 @@ public class LibraryPlaylistController implements Initializable {
     /**
      * @param onlyIfHidden when true the list is scrolled only if the row is not fully visible
      */
+    /**
+     * Tracks or albums dragged from the library are inserted where they were dropped.
+     */
+    private void insertFromLibrary(int toIndex) {
+        playlistModel.insertItems(toIndex, libraryDragPayload.getTracks(), libraryDragPayload.getAlbums());
+        libraryDragPayload.clear();
+        updatePlaylist();
+    }
+
     private void scrollToItem(PlaylistItem item, boolean onlyIfHidden) {
         int index = playlistModel.getPlaylistItems()
                                  .indexOf(item);

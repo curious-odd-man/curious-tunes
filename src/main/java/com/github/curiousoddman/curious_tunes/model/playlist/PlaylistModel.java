@@ -41,6 +41,28 @@ public class PlaylistModel {
 
     private PlaylistItem currentlyPlayingItem = null;
 
+    /**
+     * Inserts tracks and the tracks of albums at the position (drag and drop from the library).
+     */
+    public void insertItems(int index, List<TrackInfo> tracks, List<AlbumRecord> albums) {
+        AddToPlaylistEvent event = AddToPlaylistEvent
+                .builder()
+                .source(this)
+                .tracks(tracks)
+                .albums(albums)
+                .build();
+        List<PlaylistItem> toInsert = new ArrayList<>();
+        toInsert.addAll(getTracks(event));
+        toInsert.addAll(getTracksForAlbum(event));
+        if (toInsert.isEmpty()) {
+            return;
+        }
+        selectionModel.clearSelection();
+        playlistItems.addAll(Math.max(0, Math.min(index, playlistItems.size())), toInsert);
+        logPlaylistItems();
+        changed();
+    }
+
     public void addItems(AddToPlaylistEvent addToPlaylistEvent) {
         selectionModel.getSelectedIndices()
                       .addListener((InvalidationListener) o -> {

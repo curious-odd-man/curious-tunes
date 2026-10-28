@@ -4,6 +4,7 @@ import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
+import com.github.curiousoddman.curious_tunes.model.LibraryDragPayload;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumBundle;
@@ -11,14 +12,22 @@ import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumDiscBundle
 import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
-import com.github.curiousoddman.curious_tunes.util.UiIcons;
+import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import javafx.animation.FadeTransition;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -33,8 +42,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
@@ -48,6 +59,7 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 public class LibraryArtistAlbumController implements Initializable {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final FxmlLoader                fxmlLoader;
+    private final LibraryDragPayload        dragPayload;
     public        ImageView                 albumImage;
     public        Label                     albumTitle;
     public        Label                     albumDetails;
@@ -57,6 +69,7 @@ public class LibraryArtistAlbumController implements Initializable {
 
     private final List<LibraryArtistAlbumDiscController> discControllers = new ArrayList<>();
     private       AlbumInfo                              albumInfo;
+    private       FadeTransition                         playFade;
 
     @Override
     @SneakyThrows
@@ -64,16 +77,13 @@ public class LibraryArtistAlbumController implements Initializable {
         if (resources instanceof ArtistAlbumBundle albumBundle) {
             albumInfo = albumBundle.getAlbumInfo();
             ImageUtils.setImageIfPresent(albumInfo, albumImage);
+            initDrag();
 
             Integer albumYear = albumBundle.getAlbumInfo()
                                            .getAlbumYear();
             albumTitle.setText(albumInfo.getName());
-            if (albumYear == null) {
-                albumDetails.setGraphic(UiIcons.icon(UiIcons.MUSIC_NOTE, 14));
-            } else {
-                albumDetails.setText(String.valueOf(albumYear));
-            }
             List<TrackRecord> albumsTracks = albumBundle.getAlbumTracks();
+            albumDetails.setText(buildDetails(albumYear, albumsTracks));
 
             Map<Optional<Integer>, List<TrackRecord>> groupedByDiscNumber = albumsTracks
                     .stream()
@@ -104,6 +114,35 @@ public class LibraryArtistAlbumController implements Initializable {
                               .add(loaded.parent());
             }
         }
+    }
+
+    /**
+     * "1999 · 12 tracks · 48:12 · Rock"
+     */
+    private static String buildDetails(Integer year, List<TrackRecord> tracks) {
+        List<String> parts = new ArrayList<>();
+        if (year != null) {
+            parts.add(String.valueOf(year));
+        }
+        parts.add(tracks.size() + (tracks.size() == 1 ? " track" : " tracks"));
+        long totalSeconds = tracks.stream()
+                                  .map(TrackRecord::getDuration)
+                                  .filter(Objects::nonNull)
+                                  .mapToLong(Long::longValue)
+                                  .sum();
+        if (totalSeconds > 0) {
+            parts.add(TimeUtils.secondsToHumanTime((int) totalSeconds));
+        }
+        String genres = tracks.stream()
+                              .map(TrackRecord::getGenre)
+                              .filter(genre -> genre != null && !genre.isBlank())
+                              .distinct()
+                              .limit(3)
+                              .collect(Collectors.joining(", "));
+        if (!genres.isEmpty()) {
+            parts.add(genres);
+        }
+        return String.join(" · ", parts);
     }
 
     public void onAlbumImageHover(MouseEvent mouseEvent) {
@@ -147,10 +186,60 @@ public class LibraryArtistAlbumController implements Initializable {
         applicationEventPublisher.publishEvent(event);
     }
 
+    @FXML
+    public void onPlayButtonClicked(ActionEvent actionEvent) {
+        playAlbum();
+    }
+
+    @FXML
+    public void onAddToQueueClicked(ActionEvent actionEvent) {
+        publish(PlaylistAddMode.APPEND, Shuffle.SKIP);
+    }
+
+    @FXML
+    public void onShuffleClicked(ActionEvent actionEvent) {
+        publish(PlaylistAddMode.REPLACE, Shuffle.AFTER_ADDING_TO_PLAYLIST);
+    }
+
+    private void publish(PlaylistAddMode mode, Shuffle shuffle) {
+        applicationEventPublisher.publishEvent(AddToPlaylistEvent
+                .builder()
+                .source(this)
+                .albums(List.of(albumInfo.getAlbumRecord()))
+                .shuffle(shuffle)
+                .playlistAddMode(mode)
+                .build());
+    }
+
     private void fadePlayImageButtonTo(int value) {
-        FadeTransition ft = new FadeTransition(Duration.millis(250), playImageButton);
-        ft.setFromValue(playImageButton.getOpacity());
-        ft.setToValue(value);
-        ft.play();
+        if (playFade != null) {
+            playFade.stop();        // a quick in/out of the pointer must not start a second animation
+        }
+        playFade = new FadeTransition(Duration.millis(250), playImageButton);
+        playFade.setFromValue(playImageButton.getOpacity());
+        playFade.setToValue(value);
+        playFade.play();
+    }
+
+    /**
+     * The cover can be dragged into the queue.
+     */
+    private void initDrag() {
+        Node dragHandle = albumImage.getParent();
+        dragHandle.setOnDragDetected(event -> {
+            Dragboard        dragboard = dragHandle.startDragAndDrop(TransferMode.COPY);
+            ClipboardContent content   = new ClipboardContent();
+            content.putString(albumInfo.getName());
+            dragboard.setContent(content);
+            ImageView preview = new ImageView(albumImage.getImage());
+            preview.setPreserveRatio(true);
+            preview.setFitWidth(90);
+            SnapshotParameters parameters = new SnapshotParameters();
+            parameters.setFill(Color.TRANSPARENT);
+            dragboard.setDragView(preview.snapshot(parameters, null));
+            dragPayload.setAlbums(List.of(albumInfo.getAlbumRecord()));
+            event.consume();
+        });
+        dragHandle.setOnDragDone(event -> dragPayload.clear());
     }
 }

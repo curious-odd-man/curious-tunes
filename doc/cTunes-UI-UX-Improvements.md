@@ -670,22 +670,40 @@ See §6.
 
 See §4 and §5.
 
-- [ ] 4.1 Artist rows: show the four action buttons only on hover/selection (§4.1).
-- [ ] 4.2 Generated avatars (initials on a colour from the name) instead of the same placeholder (§4.2).
+- [x] 4.1 Artist rows: show the four action buttons only on hover/selection (§4.1).
+- [x] 4.2 Generated avatars (initials on a colour from the name) instead of the same placeholder (§4.2).
 - [ ] 4.3 Artist sort toggle: A–Z / recently played / most played (history table has the data) (§4.4).
 - [ ] 4.4 Remember last artist, selected tab and list scroll across restarts (§4.6, §13).
 - [ ] 4.5 Double-click an artist to play it (§4.8).
-- [ ] 4.6 Albums: always-visible *Play / Add to queue / Shuffle* buttons; stop the previous fade animation before
+- [x] 4.6 Albums: always-visible *Play / Add to queue / Shuffle* buttons; stop the previous fade animation before
   starting a new one (§5.2).
-- [ ] 4.7 Richer album subtitle: year · tracks · duration · genre (§5.3).
-- [ ] 4.8 Album sort control (year ↑/↓, name), remembered (§5.5).
+- [x] 4.7 Richer album subtitle: year · tracks · duration · genre (§5.3).
+- [x] 4.8 Album sort control (year ↑/↓, name), remembered (§5.5).
 - [ ] 4.9 Smaller default cover in list view (~200 px) — *decision needed* (today 350 px).
-- [ ] 4.10 Track rows: ▶ on hover in place of the number, right-aligned fixed-width duration (§5.6).
-- [ ] 4.11 Track context menu: *Find lyrics*, *Show file in folder*, *Copy title/artist* (§5.7).
-- [ ] 4.12 Keyboard in the track list: ↑/↓ to move, Shift+Enter to add to queue (§5.9).
-- [ ] 4.13 Drag tracks/albums from the library into the queue (§5.10).
+- [x] 4.10 Track rows: ▶ on hover in place of the number, right-aligned fixed-width duration (§5.6).
+- [x] 4.11 Track context menu: *Find lyrics*, *Show file in folder*, *Copy title/artist* (§5.7).
+- [x] 4.12 Keyboard in the track list: ↑/↓ to move, Shift+Enter to add to queue (§5.9).
+- [x] 4.13 Drag tracks/albums from the library into the queue (§5.10).
 
 > Exclude 4.3, 4.4, 4.5, 4.9
+
+**Status: DONE (step 4)**; 4.3, 4.4, 4.5 and 4.9 were excluded as requested. Notes:
+
+- 4.1/4.2: the four artist buttons appear when the pointer is over the row or the row is selected; the avatar is the
+  artist's initials on a colour taken from the name (`Avatar`, unit-tested).
+- 4.6/4.7: every album has *Play / Add to queue / Shuffle* buttons and a subtitle such as
+  `1999 · 12 tracks · 48:12 · Rock`. The hover play overlay no longer stacks animations.
+- 4.8: sort *Year (oldest/newest first)* or *Name*, remembered.
+- 4.10: the track number turns into a play icon while the pointer is over the row (click it to play); durations are
+  right-aligned in a fixed column.
+- 4.11: the track menu also has *Find lyrics* (opens the track in the tag editor and searches; you review before
+  saving),
+  *Show in file manager* and *Copy title and artist*.
+- 4.12: Up/Down move the track selection (the list scrolls to it), Shift+Enter adds the selected tracks to the queue.
+  Clicking in the album area takes the keyboard from the artist list so that the arrows move between tracks.
+- 4.13: tracks (the whole selection) and albums (list cover, or grid card) can be dragged into the queue; they land
+  above
+  or below the row under the pointer, or at the end.
 
 ### Step 5 — Lyrics tab and Edit Tags tab (M)
 

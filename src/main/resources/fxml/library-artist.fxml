@@ -5,31 +5,32 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Tooltip?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Circle?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <HBox fx:id="pane" alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
       minHeight="-Infinity" minWidth="-Infinity" spacing="2.0" xmlns="http://javafx.com/javafx/25"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistController">
     <children>
-        <ImageView fx:id="artistImageView" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true"
-                   HBox.hgrow="NEVER">
+        <StackPane fx:id="avatar" maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0"
+                   prefWidth="40.0" HBox.hgrow="NEVER">
             <HBox.margin>
-                <Insets bottom="1.0" left="1.0" right="1.0" top="1.0"/>
+                <Insets bottom="4.0" left="6.0" right="6.0" top="4.0"/>
             </HBox.margin>
-            <image>
-                <Image url="@/img/noimage.png"/>
-            </image>
-        </ImageView>
+            <children>
+                <Circle fx:id="avatarCircle" radius="20.0"/>
+                <Label fx:id="avatarInitials" styleClass="avatar-initials"/>
+            </children>
+        </StackPane>
         <Label fx:id="artistNameLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
                HBox.hgrow="ALWAYS" styleClass="text-body text-strong">
         </Label>
-        <GridPane alignment="CENTER_RIGHT" hgap="2.0" vgap="2.0" HBox.hgrow="NEVER">
+        <GridPane alignment="CENTER_RIGHT" hgap="2.0" styleClass="artist-actions" vgap="2.0" HBox.hgrow="NEVER">
             <columnConstraints>
                 <ColumnConstraints halignment="CENTER" hgrow="NEVER"/>
                 <ColumnConstraints hgrow="NEVER"/>

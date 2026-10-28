@@ -15,13 +15,14 @@
                 <FontIcon iconLiteral="mdi2m-music-note-off" iconSize="14"/>
             </graphic>
         </Label>
-        <Label fx:id="trackNumberLabel" HBox.hgrow="NEVER" styleClass="text-body">
+        <Label fx:id="trackNumberLabel" alignment="CENTER_RIGHT" minWidth="28.0" prefWidth="28.0" HBox.hgrow="NEVER"
+               styleClass="text-body">
         </Label>
         <Label fx:id="trackTitleLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
                HBox.hgrow="ALWAYS" styleClass="text-body">
         </Label>
-        <Label fx:id="trackTimeLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-               HBox.hgrow="NEVER" styleClass="text-body">
+        <Label fx:id="trackTimeLabel" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" minWidth="60.0"
+               prefWidth="60.0" HBox.hgrow="NEVER" styleClass="text-body">
         </Label>
     </children>
     <padding>

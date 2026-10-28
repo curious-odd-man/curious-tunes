@@ -217,7 +217,7 @@ public class PlaylistItemController implements Initializable {
     public void onDragOver(DragEvent dragEvent) {
         if (dragEvent.getGestureSource() != pane && dragEvent.getDragboard()
                                                              .hasString()) {
-            dragEvent.acceptTransferModes(TransferMode.MOVE);
+            dragEvent.acceptTransferModes(TransferMode.COPY_OR_MOVE);
             updateDropGuide(dragEvent);
         }
         dragEvent.consume();
