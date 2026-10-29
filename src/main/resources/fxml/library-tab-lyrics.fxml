@@ -1,61 +1,105 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.ToggleButton?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0"
-            xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0"
+      xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController">
     <children>
-        <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308"
-                    maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <content>
-                <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0"
-                            minWidth="0.0">
+        <HBox alignment="CENTER_LEFT" spacing="8.0">
+            <padding>
+                <Insets bottom="8.0" left="10.0" right="10.0" top="10.0"/>
+            </padding>
+            <children>
+                <ToggleButton fx:id="editButton" mnemonicParsing="false" onAction="#onEditButtonClick" text="Edit">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2p-pencil" iconSize="16"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Edit the lyrics"/>
+                    </tooltip>
+                </ToggleButton>
+                <Button fx:id="saveButton" disable="true" mnemonicParsing="false" onAction="#onSaveButtonClick"
+                        text="Save">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2c-content-save" iconSize="16"/>
+                    </graphic>
+                </Button>
+                <Button fx:id="revertButton" disable="true" mnemonicParsing="false" onAction="#onRevertButtonClick"
+                        text="Revert">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2u-undo" iconSize="16"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Go back to the saved lyrics"/>
+                    </tooltip>
+                </Button>
+                <Button fx:id="searchLyricsButton" mnemonicParsing="false" onAction="#onFindLyrics" text="Find lyrics">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2m-magnify" iconSize="16"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Look for the lyrics online"/>
+                    </tooltip>
+                </Button>
+                <ProgressIndicator fx:id="searchProgress" managed="false" maxHeight="18.0" maxWidth="18.0"
+                                   minHeight="18.0" minWidth="18.0" visible="false"/>
+                <Label fx:id="unsavedLabel" managed="false" styleClass="unsaved-hint" text="● Unsaved changes"
+                       visible="false"/>
+                <Label fx:id="sourceLabel" managed="false" styleClass="dim-text" visible="false"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="fontSmallerButton" mnemonicParsing="false" onAction="#onFontSmaller" text="A−">
+                    <tooltip>
+                        <Tooltip text="Smaller text"/>
+                    </tooltip>
+                </Button>
+                <Button fx:id="fontLargerButton" mnemonicParsing="false" onAction="#onFontLarger" text="A+">
+                    <tooltip>
+                        <Tooltip text="Larger text"/>
+                    </tooltip>
+                </Button>
+            </children>
+        </HBox>
+        <StackPane VBox.vgrow="ALWAYS">
+            <children>
+                <ScrollPane fx:id="readScroll" fitToWidth="true" styleClass="lyrics-read">
+                    <content>
+                        <Label fx:id="lyricsReadLabel" wrapText="true">
+                            <padding>
+                                <Insets bottom="16.0" left="16.0" right="16.0" top="12.0"/>
+                            </padding>
+                        </Label>
+                    </content>
+                </ScrollPane>
+                <TextArea fx:id="lyricsTextArea" managed="false" visible="false" wrapText="true">
+                    <StackPane.margin>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="0.0"/>
+                    </StackPane.margin>
+                </TextArea>
+                <VBox fx:id="emptyBox" alignment="CENTER" managed="false" spacing="8.0" visible="false">
                     <children>
-                        <TextArea fx:id="lyricsTextArea" editable="false" layoutY="33.0" wrapText="true"
-                                  maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-                                  prefHeight="181.0" prefWidth="480.0" AnchorPane.bottomAnchor="10.0"
-                                  AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0"
-                                  AnchorPane.topAnchor="45.0"/>
-                        <ButtonBar buttonMinWidth="20.0" buttonOrder="" maxHeight="1.7976931348623157E308"
-                                   maxWidth="1.7976931348623157E308" AnchorPane.leftAnchor="10.0"
-                                   AnchorPane.topAnchor="10.0">
-                            <buttons>
-                                <ToggleButton fx:id="editButton" mnemonicParsing="false" onAction="#onEditButtonClick"
-                                              text="Enable edit" textAlignment="CENTER">
-                                    <graphic>
-                                        <FontIcon iconLiteral="mdi2p-pencil" iconSize="16"/>
-                                    </graphic>
-                                </ToggleButton>
-                                <Button fx:id="saveButton" disable="true" mnemonicParsing="false"
-                                        onAction="#onSaveButtonClick" text="Save">
-                                    <graphic>
-                                        <FontIcon iconLiteral="mdi2c-content-save" iconSize="16"/>
-                                    </graphic>
-                                </Button>
-                                <Button fx:id="searchLyricsButton" mnemonicParsing="false" onAction="#onFindLyrics"
-                                        text="Find lyrics">
-                                    <graphic>
-                                        <FontIcon iconLiteral="mdi2m-magnify" iconSize="16"/>
-                                    </graphic>
-                                </Button>
-                                <Slider fx:id="fontSizeSlider" blockIncrement="1.0" majorTickUnit="7.0" max="32.0"
-                                        maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" min="10.0"
-                                        minorTickCount="1" showTickLabels="true" showTickMarks="true" snapToTicks="true"
-                                        value="12.0"/>
-                            </buttons>
-                        </ButtonBar>
+                        <Label fx:id="emptyTitle" styleClass="text-section"/>
+                        <Label fx:id="emptyHint" styleClass="dim-text" wrapText="true"/>
+                        <Button fx:id="emptyFindButton" mnemonicParsing="false" onAction="#onFindLyrics"
+                                text="Find lyrics">
+                            <graphic>
+                                <FontIcon iconLiteral="mdi2m-magnify" iconSize="16"/>
+                            </graphic>
+                        </Button>
                     </children>
-                </AnchorPane>
-            </content>
-        </ScrollPane>
+                </VBox>
+            </children>
+        </StackPane>
     </children>
-</AnchorPane>
+</VBox>

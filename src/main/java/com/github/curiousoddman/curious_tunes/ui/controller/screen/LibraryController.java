@@ -9,8 +9,10 @@ import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.domain.player.AudioPlayer;
 import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
+import com.github.curiousoddman.curious_tunes.event.AlbumCoverChangedEvent;
 import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.EditTagsForTrackEvent;
+import com.github.curiousoddman.curious_tunes.event.EditTagsForTracksEvent;
 import com.github.curiousoddman.curious_tunes.event.FindLyricsForTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
@@ -1021,6 +1023,38 @@ public class LibraryController implements Initializable {
                .select(editTagsTab);
         TrackInfo trackInfo = event.getTrackInfo();
         libraryTagEditTabController.showTags(trackInfo);
+    }
+
+    @EventListener
+    public void onTagsUiUpdatedEvent(EditTagsForTracksEvent event) {
+        runOnFxThread(() -> {
+            tabPane.getSelectionModel()
+                   .select(editTagsTab);
+            libraryTagEditTabController.showTags(event.getTrackInfos());
+        });
+    }
+
+    /**
+     * A new cover was saved: show the albums of the artist again so that they show it.
+     */
+    @EventListener
+    public void onAlbumCoverChanged(AlbumCoverChangedEvent event) {
+        runOnFxThread(() -> {
+            int shown = shownArtistId;
+            if (shown < 0) {
+                return;
+            }
+            allArtists.stream()
+                      .filter(artist -> artist.getId() == shown)
+                      .findFirst()
+                      .ifPresent(artist -> {
+                          shownArtistId = -1;
+                          artistListView.getSelectionModel()
+                                        .clearSelection();
+                          artistListView.getSelectionModel()
+                                        .select(artist);
+                      });
+        });
     }
 
     @EventListener

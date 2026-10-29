@@ -35,7 +35,7 @@
             <center>
                 <VBox alignment="CENTER_LEFT" spacing="5.0" BorderPane.alignment="CENTER_LEFT">
                     <children>
-                        <Label fx:id="topText" styleClass="playlist-title text-body">
+                        <Label fx:id="topText" styleClass="playlist-title, text-body">
                             <padding>
                                 <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
                             </padding>

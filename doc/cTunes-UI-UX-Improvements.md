@@ -711,21 +711,48 @@ See §7 and §8.
 
 Lyrics tab:
 
-- [ ] 5.1 Reading mode (clean, borderless, scrolling) vs. edit mode (§7.2).
-- [ ] 5.2 "● Unsaved" label and a Revert button (§7.3).
-- [ ] 5.3 Spinner / disabled button while searching; show which source answered (§7.4).
-- [ ] 5.4 Empty states: "Nothing is playing", "No lyrics — Find lyrics" (§7.5).
-- [ ] 5.5 A−/A+ font control, saved on release; share the size and auto-fit settings with Now Playing (§7.6, §7.7).
+- [x] 5.1 Reading mode (clean, borderless, scrolling) vs. edit mode (§7.2).
+- [x] 5.2 "● Unsaved" label and a Revert button (§7.3).
+- [x] 5.3 Spinner / disabled button while searching; show which source answered (§7.4).
+- [x] 5.4 Empty states: "Nothing is playing", "No lyrics — Find lyrics" (§7.5).
+- [x] 5.5 A−/A+ font control, saved on release; share the size and auto-fit settings with Now Playing (§7.6, §7.7).
 
 Edit Tags tab:
 
-- [ ] 5.6 Header with cover, title, artist/album and file path; empty state "Select a track…" (§8.1, §8.2).
-- [ ] 5.7 Changed-field tracking: highlight, Save enabled only when changed, Reset/Revert all, Ctrl+S (§8.3).
-- [ ] 5.8 ↺ restore button on overridden fields plus a legend explaining the orange border (§8.5).
-- [ ] 5.9 Wrap the form in a `ScrollPane`; consistent label widths (§8.6).
-- [ ] 5.10 Validation for numeric fields and a date hint (§8.7).
-- [ ] 5.11 Change cover (choose/drop/paste) and a placeholder when there is none (§8.9) — M–L.
-- [ ] 5.12 Batch edit for several tracks (§8.10) — L, optional.
+- [x] 5.6 Header with cover, title, artist/album and file path; empty state "Select a track…" (§8.1, §8.2).
+- [x] 5.7 Changed-field tracking: highlight, Save enabled only when changed, Reset/Revert all, Ctrl+S (§8.3).
+- [x] 5.8 ↺ restore button on overridden fields plus a legend explaining the orange border (§8.5).
+- [x] 5.9 Wrap the form in a `ScrollPane`; consistent label widths (§8.6).
+- [x] 5.10 Validation for numeric fields and a date hint (§8.7).
+- [x] 5.11 Change cover (choose/drop/paste) and a placeholder when there is none (§8.9) — M–L.
+- [x] 5.12 Batch edit for several tracks (§8.10) — L, optional.
+
+**Status: DONE (step 5).** Notes:
+
+- Lyrics tab: a reading view (no border, wrapped, adjustable size with A− / A+), an editor (*Edit* / *Done*), an
+  "● Unsaved changes" label with *Save* and *Revert*, a progress indicator while searching and the name of the site that
+  had the lyrics ("Found on …"), and empty states ("Nothing is playing", "No lyrics for this track").
+  The text size is **one setting** shared with the playback window (the separate playback size setting was dropped).
+  Auto-fit exists only in the playback window, so there is nothing to share for it.
+- Edit Tags tab: header (cover, title, artist — album, file path), empty state, scrollable form, changed fields get a
+  blue border (Save and Revert are enabled only then), invalid fields a red one (release date must be `YYYY`,
+  `YYYY-MM` or `YYYY-MM-DD` — only checked when the value was changed; track and disc number accept digits only),
+  Enter moves to the next field, Ctrl+S saves.
+- An orange border means "differs from the value that came from the file"; an undo button next to such a field puts the
+  original back (you then press Save). **Behaviour change:** "original" is now the value replaced by the *first* edit
+  (before: the value replaced by the *last* edit), so a field that was put back to its original value is no longer
+  marked. `MarkModifiedFieldsTest` was updated for this (two tests changed, one added).
+- Cover: *Choose…*, *Paste* (an image or an image file from the clipboard) or drop an image file; it is stored in the
+  album (so it applies to all tracks of the album) when you press Save, and the library views refresh.
+- Batch edit: select several tracks, right-click ▸ *Edit tags of N tracks*. Fields show what the tracks share ("(
+  different
+  values)" otherwise); only the fields you change are applied to all tracks. Title, track number and lyrics are per
+  track
+  and are disabled in this mode.
+- Saving no longer treats an empty field and a missing value as different (it used to rewrite every empty field to `""`
+  and add override records for it whenever any field was saved).
+- **Fix of an earlier step:** in step 2 some `styleClass` values in the FXML were written with spaces instead of commas
+  (artist name, History stats, queue row title), so those classes were not applied. Corrected.
 
 ### Step 6 — History tab (M–L)
 

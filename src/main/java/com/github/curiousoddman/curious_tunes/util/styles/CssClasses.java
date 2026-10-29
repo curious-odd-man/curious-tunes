@@ -14,4 +14,6 @@ public class CssClasses {
     public static final String TOAST_ERROR               = "toast-error";
     public static final String PLAYLIST_ITEM_MISSING     = "playlist-item-missing";
     public static final String PLAYLIST_ITEM_SKIPPED     = "playlist-item-skipped";
+    public static final String FIELD_CHANGED             = "field-changed";
+    public static final String FIELD_INVALID             = "field-invalid";
 }

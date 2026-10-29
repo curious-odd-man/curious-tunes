@@ -137,12 +137,15 @@ public class UserPreferencesService {
         dataAccess.setUserPref(UserPrefKey.PLAYBACK_LYRICS_AUTOFIT, String.valueOf(autoFit));
     }
 
+    /**
+     * The lyrics size is one setting for the library tab and the playback window.
+     */
     public double getPlaybackLyricsSize() {
-        return getDouble(UserPrefKey.PLAYBACK_LYRICS_SIZE, DEFAULT_LYRICS_FONT_SIZE);
+        return getLyricsFontSize();
     }
 
     public void savePlaybackLyricsSize(double size) {
-        dataAccess.setUserPref(UserPrefKey.PLAYBACK_LYRICS_SIZE, String.valueOf(size));
+        saveLyricsFontSize(size);
     }
 
     public void saveLyricsFontSize(double size) {

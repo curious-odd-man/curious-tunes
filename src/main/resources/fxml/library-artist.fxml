@@ -28,7 +28,7 @@
             </children>
         </StackPane>
         <Label fx:id="artistNameLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-               HBox.hgrow="ALWAYS" styleClass="text-body text-strong">
+               HBox.hgrow="ALWAYS" styleClass="text-body, text-strong">
         </Label>
         <GridPane alignment="CENTER_RIGHT" hgap="2.0" styleClass="artist-actions" vgap="2.0" HBox.hgrow="NEVER">
             <columnConstraints>

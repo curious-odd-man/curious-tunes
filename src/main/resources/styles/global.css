@@ -245,6 +245,31 @@
     -fx-background-color: -ct-accent-inactive;
 }
 
+/* ---- Lyrics tab ---------------------------------------------------------- */
+
+.unsaved-hint {
+    -fx-text-fill: #b45309;
+    -fx-font-weight: bold;
+}
+
+.lyrics-read {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.lyrics-read > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* ---- Tag editor ---------------------------------------------------------- */
+
+.cover-box {
+    -fx-border-color: -ct-border;
+    -fx-border-width: 1;
+    -fx-background-color: #f4f5f7;
+}
+
 .avatar-initials {
     -fx-text-fill: #FFF;
     -fx-font-weight: bold;
@@ -359,6 +384,17 @@
 
 .field-overridden {
     -fx-border-color: -ct-override;
+    -fx-border-width: 2;
+}
+
+/* declared after .field-overridden on purpose: an unsaved or invalid value wins over the "edited earlier" mark */
+.field-changed {
+    -fx-border-color: -ct-accent;
+    -fx-border-width: 2;
+}
+
+.field-invalid {
+    -fx-border-color: -ct-danger;
     -fx-border-width: 2;
 }
 

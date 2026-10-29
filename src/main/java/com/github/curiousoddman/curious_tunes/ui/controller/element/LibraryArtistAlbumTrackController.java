@@ -1,6 +1,7 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.element;
 
 import com.github.curiousoddman.curious_tunes.event.EditTagsForTrackEvent;
+import com.github.curiousoddman.curious_tunes.event.EditTagsForTracksEvent;
 import com.github.curiousoddman.curious_tunes.event.FindLyricsForTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.model.LibraryDragPayload;
@@ -156,7 +157,12 @@ public class LibraryArtistAlbumTrackController implements Initializable {
         playNext.setOnAction(_ -> TrackActions.playNext(applicationEventPublisher, this, selectedTracks()));
         addToQueue.setOnAction(_ -> TrackActions.addToQueue(applicationEventPublisher, this, selectedTracks()));
         findLyricsItem.setOnAction(_ -> applicationEventPublisher.publishEvent(new FindLyricsForTrackEvent(this, trackInfo)));
-        editTagsItem.setOnAction(_ -> applicationEventPublisher.publishEvent(new EditTagsForTrackEvent(this, trackInfo)));
+        editTagsItem.setOnAction(_ -> {
+            List<TrackInfo> tracks = selectedTracks();
+            applicationEventPublisher.publishEvent(tracks.size() > 1
+                    ? new EditTagsForTracksEvent(this, tracks)
+                    : new EditTagsForTrackEvent(this, trackInfo));
+        });
         showInFolderItem.setOnAction(_ -> {
             if (!FileManager.reveal(trackInfo.getFileLocation())) {
                 applicationEventPublisher.publishEvent(
@@ -236,8 +242,9 @@ public class LibraryArtistAlbumTrackController implements Initializable {
             boolean single = trackSelectionModel.getSelectedItems()
                                                 .size() <= 1;
             findLyricsItem.setDisable(!single);
-            editTagsItem.setDisable(!single);
             showInFolderItem.setDisable(!single);
+            editTagsItem.setText(single ? "Edit tags" : "Edit tags of " + trackSelectionModel.getSelectedItems()
+                                                                                             .size() + " tracks");
             contextMenu.show(rootHbox, mouseEvent.getScreenX(), mouseEvent.getScreenY());
             return;
         }

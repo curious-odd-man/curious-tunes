@@ -65,29 +65,38 @@ class MarkModifiedFieldsTest {
         assertTrue(wasOverridden("Rock", overrides, TRACK.GENRE));
     }
 
-    // --- multiple overrides, last one wins ---
+    // --- multiple overrides: the first one tells the original value (the one that came from the file) ---
 
     @Test
-    void multipleOverrides_lastOneUsed() {
-        // history: Pop → Rock → Jazz, current value is "Jazz" (matches last old value)
+    void multipleOverrides_backToTheOriginalIsNotModified() {
+        // history: Pop → Rock → Jazz; the first edit replaced "Pop", so "Pop" is the value from the file
         var overrides = List.of(
                 override("GENRE", "Pop"),
                 override("GENRE", "Rock"),
                 override("GENRE", "Jazz")
         );
-        // current is "Jazz", last override oldValue is "Jazz" → not modified
-        assertFalse(wasOverridden("Jazz", overrides, TRACK.GENRE));
+        assertFalse(wasOverridden("Pop", overrides, TRACK.GENRE));
     }
 
     @Test
-    void multipleOverrides_lastOneIndicatesChange() {
+    void multipleOverrides_differentFromTheOriginalIsModified() {
         var overrides = List.of(
                 override("GENRE", "Pop"),
                 override("GENRE", "Rock"),
                 override("GENRE", "Jazz")
         );
-        // current is "Metal", last override oldValue is "Jazz" → modified
+        // the value that was replaced last ("Jazz") is not the original, so it still counts as edited
+        assertTrue(wasOverridden("Jazz", overrides, TRACK.GENRE));
         assertTrue(wasOverridden("Metal", overrides, TRACK.GENRE));
+    }
+
+    // --- values of other types are compared as text ---
+
+    @Test
+    void numberIsComparedWithTheTextOfTheOldValue() {
+        var overrides = List.of(override("TRACK_NUMBER", "5"));
+        assertFalse(wasOverridden(5, overrides, TRACK.TRACK_NUMBER));
+        assertTrue(wasOverridden(6, overrides, TRACK.TRACK_NUMBER));
     }
 
     // --- field name matching ---

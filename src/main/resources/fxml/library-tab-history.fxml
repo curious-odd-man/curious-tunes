@@ -48,16 +48,16 @@
                                 <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES"/>
                             </rowConstraints>
                             <children>
-                                <Label text="Total time listened" styleClass="text-small text-strong">
+                                <Label text="Total time listened" styleClass="text-small, text-strong">
                                 </Label>
                                 <Label fx:id="totalTimeListened" GridPane.columnIndex="1"/>
-                                <Label text="Songs played" GridPane.rowIndex="1" styleClass="text-small text-strong">
+                                <Label text="Songs played" GridPane.rowIndex="1" styleClass="text-small, text-strong">
                                 </Label>
                                 <Label fx:id="songsPlayed" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                                <Label text="Albums played" GridPane.rowIndex="2" styleClass="text-small text-strong">
+                                <Label text="Albums played" GridPane.rowIndex="2" styleClass="text-small, text-strong">
                                 </Label>
                                 <Label fx:id="albumsPlayed" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                                <Label text="Artists played" GridPane.rowIndex="3" styleClass="text-small text-strong">
+                                <Label text="Artists played" GridPane.rowIndex="3" styleClass="text-small, text-strong">
                                 </Label>
                                 <Label fx:id="artistsPlayed" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
                                 <TableView fx:id="latestSongsTable" maxHeight="1.7976931348623157E308"
