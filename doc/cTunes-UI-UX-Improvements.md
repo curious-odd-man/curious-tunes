@@ -759,15 +759,30 @@ Edit Tags tab:
 The whole section (§9) is untouched. Quick win 7 (time format) was excluded; if it stays excluded, skip 6.2 or keep the
 current columns.
 
-- [ ] 6.1 Load off the UI thread with a spinner, limit the rows (e.g. latest 200 + "Load more"), and fetch
+- [x] 6.1 Load off the UI thread with a spinner, limit the rows (e.g. latest 200 + "Load more"), and fetch
   albums/artists in one query instead of one per row (§9.5) — do this first.
-- [ ] 6.2 Single "Played at" column (`Today 14:03`, `Yesterday 21:15`, date), full time in a tooltip (§9.2).
-- [ ] 6.3 Column widths, sorting, table fills the pane (§9.3).
-- [ ] 6.4 Stat cards: time listened, songs, albums, artists (§9.1).
+- [x] 6.2 Single "Played at" column (`Today 14:03`, `Yesterday 21:15`, date), full time in a tooltip (§9.2).
+- [x] 6.3 Column widths, sorting, table fills the pane (§9.3).
+- [x] 6.4 Stat cards: time listened, songs, albums, artists (§9.1).
 - [ ] 6.5 Row actions: double-click to play, context menu (§9.4).
-- [ ] 6.6 Empty state and date filters (§9.6).
+- [x] 6.6 Empty state and date filters (§9.6).
 
 > Exclude 6.5
+
+**Status: DONE (step 6)**; 6.5 was excluded as requested. Notes:
+
+- 6.1: the totals and the latest 200 plays are loaded in a background thread (spinner while loading), each with
+  one SQL query — the old code fetched the album and the artist separately for every row. *Load more* adds the next
+    200. A load that is overtaken by a newer one (for example another period) is dropped.
+- 6.2: one *Played at* column: `Today 14:03`, `Yesterday 21:15`, `12 Oct 2026`; the complete date and time is in
+  a tooltip. (This replaces the date and time columns, so quick win 7, which was excluded, is not needed any more.)
+- 6.3: sortable columns, with fixed width for *Played at* and the other three sharing the rest. Sorting applies to the
+  rows that are loaded; *Load more* adds more rows to it.
+- 6.4: stat cards for *Time listened*, *Songs played* (plays), *Albums* and *Artists* (different ones) — the three
+  counters were never filled before. They are computed by the database for the chosen period.
+- 6.6: *Today / 7 days / 30 days / All time* (stats and table follow it) and an empty state
+  ("Nothing played yet" / "Nothing played in this period").
+- `DataAccess.getAllHistoryRecords()` is not used by this tab any more (left in place).
 
 ### Step 7 — Now Playing window leftovers (M)
 

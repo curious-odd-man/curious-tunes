@@ -270,6 +270,15 @@
     -fx-background-color: #f4f5f7;
 }
 
+/* ---- History tab --------------------------------------------------------- */
+
+.stat-card {
+    -fx-background-color: #f4f5f7;
+    -fx-background-radius: 8;
+    -fx-padding: 10 18 10 18;
+    -fx-min-width: 130;
+}
+
 .avatar-initials {
     -fx-text-fill: #FFF;
     -fx-font-weight: bold;

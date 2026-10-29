@@ -1,91 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.RowConstraints?>
-<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0"
-            xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryHistoryTabController">
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" spacing="10.0"
+      xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryHistoryTabController">
+    <padding>
+        <Insets bottom="10.0" left="12.0" right="12.0" top="12.0"/>
+    </padding>
     <children>
-        <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308"
-                    maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <content>
-                <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0"
-                            minWidth="0.0">
+        <HBox alignment="CENTER_LEFT" spacing="6.0">
+            <children>
+                <Label styleClass="dim-text" text="Period"/>
+                <ToggleButton fx:id="todayToggle" mnemonicParsing="false" text="Today"/>
+                <ToggleButton fx:id="weekToggle" mnemonicParsing="false" text="7 days"/>
+                <ToggleButton fx:id="monthToggle" mnemonicParsing="false" text="30 days"/>
+                <ToggleButton fx:id="allToggle" mnemonicParsing="false" selected="true" text="All time"/>
+            </children>
+        </HBox>
+        <HBox spacing="12.0">
+            <children>
+                <VBox spacing="2.0" styleClass="stat-card">
                     <children>
-                        <GridPane hgap="5.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-                                  vgap="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="5.0">
-                            <columnConstraints>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"/>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308"/>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
-                                                   prefWidth="100.0"/>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
-                                                   prefWidth="100.0"/>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
-                                                   prefWidth="100.0"/>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
-                                                   prefWidth="100.0"/>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
-                                                   prefWidth="100.0"/>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
-                                                   prefWidth="100.0"/>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
-                                                   prefWidth="100.0"/>
-                            </columnConstraints>
-                            <rowConstraints>
-                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES"/>
-                            </rowConstraints>
-                            <children>
-                                <Label text="Total time listened" styleClass="text-small, text-strong">
-                                </Label>
-                                <Label fx:id="totalTimeListened" GridPane.columnIndex="1"/>
-                                <Label text="Songs played" GridPane.rowIndex="1" styleClass="text-small, text-strong">
-                                </Label>
-                                <Label fx:id="songsPlayed" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                                <Label text="Albums played" GridPane.rowIndex="2" styleClass="text-small, text-strong">
-                                </Label>
-                                <Label fx:id="albumsPlayed" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                                <Label text="Artists played" GridPane.rowIndex="3" styleClass="text-small, text-strong">
-                                </Label>
-                                <Label fx:id="artistsPlayed" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-                                <TableView fx:id="latestSongsTable" maxHeight="1.7976931348623157E308"
-                                           maxWidth="1.7976931348623157E308" GridPane.columnSpan="9"
-                                           GridPane.rowIndex="5">
-                                    <columns>
-                                        <TableColumn fx:id="dateColumn" editable="false"
-                                                     maxWidth="1.7976931348623157E308" sortable="false" text="Date"/>
-                                        <TableColumn fx:id="timeColumn" editable="false"
-                                                     maxWidth="1.7976931348623157E308" sortable="false" text="Time"/>
-                                        <TableColumn fx:id="songColumn" editable="false"
-                                                     maxWidth="1.7976931348623157E308" sortable="false" text="Song"/>
-                                        <TableColumn fx:id="albumColumn" editable="false"
-                                                     maxWidth="1.7976931348623157E308" sortable="false" text="Album"/>
-                                        <TableColumn fx:id="artistColumn" editable="false"
-                                                     maxWidth="1.7976931348623157E308" sortable="false" text="Artist"/>
-                                    </columns>
-                                </TableView>
-                                <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
-                                       maxWidth="1.7976931348623157E308" text="Latest Songs History"
-                                       textAlignment="CENTER" GridPane.columnSpan="9" GridPane.rowIndex="4"
-                                       GridPane.valignment="CENTER" styleClass="text-section">
-                                </Label>
-                            </children>
-                        </GridPane>
+                        <Label fx:id="totalTimeListened" styleClass="text-title" text="–"/>
+                        <Label styleClass="dim-text" text="Time listened"/>
                     </children>
-                </AnchorPane>
-            </content>
-        </ScrollPane>
+                </VBox>
+                <VBox spacing="2.0" styleClass="stat-card">
+                    <children>
+                        <Label fx:id="songsPlayed" styleClass="text-title" text="–"/>
+                        <Label styleClass="dim-text" text="Songs played"/>
+                    </children>
+                </VBox>
+                <VBox spacing="2.0" styleClass="stat-card">
+                    <children>
+                        <Label fx:id="albumsPlayed" styleClass="text-title" text="–"/>
+                        <Label styleClass="dim-text" text="Albums"/>
+                    </children>
+                </VBox>
+                <VBox spacing="2.0" styleClass="stat-card">
+                    <children>
+                        <Label fx:id="artistsPlayed" styleClass="text-title" text="–"/>
+                        <Label styleClass="dim-text" text="Artists"/>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+        <StackPane VBox.vgrow="ALWAYS">
+            <children>
+                <TableView fx:id="latestSongsTable" maxHeight="1.7976931348623157E308"
+                           maxWidth="1.7976931348623157E308">
+                    <columns>
+                        <TableColumn fx:id="playedAtColumn" editable="false" maxWidth="170.0" minWidth="120.0"
+                                     prefWidth="140.0" text="Played at"/>
+                        <TableColumn fx:id="songColumn" editable="false" prefWidth="260.0" text="Song"/>
+                        <TableColumn fx:id="artistColumn" editable="false" prefWidth="180.0" text="Artist"/>
+                        <TableColumn fx:id="albumColumn" editable="false" prefWidth="180.0" text="Album"/>
+                    </columns>
+                </TableView>
+                <Label fx:id="emptyLabel" managed="false" styleClass="dim-text" visible="false"/>
+                <ProgressIndicator fx:id="loadingIndicator" managed="false" maxHeight="40.0" maxWidth="40.0"
+                                   visible="false"/>
+            </children>
+        </StackPane>
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <children>
+                <Label fx:id="shownLabel" styleClass="dim-text"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="loadMoreButton" managed="false" mnemonicParsing="false" onAction="#onLoadMore"
+                        text="Load more" visible="false"/>
+            </children>
+        </HBox>
     </children>
-</AnchorPane>
+</VBox>
