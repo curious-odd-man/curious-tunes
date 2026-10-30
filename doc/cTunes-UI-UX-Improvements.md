@@ -788,14 +788,26 @@ current columns.
 
 See §11.
 
-- [ ] 7.1 Visible "◀ Library" button with tooltip (§11.1).
-- [ ] 7.2 Choose compact/wide layout by window size instead of maximized state (§11.2) — *decision needed*, since the
+- [x] 7.1 Visible "◀ Library" button with tooltip (§11.1).
+- [x] 7.2 Choose compact/wide layout by window size instead of maximized state (§11.2) — *decision needed*, since the
   lyrics drawer and fullscreen already cover most of the need.
-- [ ] 7.3 More keys: ←/→ seek, ↑/↓ volume, N next (P previous after Step 10) (§11.4).
-- [ ] 7.4 Waveform: hover time preview, playhead line, hint that it fills in while listening (§11.7). Same for the
+- [x] 7.3 More keys: ←/→ seek, ↑/↓ volume, N next (P previous after Step 10) (§11.4).
+- [x] 7.4 Waveform: hover time preview, playhead line, hint that it fills in while listening (§11.7). Same for the
   library seek bar (§3.9).
-- [ ] 7.5 Window title "Title — Artist" while playing; also for the library window (§11.9, §13).
-- [ ] 7.6 Filled volume track; double-click artwork toggles layout; right-click lyrics ▸ Copy (§11.12, §11.13).
+- [x] 7.5 Window title "Title — Artist" while playing; also for the library window (§11.9, §13).
+- [x] 7.6 Filled volume track; double-click artwork toggles layout; right-click lyrics ▸ Copy (§11.12, §11.13).
+
+**Status: DONE (step 7).** The full description is in section 10 of `playback-window.md`. In short:
+
+- 7.1/7.2: a window bar with *◀ Library*; the wide view is used from 1000 × 640 px (or maximized / fullscreen),
+  the compact view below that. *Maximize* now only maximizes (it no longer switches the "view").
+- 7.3: ← / → seek 5 s, ↑ / ↓ volume, N next. *P* (previous) is not added: the playback window design says no previous
+  track, and the player has no previous-track support (Step 10).
+- 7.4: playhead line, hover line and time tooltip on both waveforms, with a hint where the waveform is still empty.
+- 7.5: window title "Title — Artist" in both windows while a track is loaded.
+- 7.6: the volume track is filled up to the thumb (both windows); double-click the artwork maximizes / restores;
+  right-click
+  the lyrics ▸ Copy lyrics.
 
 ### Step 8 — Rescan dialog, Settings, Preloader (S–L)
 

@@ -1,11 +1,14 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.custom;
 
 import com.github.curiousoddman.curious_tunes.model.WaveformModel;
+import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.async.WaveformWriter;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Background;
@@ -40,13 +43,15 @@ public class ProgressCanvasController implements TrackProgressController {
     private final MusicCurveAnimation musicCurveAnimation;
     private final WaveformModel       waveformModel;
 
-    private Canvas          canvas;
-    private GraphicsContext graphicsContext;
-    private WritableImage   playedImage;
-    private WritableImage   unplayedImage;
-    private Duration        currentDuration;
-    private Duration        totalDuration;
-    private AnimationTimer  timer;
+    private       Canvas          canvas;
+    private       GraphicsContext graphicsContext;
+    private       WritableImage   playedImage;
+    private       WritableImage   unplayedImage;
+    private       Duration        currentDuration;
+    private       Duration        totalDuration;
+    private       AnimationTimer  timer;
+    private       double          hoverX   = -1;        // pointer over the seek bar, -1 when it is not over it
+    private final Tooltip         hoverTip = new Tooltip();
 
     private LongConsumer animation = now -> render();
 
@@ -62,6 +67,15 @@ public class ProgressCanvasController implements TrackProgressController {
         clearWaveform(graphicsContext);
         parentPane.getStyleClass()
                   .add("waveform-pane");
+        parentPane.setCursor(Cursor.HAND);
+        parentPane.setOnMouseMoved(event -> {
+            hoverX = event.getX();
+            showHoverTime(event.getScreenX(), event.getScreenY());
+        });
+        parentPane.setOnMouseExited(event -> {
+            hoverX = -1;
+            hoverTip.hide();
+        });
         parentPane.sceneProperty()
                   .addListener((obs, oldScene, newScene) -> {
                       if (newScene != null) {
@@ -246,6 +260,28 @@ public class ProgressCanvasController implements TrackProgressController {
                 | (int) (c.getBlue() * 255);
     }
 
+    private void showHoverTime(double screenX, double screenY) {
+        double width = canvas.getWidth();
+        if (width <= 0 || totalDuration == null || totalDuration.toMillis() <= 0) {
+            hoverTip.hide();
+            return;
+        }
+        double   fraction = Math.max(0, Math.min(1, hoverX / width));
+        String   text     = TimeUtils.secondsToHumanTime((int) (fraction * totalDuration.toSeconds()));
+        double[] bars     = waveformModel.getBars();
+        int      index    = Math.min(bars.length - 1, (int) (fraction * bars.length));
+        if (bars[index] == 0 && currentDuration != null && fraction * totalDuration.toMillis() > currentDuration.toMillis()) {
+            text += "\nThe waveform fills in as the track plays";
+        }
+        hoverTip.setText(text);
+        if (hoverTip.isShowing()) {
+            hoverTip.setAnchorX(screenX + 12);
+            hoverTip.setAnchorY(screenY + 16);
+        } else {
+            hoverTip.show(canvas, screenX + 12, screenY + 16);
+        }
+    }
+
     private void render() {
         double width  = canvas.getWidth();
         double height = canvas.getHeight();
@@ -263,6 +299,16 @@ public class ProgressCanvasController implements TrackProgressController {
             graphicsContext.drawImage(unplayedImage,
                     splitX, 0, width - splitX, height,
                     splitX, 0, width - splitX, height);
+        }
+
+        // Playhead, and where a click would seek to while the pointer is over the bar.
+        if (totalDuration != null && totalDuration.toMillis() > 0) {
+            graphicsContext.setFill(Color.color(1, 1, 1, 0.9));
+            graphicsContext.fillRect(Math.max(0, splitX - 1), 2, 2, height - 4);
+        }
+        if (hoverX >= 0) {
+            graphicsContext.setFill(Color.color(1, 1, 1, 0.45));
+            graphicsContext.fillRect(Math.floor(hoverX), 2, 1, height - 4);
         }
     }
 

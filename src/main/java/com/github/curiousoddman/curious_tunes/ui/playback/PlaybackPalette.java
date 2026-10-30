@@ -106,6 +106,14 @@ public record PlaybackPalette(Color bgTop,
                 .formatted(css(bgTop), css(bgBottom), css(text), css(textDim), css(accent));
     }
 
+    public String accentCss() {
+        return css(accent);
+    }
+
+    public String unplayedCss() {
+        return css(unplayed);
+    }
+
     private static String css(Color c) {
         return String.format(Locale.ROOT, "rgba(%d,%d,%d,%.3f)",
                 Math.round(c.getRed() * 255),

@@ -46,6 +46,7 @@ import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.Library
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryTagEditTabController;
 import com.github.curiousoddman.curious_tunes.ui.playback.PlaybackWindow;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
+import com.github.curiousoddman.curious_tunes.util.SliderFill;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.TrackActions;
 import com.github.curiousoddman.curious_tunes.util.UiIcons;
@@ -240,9 +241,11 @@ public class LibraryController implements Initializable {
     private       TrackInfo                    pendingRevealTrack;       // "Show in library": select this track when its albums are shown
 
     // ---- transport bar
-    private final Tooltip nowPlayingTooltip = new Tooltip();
-    private       Image   noCoverImage;
-    private       double  volumeBeforeMute  = 30;
+    private static final String  NOTHING_PLAYING   = "Nothing playing";
+    private final        Tooltip nowPlayingTooltip = new Tooltip();
+    private              String  baseWindowTitle;
+    private              Image   noCoverImage;
+    private              double  volumeBeforeMute  = 30;
 
     // ---- status bar
     private final PauseTransition toastTimer = new PauseTransition(Duration.seconds(5));
@@ -1110,6 +1113,7 @@ public class LibraryController implements Initializable {
                      .addListener((obs, oldValue, newValue) -> updateVolumeIcon(newValue.doubleValue()));
         updateVolumeIcon(volumeControl.getValue());
 
+        SliderFill.install(volumeControl, () -> "-ct-accent", () -> "#cbd5e1");
         showIdle();
     }
 
@@ -1130,10 +1134,27 @@ public class LibraryController implements Initializable {
                    .append(album);
         }
         nowPlayingTooltip.setText(tooltip.toString());
+        updateWindowTitle(title, artist);
+    }
+
+    /**
+     * "Title — Artist" in the title bar and the taskbar while something plays; the normal title otherwise.
+     */
+    private void updateWindowTitle(String title, String artist) {
+        if (buttonPlayPause.getScene() == null || !(buttonPlayPause.getScene()
+                                                                   .getWindow() instanceof Stage stage)) {
+            return;
+        }
+        if (baseWindowTitle == null) {
+            baseWindowTitle = stage.getTitle() == null ? "cTunes" : stage.getTitle();
+        }
+        boolean idle = NOTHING_PLAYING.equals(title);
+        stage.setTitle(idle ? baseWindowTitle
+                : (artist == null || artist.isBlank() ? title : title + " — " + artist));
     }
 
     private void showIdle() {
-        showTrackInfo("Nothing playing", "", "");
+        showTrackInfo(NOTHING_PLAYING, "", "");
         timeSinceStart.setText("0:00");
         timeRemaining.setText("-0:00");
         currentTrackAlbumImage.setImage(noCoverImage);

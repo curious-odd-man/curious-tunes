@@ -228,3 +228,33 @@ None. Section 4 contains three **[PROPOSAL]** items on lyrics auto-fit edge case
 9. Colors follow the art and fade between tracks; default colors for tracks without art.
 10. Move/resize in Simple view, close, reopen: same position/size; always opens in Simple view; X returns to the
     library; library size/position unchanged.
+
+## 10. Changes after the UI review (steps 1–7)
+
+These supersede the matching statements in the sections above (in particular "View = window state" and "the checkbox
+resets to checked on every open").
+
+- **Window bar.** A bar at the top of the window holds *◀ Library* (back to the library; Esc and the close button do the
+  same), the session time, *Lyrics*, fullscreen and *Maximize / Restore*. The playback buttons (play/pause, next,
+  volume) are on their own row.
+- **Compact or wide view follows the window size**, not only the maximized state: the wide view (art left, lyrics right)
+  is used when the window is at least 1000 × 640 px, or maximized, or fullscreen. It switches back at 960 × 600 so that
+  dragging an edge does not flicker. Minimum window size is now 780 × 360.
+- **Lyrics drawer in the compact view.** *Lyrics* (or L) opens the lyrics under the "Up next" line and makes the window
+  taller (about 600 px); closing it restores the previous height. The wide view always shows the lyrics. Whether the
+  drawer is open and whether auto-fit is on are remembered. Only the compact height is saved as the window height.
+- **Lyrics size** is one setting shared with the library's lyrics tab. Auto-fit exists only here.
+- **Fullscreen (F11).** Uses the wide view. After 3 idle seconds the window bar, the waveform, the controls and the
+  mouse cursor fade out; a mouse move or key press brings them back. The first Esc leaves fullscreen, the next one
+  returns to the library.
+- **Keys.** Space play/pause, ← / → seek 5 s, ↑ / ↓ volume ±5, N next track, L lyrics drawer, F11 fullscreen,
+  Esc back (or leave fullscreen). A focused slider uses the arrow keys itself. There is still no previous-track key
+  (section 2: no previous in this window).
+- **Waveform.** A playhead line; while the pointer is over it a line and a tooltip show the time a click would seek to,
+  with a note where the waveform is not drawn yet ("fills in as the track plays"). The library's seek bar does the same.
+- **Volume.** The speaker icon mutes/unmutes and changes with the level; the track is filled up to the thumb with the
+  accent colour of the artwork; the tooltip shows the value; the volume is saved after every change (also from the
+  keyboard and from the library slider).
+- **Other.** The window title is "Title — Artist" while a track is loaded; double-clicking the artwork maximizes /
+  restores the window; right-click on the lyrics offers *Copy lyrics*.
+
