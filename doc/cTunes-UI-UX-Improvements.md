@@ -811,10 +811,24 @@ See §11.
 
 ### Step 8 — Rescan dialog, Settings, Preloader (S–L)
 
-- [ ] 8.1 Rescan dialog on a proper layout instead of absolute positions; recent-folders list (§10.1, §10.2).
-- [ ] 8.2 Settings dialog: library folders, default shuffle behaviour, lyrics font (§10.6) — L, optional.
-- [ ] 8.3 Preloader: make the rotation visible (arc or dashed stroke), stretch the waves with the window, add the logo
+- [x] 8.1 Rescan dialog on a proper layout instead of absolute positions; recent-folders list (§10.1, §10.2).
+- [x] 8.2 Settings dialog: library folders, default shuffle behaviour, lyrics font (§10.6) — L, optional.
+- [x] 8.3 Preloader: make the rotation visible (arc or dashed stroke), stretch the waves with the window, add the logo
   and a status line (§12) — S each.
+
+**Status: DONE (step 8).** Notes:
+
+- 8.1: the Rescan dialog is a normal layout (it resizes), with an editable list of the last 8 folders that were scanned,
+  *Browse…*, a message when the folder does not exist, and Scan / Cancel (Enter / Esc).
+- 8.2: *File ▸ Settings…* has three settings: the music folder (the one *Rescan library* offers), what the play buttons
+  of
+  artists and albums do (play in order, or play shuffled — the shuffle buttons always shuffle), and the lyrics text size
+  (shared with the lyrics tab and the playback window). "Library folders" was reduced to the one folder the rescan uses,
+  because scanning works on one folder at a time.
+- 8.3: the loader ring is dashed, so that its rotation can be seen; the waves follow the window width; the logo is
+  shown;
+  and a status line says "Starting the application..." and "Opening the library...". (Spring's start is one blocking
+  call, so there are only these two messages.)
 
 ### Step 9 — Accessibility and navigation (M–L)
 

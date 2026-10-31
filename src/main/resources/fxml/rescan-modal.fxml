@@ -1,33 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tooltip?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-<AnchorPane prefHeight="167.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.screen.RescanLibraryController">
+<VBox minWidth="560.0" prefWidth="640.0" spacing="10.0" xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.screen.RescanLibraryController">
+    <padding>
+        <Insets bottom="16.0" left="18.0" right="18.0" top="16.0"/>
+    </padding>
     <children>
-        <TextField fx:id="path" layoutX="22.0" layoutY="35.0" prefHeight="51.0" prefWidth="503.0"/>
-        <Button layoutX="525.0" layoutY="35.0" mnemonicParsing="false" onAction="#onChoosePath">
-            <graphic>
-                <FontIcon iconLiteral="mdi2f-folder-open" iconSize="22"/>
-            </graphic>
-            <tooltip>
-                <Tooltip text="Choose the music folder..."/>
-            </tooltip>
-        </Button>
-        <Label fx:id="errorLabel" layoutX="22.0" layoutY="88.0" text="" textFill="RED"/>
-        <Button fx:id="scanButton" defaultButton="true" layoutX="200.0" layoutY="105.0" mnemonicParsing="false"
-                onAction="#onRescan" text="Scan">
-            <graphic>
-                <FontIcon iconLiteral="mdi2r-refresh" iconSize="18"/>
-            </graphic>
-        </Button>
-        <Button cancelButton="true" layoutX="320.0" layoutY="105.0" mnemonicParsing="false" onAction="#onCancel"
-                text="Cancel" styleClass="text-large">
-        </Button>
+        <Label styleClass="text-section" text="Music folder"/>
+        <Label styleClass="dim-text"
+               text="All music files in this folder and its sub-folders are added to the library or updated."
+               wrapText="true"/>
+        <HBox alignment="CENTER_LEFT" spacing="6.0">
+            <children>
+                <ComboBox fx:id="path" editable="true" maxWidth="1.7976931348623157E308"
+                          promptText="The folder with your music" visibleRowCount="8" HBox.hgrow="ALWAYS"/>
+                <Button mnemonicParsing="false" onAction="#onChoosePath" text="Browse…">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2f-folder-open" iconSize="18"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Choose the music folder"/>
+                    </tooltip>
+                </Button>
+            </children>
+        </HBox>
+        <Label fx:id="errorLabel" minHeight="20.0" styleClass="toast-error"/>
+        <HBox alignment="CENTER_RIGHT" spacing="8.0">
+            <children>
+                <Button cancelButton="true" mnemonicParsing="false" onAction="#onCancel" text="Cancel"/>
+                <Button fx:id="scanButton" defaultButton="true" mnemonicParsing="false" onAction="#onRescan"
+                        text="Scan">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2r-refresh" iconSize="16"/>
+                    </graphic>
+                </Button>
+            </children>
+        </HBox>
     </children>
-</AnchorPane>
+</VBox>

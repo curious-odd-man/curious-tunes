@@ -1,6 +1,7 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.element;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
+import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
@@ -31,6 +32,7 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @RequiredArgsConstructor
 public class LibraryArtistController implements Initializable {
     private final ApplicationEventPublisher eventPublisher;
+    private final UserPreferencesService    userPreferencesService;
 
     public StackPane avatar;
     @FXML
@@ -73,7 +75,7 @@ public class LibraryArtistController implements Initializable {
                 .builder()
                 .source(this)
                 .artistRecord(artistRecord)
-                .shuffle(Shuffle.SKIP)
+                .shuffle(userPreferencesService.isPlayShuffled() ? Shuffle.AFTER_ADDING_TO_PLAYLIST : Shuffle.SKIP)
                 .playlistAddMode(PlaylistAddMode.REPLACE)
                 .build();
         eventPublisher.publishEvent(event);
@@ -85,7 +87,7 @@ public class LibraryArtistController implements Initializable {
                 .builder()
                 .source(this)
                 .artistRecord(artistRecord)
-                .shuffle(Shuffle.SKIP)
+                .shuffle(userPreferencesService.isPlayShuffled() ? Shuffle.BEFORE_ADDING_TO_PLAYLIST : Shuffle.SKIP)
                 .playlistAddMode(PlaylistAddMode.APPEND)
                 .build();
         eventPublisher.publishEvent(event);

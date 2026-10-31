@@ -294,6 +294,7 @@
                 <Menu mnemonicParsing="false" text="File">
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#onRescanMenuClicked" text="Rescan library..."/>
+                        <MenuItem mnemonicParsing="false" onAction="#onSettingsMenuClicked" text="Settings..."/>
                         <MenuItem mnemonicParsing="false" onAction="#onCloseMenuClicked" text="Close"/>
                     </items>
                 </Menu>

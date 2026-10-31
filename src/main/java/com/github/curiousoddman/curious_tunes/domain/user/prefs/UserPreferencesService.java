@@ -2,6 +2,7 @@ package com.github.curiousoddman.curious_tunes.domain.user.prefs;
 
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.model.AlbumSort;
+import com.github.curiousoddman.curious_tunes.util.RecentFolders;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.Path;
+import java.util.List;
 
 
 @Slf4j
@@ -195,11 +197,25 @@ public class UserPreferencesService {
                    .toString();
     }
 
+    public List<String> getRecentLibraryRoots() {
+        return RecentFolders.parse(dataAccess.getUserPref(UserPrefKey.RECENT_LIBRARY_ROOTS, null));
+    }
+
+    public boolean isPlayShuffled() {
+        return getBoolean(UserPrefKey.PLAY_SHUFFLED, false);
+    }
+
+    public void savePlayShuffled(boolean shuffled) {
+        dataAccess.setUserPref(UserPrefKey.PLAY_SHUFFLED, String.valueOf(shuffled));
+    }
+
     public void saveLibraryRoot(String libraryRoot) {
         if (libraryRoot == null || libraryRoot.isBlank() || libraryRoot.length() > MAX_PREF_VALUE_LENGTH) {
             log.warn("Library root is not saved (empty or longer than {} characters)", MAX_PREF_VALUE_LENGTH);
             return;
         }
         dataAccess.setUserPref(UserPrefKey.LIBRARY_ROOT, libraryRoot);
+        List<String> recent = RecentFolders.push(getRecentLibraryRoots(), libraryRoot, 8, MAX_PREF_VALUE_LENGTH - 5);
+        dataAccess.setUserPref(UserPrefKey.RECENT_LIBRARY_ROOTS, RecentFolders.join(recent));
     }
 }

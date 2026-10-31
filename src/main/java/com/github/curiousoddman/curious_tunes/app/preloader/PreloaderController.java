@@ -1,6 +1,12 @@
 package com.github.curiousoddman.curious_tunes.app.preloader;
 
-import javafx.animation.*;
+import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.RotateTransition;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -17,23 +23,32 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PreloaderController implements Initializable {
 
     @FXML
-    public CubicCurveTo wave1Curve;
+    public  CubicCurveTo wave1Curve;
     @FXML
-    public CubicCurveTo wave2Curve;
+    public  CubicCurveTo wave2Curve;
     @FXML
-    public CubicCurveTo wave3Curve;
+    public  CubicCurveTo wave3Curve;
     @FXML
-    public Path wave1;
+    public  Path         wave1;
     @FXML
-    public Path wave2;
+    public  Path         wave2;
     @FXML
-    public Path wave3;
+    public  Path         wave3;
     @FXML
-    public AnchorPane rootPane;
+    public  AnchorPane   rootPane;
     @FXML
-    private Circle loaderCircle;
+    private Circle       loaderCircle;
     @FXML
-    private Label loadingText;
+    private Label        loadingText;
+    @FXML
+    private Label        statusText;
+
+    /**
+     * What is happening now ("Opening the library...").
+     */
+    public void setStatus(String message) {
+        statusText.setText(message == null ? "" : message);
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -48,6 +63,16 @@ public class PreloaderController implements Initializable {
         fade.setCycleCount(Animation.INDEFINITE);
         fade.setAutoReverse(true);
 
+        // The waves span the whole width of the window, whatever its size.
+        for (CubicCurveTo curve : new CubicCurveTo[]{wave1Curve, wave2Curve, wave3Curve}) {
+            rootPane.widthProperty()
+                    .addListener((obs, oldWidth, width) -> {
+                        curve.setX(width.doubleValue());
+                        curve.setControlX1(width.doubleValue() * 0.25);
+                        curve.setControlX2(width.doubleValue() * 0.75);
+                    });
+        }
+
         createWaveAndAnimate(wave1Curve, 200, 0.8);
         createWaveAndAnimate(wave2Curve, 200, 1);
         createWaveAndAnimate(wave3Curve, 200, 1.2);
@@ -57,9 +82,9 @@ public class PreloaderController implements Initializable {
     }
 
     private void createWaveAndAnimate(CubicCurveTo cubicCurveTo, double amplitude, double speed) {
-        var baseY = cubicCurveTo.getY();
+        var               baseY             = cubicCurveTo.getY();
         ThreadLocalRandom threadLocalRandom = ThreadLocalRandom.current();
-        int sign = threadLocalRandom.nextInt() % 2 == 0 ? 1 : -1;
+        int               sign              = threadLocalRandom.nextInt() % 2 == 0 ? 1 : -1;
         Timeline timeline = new Timeline(
                 new KeyFrame(Duration.ZERO,
                         new KeyValue(cubicCurveTo.controlY1Property(), baseY + amplitude * sign * threadLocalRandom.nextDouble(0.2, 1)),

@@ -1,6 +1,7 @@
 package com.github.curiousoddman.curious_tunes;
 
 import com.github.curiousoddman.curious_tunes.app.preloader.MainSceneVisible;
+import com.github.curiousoddman.curious_tunes.app.preloader.PreloaderStatus;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
 import com.github.curiousoddman.curious_tunes.ui.controller.screen.LibraryController;
@@ -15,11 +16,13 @@ public class JavafxApplication extends Application {
     private Stage stage;
 
     private ConfigurableApplicationContext applicationContext;
-    private StageManager stageManager;
+    private StageManager                   stageManager;
 
     @Override
     public void init() {
+        notifyPreloader(new PreloaderStatus("Starting the application..."));
         applicationContext = new SpringApplicationBuilder(Main.class).run();
+        notifyPreloader(new PreloaderStatus("Opening the library..."));
     }
 
     @Override
@@ -31,12 +34,13 @@ public class JavafxApplication extends Application {
     @Override
     public void start(Stage primaryStage) {
         stage = primaryStage;
-        stage.getIcons().addAll(
-                new Image(getClass().getResourceAsStream("/icons/app-icon-16.png")),
-                new Image(getClass().getResourceAsStream("/icons/app-icon-32.png")),
-                new Image(getClass().getResourceAsStream("/icons/app-icon-64.png")),
-                new Image(getClass().getResourceAsStream("/icons/app-icon-128.png"))
-        );
+        stage.getIcons()
+             .addAll(
+                     new Image(getClass().getResourceAsStream("/icons/app-icon-16.png")),
+                     new Image(getClass().getResourceAsStream("/icons/app-icon-32.png")),
+                     new Image(getClass().getResourceAsStream("/icons/app-icon-64.png")),
+                     new Image(getClass().getResourceAsStream("/icons/app-icon-128.png"))
+             );
         stageManager = applicationContext.getBean(StageManager.class, primaryStage);
         LibraryController libraryController = stageManager.switchScene(FxmlView.LIBRARY);
         libraryController.setUserPrefs(primaryStage);

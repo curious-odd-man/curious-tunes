@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes.ui.controller.element;
 import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.model.LibraryDragPayload;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
@@ -60,6 +61,7 @@ public class LibraryArtistAlbumController implements Initializable {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final FxmlLoader                fxmlLoader;
     private final LibraryDragPayload        dragPayload;
+    private final UserPreferencesService    userPreferencesService;
     public        ImageView                 albumImage;
     public        Label                     albumTitle;
     public        Label                     albumDetails;
@@ -180,7 +182,7 @@ public class LibraryArtistAlbumController implements Initializable {
                 .builder()
                 .source(this)
                 .albums(List.of(albumInfo.getAlbumRecord()))
-                .shuffle(Shuffle.SKIP)
+                .shuffle(userPreferencesService.isPlayShuffled() ? Shuffle.AFTER_ADDING_TO_PLAYLIST : Shuffle.SKIP)
                 .playlistAddMode(PlaylistAddMode.REPLACE)
                 .build();
         applicationEventPublisher.publishEvent(event);
@@ -193,7 +195,7 @@ public class LibraryArtistAlbumController implements Initializable {
 
     @FXML
     public void onAddToQueueClicked(ActionEvent actionEvent) {
-        publish(PlaylistAddMode.APPEND, Shuffle.SKIP);
+        publish(PlaylistAddMode.APPEND, userPreferencesService.isPlayShuffled() ? Shuffle.BEFORE_ADDING_TO_PLAYLIST : Shuffle.SKIP);
     }
 
     @FXML

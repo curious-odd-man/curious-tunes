@@ -1203,6 +1203,20 @@ public class LibraryController implements Initializable {
     }
 
     @FXML
+    public void onSettingsMenuClicked(ActionEvent actionEvent) {
+        Stage stage = new Stage();
+        Scene scene = new Scene(fxmlLoader.load(FxmlView.SETTINGS, null)
+                                          .parent());
+        UiStyles.apply(scene);
+        stage.setScene(scene);
+        stage.setTitle("Settings");
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initOwner(buttonPlayPause.getScene()
+                                       .getWindow());
+        stage.showAndWait();
+    }
+
+    @FXML
     @SneakyThrows
     public void onRescanMenuClicked(ActionEvent actionEvent) {
         Stage stage = new Stage();
