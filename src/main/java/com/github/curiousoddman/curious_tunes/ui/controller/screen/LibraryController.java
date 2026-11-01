@@ -17,6 +17,7 @@ import com.github.curiousoddman.curious_tunes.event.FindLyricsForTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
 import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
+import com.github.curiousoddman.curious_tunes.event.ShowAlbumInLibraryEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowArtistAlbums;
 import com.github.curiousoddman.curious_tunes.event.ShowInLibraryEvent;
 import com.github.curiousoddman.curious_tunes.event.SkipNextEvent;
@@ -45,6 +46,7 @@ import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.Library
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryTagEditTabController;
 import com.github.curiousoddman.curious_tunes.ui.playback.PlaybackWindow;
+import com.github.curiousoddman.curious_tunes.util.Accessibility;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import com.github.curiousoddman.curious_tunes.util.SliderFill;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
@@ -239,6 +241,7 @@ public class LibraryController implements Initializable {
     private       boolean                      artistsLoaded;
     private       int                          shownArtistId        = -1;
     private       TrackInfo                    pendingRevealTrack;       // "Show in library": select this track when its albums are shown
+    private       Integer                      pendingRevealAlbumId;      // "Show in library" of an artist or album: scroll to this album
 
     // ---- transport bar
     private static final String  NOTHING_PLAYING   = "Nothing playing";
@@ -439,6 +442,7 @@ public class LibraryController implements Initializable {
         }
         applyCoverSize();
         revealPendingTrack();
+        revealPendingAlbum();
     }
 
     /**
@@ -472,6 +476,47 @@ public class LibraryController implements Initializable {
                 artistListView.scrollTo(artist);
             }
         });
+    }
+
+    /**
+     * "Show in library" from the search: show the artist and scroll to the album.
+     */
+    @EventListener
+    public void onShowAlbumInLibrary(ShowAlbumInLibraryEvent event) {
+        runOnFxThread(() -> {
+            ArtistRecord artist = allArtists.stream()
+                                            .filter(a -> a.getId() == event.getArtistId())
+                                            .findFirst()
+                                            .orElse(null);
+            if (artist == null) {
+                return;
+            }
+            tabPane.getSelectionModel()
+                   .select(0);
+            searchField.clear();
+            pendingRevealAlbumId = event.getAlbumId();
+            if (shownArtistId == artist.getId() && !currentAlbums.isEmpty()) {
+                revealPendingAlbum();
+            } else {
+                artistListView.getSelectionModel()
+                              .select(artist);
+                artistListView.scrollTo(artist);
+            }
+        });
+    }
+
+    private void revealPendingAlbum() {
+        Integer albumId = pendingRevealAlbumId;
+        if (albumId == null) {
+            return;
+        }
+        pendingRevealAlbumId = null;
+        currentAlbums.stream()
+                     .filter(album -> Objects.equals(album.controller()
+                                                          .getAlbumInfo()
+                                                          .getId(), albumId))
+                     .findFirst()
+                     .ifPresent(this::openAlbumInList);
     }
 
     private void revealPendingTrack() {
@@ -926,6 +971,7 @@ public class LibraryController implements Initializable {
                 LoadedFxml<LibraryArtistController> loaded = fxmlLoader.load(FxmlView.LIBRARY_ARTIST_ITEM, null);
                 rowController = loaded.controller();
                 rowRoot = loaded.parent();
+                Accessibility.nameIconControls(rowRoot);
                 ((Region) rowRoot).prefWidthProperty()
                                   .bind(artistListView.widthProperty()
                                                       .subtract(20));
@@ -1113,6 +1159,7 @@ public class LibraryController implements Initializable {
                      .addListener((obs, oldValue, newValue) -> updateVolumeIcon(newValue.doubleValue()));
         updateVolumeIcon(volumeControl.getValue());
 
+        volumeControl.setAccessibleText("Volume");
         SliderFill.install(volumeControl, () -> "-ct-accent", () -> "#cbd5e1");
         showIdle();
     }
@@ -1203,11 +1250,26 @@ public class LibraryController implements Initializable {
     }
 
     @FXML
+    public void onSearchMenuClicked(ActionEvent actionEvent) {
+        Stage stage = new Stage();
+        Scene scene = new Scene(fxmlLoader.load(FxmlView.SEARCH, null)
+                                          .parent());
+        UiStyles.apply(scene);
+        Accessibility.nameIconControls(scene.getRoot());
+        stage.setScene(scene);
+        stage.setTitle("Search library");
+        stage.initOwner(buttonPlayPause.getScene()
+                                       .getWindow());
+        stage.show();
+    }
+
+    @FXML
     public void onSettingsMenuClicked(ActionEvent actionEvent) {
         Stage stage = new Stage();
         Scene scene = new Scene(fxmlLoader.load(FxmlView.SETTINGS, null)
                                           .parent());
         UiStyles.apply(scene);
+        Accessibility.nameIconControls(scene.getRoot());
         stage.setScene(scene);
         stage.setTitle("Settings");
         stage.initModality(Modality.APPLICATION_MODAL);
@@ -1224,6 +1286,7 @@ public class LibraryController implements Initializable {
                                 .parent();
         Scene rescanScene = new Scene(root);
         UiStyles.apply(rescanScene);
+        Accessibility.nameIconControls(root);
         stage.setScene(rescanScene);
         stage.setTitle("Rescan library");
         stage.initModality(Modality.APPLICATION_MODAL);

@@ -8,6 +8,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPrefKey;
 import com.github.curiousoddman.curious_tunes.model.HistoryRow;
 import com.github.curiousoddman.curious_tunes.model.HistoryStats;
+import com.github.curiousoddman.curious_tunes.model.SearchResult;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -171,6 +172,47 @@ public class DataAccess {
                 .columns(PLAYBACK_HISTORY.DATETIME, PLAYBACK_HISTORY.FK_TRACK, PLAYBACK_HISTORY.VOLUME)
                 .values(now, trackId, (byte) volume)
                 .execute();
+    }
+
+    /**
+     * Artists, albums and tracks whose name contains the text (ignoring the case): at most {@code limitPerKind} of each.
+     */
+    public List<SearchResult> searchLibrary(String text, int limitPerKind) {
+        String             pattern = "%" + text.replace("\\", "\\\\")
+                                               .replace("%", "\\%")
+                                               .replace("_", "\\_") + "%";
+        List<SearchResult> results = new ArrayList<>();
+
+        dsl.select(ARTIST.ID, ARTIST.NAME)
+           .from(ARTIST)
+           .where(ARTIST.NAME.likeIgnoreCase(pattern, '\\'))
+           .orderBy(ARTIST.NAME)
+           .limit(limitPerKind)
+           .forEach(row -> results.add(new SearchResult(SearchResult.Kind.ARTIST, row.get(ARTIST.ID), row.get(ARTIST.NAME),
+                   "Artist", row.get(ARTIST.ID), null)));
+
+        dsl.select(ALBUM.ID, ALBUM.NAME, ARTIST.ID, ARTIST.NAME)
+           .from(ALBUM)
+           .join(ARTIST)
+           .on(ALBUM.FK_ARTIST.eq(ARTIST.ID))
+           .where(ALBUM.NAME.likeIgnoreCase(pattern, '\\'))
+           .orderBy(ALBUM.NAME)
+           .limit(limitPerKind)
+           .forEach(row -> results.add(new SearchResult(SearchResult.Kind.ALBUM, row.get(ALBUM.ID), row.get(ALBUM.NAME),
+                   "Album · " + row.get(ARTIST.NAME), row.get(ARTIST.ID), row.get(ALBUM.ID))));
+
+        dsl.select(TRACK.ID, TRACK.TITLE, ALBUM.ID, ALBUM.NAME, ARTIST.ID, ARTIST.NAME)
+           .from(TRACK)
+           .join(ALBUM)
+           .on(TRACK.FK_ALBUM.eq(ALBUM.ID))
+           .join(ARTIST)
+           .on(ALBUM.FK_ARTIST.eq(ARTIST.ID))
+           .where(TRACK.TITLE.likeIgnoreCase(pattern, '\\'))
+           .orderBy(TRACK.TITLE)
+           .limit(limitPerKind)
+           .forEach(row -> results.add(new SearchResult(SearchResult.Kind.TRACK, row.get(TRACK.ID), row.get(TRACK.TITLE),
+                   row.get(ARTIST.NAME) + " · " + row.get(ALBUM.NAME), row.get(ARTIST.ID), row.get(ALBUM.ID))));
+        return results;
     }
 
     /**

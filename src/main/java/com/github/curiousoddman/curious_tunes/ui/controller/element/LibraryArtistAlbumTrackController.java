@@ -189,8 +189,15 @@ public class LibraryArtistAlbumTrackController implements Initializable {
         return selected.isEmpty() ? List.of(trackInfo) : selected;
     }
 
+    private void updateAccessibleText() {
+        rootHbox.setAccessibleText(trackInfo.getTitle() + ", " + secondsToHumanTime(trackInfo.getDuration())
+                + (playing ? ", playing now" : "")
+                + (trackSelectionModel.isSelected(trackInfo) ? ", selected" : ""));
+    }
+
     private void updateSelectionStyle() {
-        boolean      selected     = trackSelectionModel.isSelected(trackInfo);
+        boolean selected = trackSelectionModel.isSelected(trackInfo);
+        updateAccessibleText();
         List<String> styleClasses = rootHbox.getStyleClass();
         if (selected && !styleClasses.contains(SELECTED_ITEM)) {
             styleClasses.add(SELECTED_ITEM);
@@ -210,6 +217,7 @@ public class LibraryArtistAlbumTrackController implements Initializable {
             styleClasses.add(LIBRARY_TRACK_PLAYING);
         }
         updateNumberLabel();
+        updateAccessibleText();
     }
 
     /**

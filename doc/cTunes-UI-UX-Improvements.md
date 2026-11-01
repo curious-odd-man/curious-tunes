@@ -834,12 +834,35 @@ See §11.
 
 See §13.
 
-- [ ] 9.1 Menu accelerators and mnemonics (Ctrl+R rescan, Ctrl+Q quit) (S).
-- [ ] 9.2 Accessible names for all icon-only buttons (S).
-- [ ] 9.3 Do not rely on colour alone for selected/playing/played states (S).
-- [ ] 9.4 Notify the user when an audio file is missing (extend the status-bar messages) (S).
-- [ ] 9.5 Global search across artists, albums and tracks with play/queue actions (L).
+- [x] 9.1 Menu accelerators and mnemonics (Ctrl+R rescan, Ctrl+Q quit) (S).
+- [x] 9.2 Accessible names for all icon-only buttons (S).
+- [x] 9.3 Do not rely on colour alone for selected/playing/played states (S).
+- [x] 9.4 Notify the user when an audio file is missing (extend the status-bar messages) (S).
+- [x] 9.5 Global search across artists, albums and tracks with play/queue actions (L).
 - [ ] 9.6 Remember more UI state: tab, scroll, album sort (overlaps 4.4, 4.8) (M).
+
+**Status: DONE (step 9)**, except 9.6. Notes:
+
+- 9.1: *File ▸ Search library… (Ctrl+K)*, *Rescan library… (Ctrl+R)*, *Settings… (Ctrl+,)*, *Quit (Ctrl+Q)*, *Help ▸
+  About (F1)*; the menus
+  and items have Alt-mnemonics (underlined letters).
+- 9.2: buttons that show only an icon get their tooltip as accessible name (`Accessibility`); the volume sliders are
+  named.
+- 9.3: the queue shows *played* with a check mark (before: only dimmed); playing, missing and skipped already had an
+  icon or
+  strikethrough. Queue rows and library track rows have a spoken description ("Title, Artist, playing now"). Blue
+  (changed) and orange (edited earlier) field borders are still colours only; they are explained by the legend, the
+  undo button and the enabled Save button.
+- 9.4: before playing or preloading a track the player checks that the file exists. A track without a file is marked
+  (struck through, warning icon, tooltip with the path), the status bar says "File not found: …", and playback goes
+  on with the next track. If the file comes back the mark is removed. A track that cannot be opened for another reason
+  also gives a message.
+- 9.5: *Search library* window (Ctrl+K): type (2 letters or more) to find artists, albums and tracks; Enter plays,
+  Shift+Enter adds to the queue (the window stays open), Ctrl+Enter shows the hit in the library; double-click plays.
+  It finds text anywhere in the name and ignores the case, but not accents ("bjork" does not find "Björk" here — the
+  artist filter in the library does).
+- **9.6 was not done:** remembering the tab and the scroll position is the same as 4.4, which you excluded. The album
+  sort is remembered (4.8).
 
 ### Step 10 — Needs backend/player work first
 

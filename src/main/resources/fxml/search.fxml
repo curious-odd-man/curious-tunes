@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<VBox minHeight="320.0" minWidth="520.0" prefHeight="460.0" prefWidth="620.0" spacing="8.0"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.github.curiousoddman.curious_tunes.ui.controller.screen.SearchController">
+    <padding>
+        <Insets bottom="12.0" left="14.0" right="14.0" top="14.0"/>
+    </padding>
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="8.0">
+            <children>
+                <FontIcon iconLiteral="mdi2m-magnify" iconSize="22"/>
+                <TextField fx:id="queryField" maxWidth="1.7976931348623157E308"
+                           promptText="Search artists, albums and tracks" HBox.hgrow="ALWAYS"/>
+                <ProgressIndicator fx:id="progress" managed="false" maxHeight="20.0" maxWidth="20.0" minHeight="20.0"
+                                   minWidth="20.0" visible="false"/>
+            </children>
+        </HBox>
+        <StackPane VBox.vgrow="ALWAYS">
+            <children>
+                <ListView fx:id="resultsList"/>
+                <Label fx:id="emptyLabel" managed="false" styleClass="dim-text" visible="false"/>
+            </children>
+        </StackPane>
+        <Label styleClass="dim-text, text-small"
+               text="Enter: play   ·   Shift+Enter: add to the queue   ·   Ctrl+Enter: show in the library   ·   Esc: close"
+               wrapText="true"/>
+    </children>
+</VBox>

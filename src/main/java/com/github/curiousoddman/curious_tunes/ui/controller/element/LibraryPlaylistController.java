@@ -5,6 +5,7 @@ import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.ShowInLibraryEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
+import com.github.curiousoddman.curious_tunes.event.player.PlaylistItemUpdatedEvent;
 import com.github.curiousoddman.curious_tunes.model.LibraryDragPayload;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
@@ -220,6 +221,19 @@ public class LibraryPlaylistController implements Initializable {
         if (playerStatusEvent.getStatus() == PlaybackState.LAUNCHING) {
             Platform.runLater(() -> scrollToItem(playlistItem, true));
         }
+    }
+
+    /**
+     * The state of an item changed (for example its file is missing): style its row again.
+     */
+    @EventListener
+    public void onPlaylistItemUpdated(PlaylistItemUpdatedEvent event) {
+        runOnFxThread(() -> {
+            PlaylistItemController controller = playlistItemControllers.get(event.getPlaylistItem());
+            if (controller != null) {
+                controller.updateStyleFromPlayerStatus();
+            }
+        });
     }
 
     @FXML

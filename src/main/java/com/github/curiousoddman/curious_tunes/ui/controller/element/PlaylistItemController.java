@@ -170,12 +170,21 @@ public class PlaylistItemController implements Initializable {
             }
         }
 
-        // The icon next to the duration: play for the track that is playing, a warning for a missing file.
+        // The icon next to the duration: play for the track that is playing, a check for one that was played,
+        // a warning for a missing file. The state is not shown by a colour alone.
         switch (status) {
             case PLAYING -> rightText.setGraphic(UiIcons.icon(UiIcons.PLAY, 14));
+            case PLAYED -> rightText.setGraphic(UiIcons.icon("mdi2c-check", 14));
             case FILE_NOT_FOUND -> rightText.setGraphic(UiIcons.icon("mdi2a-alert-circle-outline", 14));
             default -> rightText.setGraphic(null);
         }
+        pane.setAccessibleText(playlistItem.getTitle() + ", " + playlistItem.getArtistName() + switch (status) {
+            case PLAYING -> ", playing now";
+            case PLAYED -> ", played";
+            case FILE_NOT_FOUND -> ", file not found";
+            case SKIPPED, TO_BE_SKIPPED -> ", skipped";
+            case QUEUED -> "";
+        });
 
         boolean missing = status == PlaylistItemStatus.FILE_NOT_FOUND;
         if (missing) {

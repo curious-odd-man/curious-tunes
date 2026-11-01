@@ -3,24 +3,10 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.ProgressBar?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Slider?>
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.ToggleButton?>
-<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -291,16 +277,43 @@
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <menus>
-                <Menu mnemonicParsing="false" text="File">
+                <Menu mnemonicParsing="true" text="_File">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#onRescanMenuClicked" text="Rescan library..."/>
-                        <MenuItem mnemonicParsing="false" onAction="#onSettingsMenuClicked" text="Settings..."/>
-                        <MenuItem mnemonicParsing="false" onAction="#onCloseMenuClicked" text="Close"/>
+                        <MenuItem mnemonicParsing="true" onAction="#onSearchMenuClicked" text="_Search library...">
+                            <accelerator>
+                                <KeyCodeCombination alt="UP" code="K" control="UP" meta="UP" shift="UP"
+                                                    shortcut="DOWN"/>
+                            </accelerator>
+                        </MenuItem>
+                        <SeparatorMenuItem mnemonicParsing="false"/>
+                        <MenuItem mnemonicParsing="true" onAction="#onRescanMenuClicked" text="_Rescan library...">
+                            <accelerator>
+                                <KeyCodeCombination alt="UP" code="R" control="UP" meta="UP" shift="UP"
+                                                    shortcut="DOWN"/>
+                            </accelerator>
+                        </MenuItem>
+                        <MenuItem mnemonicParsing="true" onAction="#onSettingsMenuClicked" text="S_ettings...">
+                            <accelerator>
+                                <KeyCodeCombination alt="UP" code="COMMA" control="UP" meta="UP" shift="UP"
+                                                    shortcut="DOWN"/>
+                            </accelerator>
+                        </MenuItem>
+                        <SeparatorMenuItem mnemonicParsing="false"/>
+                        <MenuItem mnemonicParsing="true" onAction="#onCloseMenuClicked" text="_Quit">
+                            <accelerator>
+                                <KeyCodeCombination alt="UP" code="Q" control="UP" meta="UP" shift="UP"
+                                                    shortcut="DOWN"/>
+                            </accelerator>
+                        </MenuItem>
                     </items>
                 </Menu>
-                <Menu mnemonicParsing="false" text="Help">
+                <Menu mnemonicParsing="true" text="_Help">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#onAboutMenuClicked" text="About"/>
+                        <MenuItem mnemonicParsing="true" onAction="#onAboutMenuClicked" text="_About">
+                            <accelerator>
+                                <KeyCodeCombination alt="UP" code="F1" control="UP" meta="UP" shift="UP" shortcut="UP"/>
+                            </accelerator>
+                        </MenuItem>
                     </items>
                 </Menu>
             </menus>

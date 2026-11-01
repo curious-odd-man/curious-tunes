@@ -11,6 +11,7 @@ import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.Library
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryTagEditTabController;
 import com.github.curiousoddman.curious_tunes.ui.controller.screen.LibraryController;
 import com.github.curiousoddman.curious_tunes.ui.controller.screen.RescanLibraryController;
+import com.github.curiousoddman.curious_tunes.ui.controller.screen.SearchController;
 import com.github.curiousoddman.curious_tunes.ui.controller.screen.SettingsController;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class FxmlView<T> {
     public static final FxmlView<LibraryArtistAlbumController>      LIBRARY_ARTIST_ALBUM      = new FxmlView<>("/fxml/library-artist-album.fxml", LibraryArtistAlbumController.class);
     public static final FxmlView<LibraryArtistAlbumDiscController>  LIBRARY_ARTIST_ALBUM_DISC = new FxmlView<>("/fxml/library-artist-album-disc.fxml", LibraryArtistAlbumDiscController.class);
     public static final FxmlView<RescanLibraryController>           RESCAN_MODAL              = new FxmlView<>("/fxml/rescan-modal.fxml", RescanLibraryController.class);
+    public static final FxmlView<SearchController>                  SEARCH                    = new FxmlView<>("/fxml/search.fxml", SearchController.class);
     public static final FxmlView<SettingsController>                SETTINGS                  = new FxmlView<>("/fxml/settings.fxml", SettingsController.class);
     public static final FxmlView<LibraryPlaylistController>         LIBRARY_PLAYLIST          = new FxmlView<>("/fxml/library-playlist.fxml", LibraryPlaylistController.class);
     public static final FxmlView<PlaylistItemController>            PLAYLIST_ITEM             = new FxmlView<>("/fxml/playlist-item.fxml", PlaylistItemController.class);

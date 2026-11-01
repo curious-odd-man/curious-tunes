@@ -5,14 +5,17 @@ import com.github.curiousoddman.curious_tunes.event.AddToPlaylistEvent;
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
 import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
 import com.github.curiousoddman.curious_tunes.event.SkipNextEvent;
+import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.event.UserShutdownApplication;
 import com.github.curiousoddman.curious_tunes.event.player.PlayerStatusEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlaylistChangedEvent;
+import com.github.curiousoddman.curious_tunes.event.player.PlaylistItemUpdatedEvent;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItemStatus;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.ui.controller.custom.TrackProgressController;
 import javafx.beans.property.DoubleProperty;
@@ -27,6 +30,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -140,7 +145,7 @@ public class AudioPlayer {
 
         if (isFirstSong()) {
             log.info("First song in playlist...");
-            Optional<PlaylistItem> currentForPlayback = playlistModel.getNextForPlayback();
+            Optional<PlaylistItem> currentForPlayback = nextPlayable();
             if (currentForPlayback.isEmpty()) {
                 log.info("No items to play");
                 return;
@@ -163,11 +168,16 @@ public class AudioPlayer {
             return;
         }
 
+        MediaPlayer  launching     = currentPlayer;
+        PlaylistItem launchingItem = playlistItemProperty.get();
+        launching.setOnError(() -> eventPublisher.publishEvent(UserNotificationEvent.error(this,
+                "Unable to play " + launchingItem.getTitle() + ": " + launching.getError()
+                                                                               .getMessage())));
         mediaPlayerListeningTracker.attachToPlayer(currentPlayer, playlistItemProperty.get()
                                                                                       .getTrackRecord());
         trackProgressController.startLoadingAnimation();
         playbackStatusProperty.set(PlaybackState.LAUNCHING);
-        Optional<PlaylistItem> nextForPlayback = playlistModel.getNextForPlayback();
+        Optional<PlaylistItem> nextForPlayback = nextPlayable();
 
         // Preload next track
         nextForPlayback.ifPresent(this::preloadNext);
@@ -227,6 +237,44 @@ public class AudioPlayer {
         }
     }
 
+    /**
+     * The track that plays next: the first one after the current track whose file exists. Tracks whose file is
+     * missing are marked, the user is told, and playback goes on with the track after them.
+     */
+    private Optional<PlaylistItem> nextPlayable() {
+        List<PlaylistItem> items   = playlistModel.getPlaylistItems();
+        PlaylistItem       current = playlistModel.getCurrentlyPlayingItem()
+                                                  .orElse(null);
+        for (int index = current == null ? 0 : items.indexOf(current) + 1; index < items.size(); index++) {
+            PlaylistItem item = items.get(index);
+            if (isPlayable(item)) {
+                return Optional.of(item);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private boolean isPlayable(PlaylistItem item) {
+        String  location = item.getFileLocation();
+        boolean exists   = location != null && Files.exists(Path.of(location));
+        if (exists) {
+            if (item.getPlaylistItemStatus() == PlaylistItemStatus.FILE_NOT_FOUND) {
+                item.setPlaylistItemStatus(PlaylistItemStatus.QUEUED);      // the file is back
+                eventPublisher.publishEvent(new PlaylistItemUpdatedEvent(this, item));
+            }
+            return true;
+        }
+        if (item.getPlaylistItemStatus() != PlaylistItemStatus.FILE_NOT_FOUND) {
+            item.setPlaylistItemStatus(PlaylistItemStatus.FILE_NOT_FOUND);
+            log.warn("File not found: {}", location);
+            eventPublisher.publishEvent(new PlaylistItemUpdatedEvent(this, item));
+            eventPublisher.publishEvent(UserNotificationEvent.error(this, "File not found: "
+                    + (location == null ? item.getTitle() : Path.of(location)
+                                                                .getFileName())));
+        }
+        return false;
+    }
+
     private void preloadNext(PlaylistItem item) {
         setNextPlaylistItem(item);
         log.info("Preloading: {}", item.getTitle());
@@ -245,8 +293,7 @@ public class AudioPlayer {
         if (currentPlayer == null) {
             return;     // nothing is playing; the next track is picked when playback starts
         }
-        PlaylistItem wanted = playlistModel.getNextForPlayback()
-                                           .orElse(null);
+        PlaylistItem wanted = nextPlayable().orElse(null);
         if (wanted == nextPlaylistItem) {
             return;     // the same track object is already preloaded
         }

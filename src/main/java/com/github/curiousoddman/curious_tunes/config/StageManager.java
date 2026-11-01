@@ -2,6 +2,7 @@ package com.github.curiousoddman.curious_tunes.config;
 
 import com.github.curiousoddman.curious_tunes.event.UserShutdownApplication;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
+import com.github.curiousoddman.curious_tunes.util.Accessibility;
 import com.github.curiousoddman.curious_tunes.util.UiStyles;
 import com.github.curiousoddman.curious_tunes.util.styles.CssClasses;
 import javafx.collections.ObservableList;
@@ -42,6 +43,7 @@ public class StageManager {
         LoadedFxml<T> loaded = loadRootNode(view);
         Scene         scene  = new Scene(loaded.parent());
         UiStyles.apply(scene);
+        Accessibility.nameIconControls(scene.getRoot());
         primaryStage.setMinWidth(MIN_WIDTH);
         primaryStage.setMinHeight(MIN_HEIGHT);
 

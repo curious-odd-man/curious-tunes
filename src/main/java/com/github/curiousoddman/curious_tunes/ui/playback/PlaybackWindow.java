@@ -9,6 +9,7 @@ import com.github.curiousoddman.curious_tunes.model.PlaybackState;
 import com.github.curiousoddman.curious_tunes.model.WaveformModel;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
+import com.github.curiousoddman.curious_tunes.util.Accessibility;
 import com.github.curiousoddman.curious_tunes.util.SliderFill;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.UiIcons;
@@ -454,6 +455,7 @@ public class PlaybackWindow {
                      .bind(volumeSlider.valueProperty()
                                        .asString("Volume: %.0f%%"));
         volumeSlider.setTooltip(volumeTooltip);
+        volumeSlider.setAccessibleText("Volume");
         volumeSlider.valueProperty()
                     .addListener((obs, oldValue, newValue) -> updateVolumeIcon(newValue.doubleValue()));
         volumeFill = SliderFill.install(volumeSlider,
@@ -533,6 +535,7 @@ public class PlaybackWindow {
         lyricsSizeSlider = new Slider(MIN_LYRICS_SIZE, MAX_LYRICS_SIZE, DEFAULT_LYRICS_SIZE);
         lyricsSizeSlider.setPrefWidth(160);
         lyricsSizeSlider.setTooltip(new Tooltip("Lyrics font size"));
+        lyricsSizeSlider.setAccessibleText("Lyrics font size");
         // Moving the slider only changes the size; it never touches the auto-fit checkbox.
         lyricsSizeSlider.valueProperty()
                         .addListener((obs, was, size) ->
@@ -597,6 +600,7 @@ public class PlaybackWindow {
         }
         updateSizes();
         requestFit();
+        Accessibility.nameIconControls(root);
     }
 
     private void applySimpleLayout() {
