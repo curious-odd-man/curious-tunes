@@ -6,6 +6,7 @@ import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesS
 import com.github.curiousoddman.curious_tunes.event.PlayPauseEvent;
 import com.github.curiousoddman.curious_tunes.event.SkipNextEvent;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
+import com.github.curiousoddman.curious_tunes.model.SpectrumModel;
 import com.github.curiousoddman.curious_tunes.model.WaveformModel;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
@@ -103,6 +104,10 @@ public class PlaybackWindow {
     private static final double SIMPLE_WAVEFORM_HEIGHT    = 56;
     private static final double MAXIMIZED_WAVEFORM_HEIGHT = 100;
     private static final double LEFT_COLUMN_SHARE         = 0.38;
+    private static final double ART_HEIGHT_SHARE          = 0.45;      // of the window height (maximized view)
+    private static final double SPECTRUM_HEIGHT_SHARE     = 0.32;      // of the album art size
+    private static final double MIN_SPECTRUM_HEIGHT       = 56;
+    private static final double MAX_SPECTRUM_HEIGHT       = 140;
 
     private static final String DIM        = "pw-dim";
     private static final String NO_IMAGE   = "/img/noimage.png";
@@ -113,6 +118,7 @@ public class PlaybackWindow {
     private final AudioPlayer               audioPlayer;
     private final PlaybackSessionTimer      sessionTimer;
     private final WaveformModel             waveformModel;
+    private final SpectrumModel             spectrumModel;
     private final UserPreferencesService    userPreferencesService;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -135,6 +141,7 @@ public class PlaybackWindow {
 
     // ── Progress and controls ────────────────────────────────────────────────
     private PlaybackWaveformView waveformView;
+    private PlaybackSpectrumView spectrumView;
     private Label                elapsedLabel;
     private Label                remainingLabel;
     private Label                sessionLabel;
@@ -395,6 +402,7 @@ public class PlaybackWindow {
 
     private void buildProgressNodes() {
         waveformView = new PlaybackWaveformView(waveformModel, this::seekToFraction);
+        spectrumView = new PlaybackSpectrumView(spectrumModel);
 
         elapsedLabel = label("pw-time");
         remainingLabel = label("pw-time");
@@ -642,7 +650,7 @@ public class PlaybackWindow {
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
-        leftPane = track(new VBox(12, artView, titleLabel, artistLabel, albumLabel, spacer, upNextCard));
+        leftPane = track(new VBox(12, artView, spectrumView.getNode(), titleLabel, artistLabel, albumLabel, spacer, upNextCard));
         leftPane.setPadding(new Insets(20));
 
         HBox.setHgrow(lyricsPane, Priority.ALWAYS);
@@ -677,9 +685,16 @@ public class PlaybackWindow {
         leftPane.setMinWidth(leftWidth);
         leftPane.setMaxWidth(leftWidth);
 
-        double artSize = Math.max(120, Math.min(leftWidth - 40, root.getHeight() * 0.40));
+        double artSize = Math.max(120, Math.min(leftWidth - 40, root.getHeight() * ART_HEIGHT_SHARE));
         artView.setFitWidth(artSize);
         artView.setFitHeight(artSize);
+
+        // The spectrum sits under the art, as wide as the art.
+        double spectrumHeight = Math.max(MIN_SPECTRUM_HEIGHT, Math.min(MAX_SPECTRUM_HEIGHT, artSize * SPECTRUM_HEIGHT_SHARE));
+        Region spectrum       = spectrumView.getNode();
+        spectrum.setPrefSize(artSize, spectrumHeight);
+        spectrum.setMinSize(artSize, spectrumHeight);
+        spectrum.setMaxSize(artSize, spectrumHeight);
     }
 
     private HBox waveformRow() {
@@ -1124,6 +1139,7 @@ public class PlaybackWindow {
         currentPalette = palette;
         root.setStyle(palette.toCssVariables());
         waveformView.setPalette(palette);
+        spectrumView.setPalette(palette);
         if (volumeFill != null) {
             volumeFill.run();
         }
@@ -1167,11 +1183,13 @@ public class PlaybackWindow {
         updateSession();
         sessionTicker.play();
         waveformView.start();
+        spectrumView.start();
     }
 
     private void stopTickers() {
         sessionTicker.stop();
         waveformView.stop();
+        spectrumView.stop();
         fitDebounce.stop();
     }
 

@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.custom;
 
+import com.github.curiousoddman.curious_tunes.model.SpectrumModel;
 import com.github.curiousoddman.curious_tunes.model.WaveformModel;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.async.WaveformWriter;
@@ -31,6 +32,15 @@ public class ProgressCanvasController implements TrackProgressController {
     private static final int    NUM_BARS           = WaveformModel.NUM_BARS;
     private static final double BAR_GAP            = 0.0;
     private static final int    AUDIO_THRESHOLD_DB = -80;
+    /**
+     * How often the player reports the spectrum. Fast enough for the playback window's visualiser to look smooth.
+     */
+    private static final double SPECTRUM_INTERVAL_SEC = 0.04;
+    /**
+     * The library waveform images are costly to build, so they are rebuilt no more often than this
+     * (the rate they had before the spectrum came faster).
+     */
+    private static final long   IMAGE_REBUILD_NANOS   = 100_000_000L;
 
     // Defaults; the real colors come from the -ct-seek-* tokens of global.css (see loadColorsFromCss).
     private Color bgColor     = Color.web("#3a4149");
@@ -42,6 +52,7 @@ public class ProgressCanvasController implements TrackProgressController {
     private final WaveformWriter      waveformWriter;
     private final MusicCurveAnimation musicCurveAnimation;
     private final WaveformModel       waveformModel;
+    private final SpectrumModel       spectrumModel;
 
     private       Canvas          canvas;
     private       GraphicsContext graphicsContext;
@@ -54,6 +65,7 @@ public class ProgressCanvasController implements TrackProgressController {
     private final Tooltip         hoverTip = new Tooltip();
 
     private LongConsumer animation = now -> render();
+    private long         lastImageBuildNanos;
 
     public void init(StackPane parentPane, Canvas canvas) {
         this.canvas = canvas;
@@ -182,7 +194,13 @@ public class ProgressCanvasController implements TrackProgressController {
 
         waveformWriter.append(timestamp, duration, magnitudes, phases, loudestMagnitude, barMagnitude);
         waveformModel.set(barIndex, barMagnitude);
-        buildImages();
+        spectrumModel.update(magnitudes, AUDIO_THRESHOLD_DB);
+
+        long now = System.nanoTime();
+        if (now - lastImageBuildNanos >= IMAGE_REBUILD_NANOS) {
+            lastImageBuildNanos = now;
+            buildImages();
+        }
     }
 
     @Override
@@ -192,7 +210,7 @@ public class ProgressCanvasController implements TrackProgressController {
 
     @Override
     public double getAudioSpectrumInterval() {
-        return 0.1;
+        return SPECTRUM_INTERVAL_SEC;
     }
 
     @Override
