@@ -23,6 +23,8 @@ public class UserPreferencesService {
     public static final  double DEFAULT_WINDOW_WIDTH           = 1920;
     public static final  double DEFAULT_WINDOW_HEIGHT          = 1080;
     public static final  int    DEFAULT_VOLUME                 = 30;
+    public static final  int    DEFAULT_VISUALISER_DELAY_MS    = 150;
+    public static final  int    MAX_VISUALISER_DELAY_MS        = 500;
     public static final  double DEFAULT_ARTISTS_SPLIT_WIDTH    = 0.26;
     public static final  double DEFAULT_PLAYLIST_SPLIT_WIDTH   = 0.8;
     public static final  double DEFAULT_LYRICS_FONT_SIZE       = 12;
@@ -105,6 +107,21 @@ public class UserPreferencesService {
             return defaultValue;
         }
         return Boolean.parseBoolean(raw);
+    }
+
+    /**
+     * How long after the spectrum arrives the visualiser draws it, so it lines up with what is heard (ms).
+     */
+    public int getVisualiserDelayMillis() {
+        return clampVisualiserDelay(getInt(UserPrefKey.VISUALISER_DELAY_MS, DEFAULT_VISUALISER_DELAY_MS));
+    }
+
+    public void saveVisualiserDelayMillis(int millis) {
+        dataAccess.setUserPref(UserPrefKey.VISUALISER_DELAY_MS, String.valueOf(clampVisualiserDelay(millis)));
+    }
+
+    public static int clampVisualiserDelay(int millis) {
+        return Math.max(0, Math.min(MAX_VISUALISER_DELAY_MS, millis));
     }
 
     public int getVolume() {

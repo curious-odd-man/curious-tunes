@@ -17,6 +17,7 @@ public enum UserPrefKey {
 
     // ── Playback ────────────────────────────────────────────────────────────
     VOLUME("playback.volume"),          // 0 – 100
+    VISUALISER_DELAY_MS("playback.visualiser.delay.ms"),   // spectrum drawn this long after it arrives, 0 – 500
 
     // ── Playback window (simple view only) ──────────────────────────────────
     PLAYBACK_WINDOW_X("playback.window.x"),

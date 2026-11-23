@@ -2,38 +2,61 @@ package com.github.curiousoddman.curious_tunes.model;
 
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayDeque;
+import java.util.Iterator;
+
 /**
- * The latest audio spectrum of the track being played, as reported by the media player
- * (magnitudes in dB, from the spectrum threshold up to 0). Views that animate the spectrum read it on every frame.
+ * Recent audio spectra of the track being played, as reported by the media player (magnitudes in dB, from the
+ * spectrum threshold up to 0), each with the time it arrived.
+ * <p>
+ * The player reports a spectrum when the audio is decoded, which is ahead of the moment it is heard (the audio
+ * output buffers it first). Views that animate the spectrum therefore ask for the frame that arrived a little
+ * while ago ({@link #frameAt(long)}) rather than the newest one, so the picture lines up with the sound.
  * <p>
  * Used from the JavaFX application thread only.
  */
 @Component
 public class SpectrumModel {
-    private float[] magnitudes = new float[0];
-    private double  thresholdDb;
-    private long    lastUpdateNanos;
-    private int     version;
+    /**
+     * Frames older than this are dropped; longer than any delay a view would use.
+     */
+    private static final long KEEP_NANOS = 2_000_000_000L;
+
+    public record Frame(long arrivedNanos, float[] magnitudes) {
+    }
+
+    private final ArrayDeque<Frame> frames = new ArrayDeque<>();
+    private       double            thresholdDb;
 
     /**
      * @param magnitudes  the player's array; it is reused by the player, so it is copied here
      * @param thresholdDb the spectrum threshold (the value of a silent band), e.g. -80
      */
     public void update(float[] magnitudes, double thresholdDb) {
-        if (this.magnitudes.length != magnitudes.length) {
-            this.magnitudes = new float[magnitudes.length];
-        }
-        System.arraycopy(magnitudes, 0, this.magnitudes, 0, magnitudes.length);
+        long now = System.nanoTime();
+        frames.addLast(new Frame(now, magnitudes.clone()));
         this.thresholdDb = thresholdDb;
-        this.lastUpdateNanos = System.nanoTime();
-        version++;
+        while (!frames.isEmpty() && now - frames.peekFirst()
+                                                .arrivedNanos() > KEEP_NANOS) {
+            frames.removeFirst();
+        }
     }
 
     /**
-     * @return live array (not a copy); read only
+     * The frame to show at {@code nanos} ({@link System#nanoTime()} clock): the newest one that had arrived by then.
+     *
+     * @return null if none had arrived by then
      */
-    public float[] getMagnitudes() {
-        return magnitudes;
+    public Frame frameAt(long nanos) {
+        Frame result = null;
+        for (Iterator<Frame> it = frames.iterator(); it.hasNext(); ) {
+            Frame frame = it.next();
+            if (frame.arrivedNanos() > nanos) {
+                break;
+            }
+            result = frame;
+        }
+        return result;
     }
 
     public double getThresholdDb() {
@@ -41,14 +64,16 @@ public class SpectrumModel {
     }
 
     /**
-     * When the player last reported a spectrum ({@link System#nanoTime()}), 0 if never. The player stops reporting
-     * while paused or stopped, so an old value means there is nothing playing.
+     * @return the loudest band of {@code magnitudes}, 0 (silent: at the threshold) to 1 (full scale: 0 dB)
      */
-    public long getLastUpdateNanos() {
-        return lastUpdateNanos;
-    }
-
-    public int getVersion() {
-        return version;
+    public static double loudness(float[] magnitudes, double thresholdDb) {
+        if (thresholdDb >= 0) {
+            return 0;
+        }
+        double loudest = thresholdDb;
+        for (float magnitude : magnitudes) {
+            loudest = Math.max(loudest, magnitude);
+        }
+        return Math.max(0, Math.min(1, (loudest - thresholdDb) / -thresholdDb));
     }
 }

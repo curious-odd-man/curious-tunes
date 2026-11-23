@@ -298,6 +298,8 @@
                                                     shortcut="DOWN"/>
                             </accelerator>
                         </MenuItem>
+                        <MenuItem mnemonicParsing="true" onAction="#onCalibrateVisualiserMenuClicked"
+                                  text="_Calibrate visualiser..."/>
                         <SeparatorMenuItem mnemonicParsing="false"/>
                         <MenuItem mnemonicParsing="true" onAction="#onCloseMenuClicked" text="_Quit">
                             <accelerator>

@@ -31,11 +31,11 @@ import java.util.function.LongConsumer;
 public class ProgressCanvasController implements TrackProgressController {
     private static final int    NUM_BARS           = WaveformModel.NUM_BARS;
     private static final double BAR_GAP            = 0.0;
-    private static final int    AUDIO_THRESHOLD_DB = -80;
+    public static final  int    AUDIO_THRESHOLD_DB = -80;
     /**
      * How often the player reports the spectrum. Fast enough for the playback window's visualiser to look smooth.
      */
-    private static final double SPECTRUM_INTERVAL_SEC = 0.04;
+    public static final  double SPECTRUM_INTERVAL_SEC = 0.04;
     /**
      * The library waveform images are costly to build, so they are rebuilt no more often than this
      * (the rate they had before the spectrum came faster).

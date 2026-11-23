@@ -46,6 +46,7 @@ import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.Library
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryTagEditTabController;
 import com.github.curiousoddman.curious_tunes.ui.playback.PlaybackWindow;
+import com.github.curiousoddman.curious_tunes.ui.playback.calibration.VisualiserCalibrationWindow;
 import com.github.curiousoddman.curious_tunes.util.Accessibility;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import com.github.curiousoddman.curious_tunes.util.SliderFill;
@@ -112,6 +113,7 @@ import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
@@ -229,6 +231,7 @@ public class LibraryController implements Initializable {
     private final VersionService           versionService;
     private final NowPlayingMarker         nowPlayingMarker;
     private final LibraryDragPayload       dragPayload;
+    private final ObjectProvider<VisualiserCalibrationWindow> calibrationWindow;
 
     // ---- artists: all of them, and the ones that match the search text
     private static final String ARTIST_LETTERS = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -1276,6 +1279,13 @@ public class LibraryController implements Initializable {
         stage.initOwner(buttonPlayPause.getScene()
                                        .getWindow());
         stage.showAndWait();
+    }
+
+    @FXML
+    public void onCalibrateVisualiserMenuClicked(ActionEvent actionEvent) {
+        calibrationWindow.getObject()
+                         .show(buttonPlayPause.getScene()
+                                              .getWindow());
     }
 
     @FXML

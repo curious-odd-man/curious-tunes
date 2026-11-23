@@ -10,6 +10,7 @@ import com.github.curiousoddman.curious_tunes.model.SpectrumModel;
 import com.github.curiousoddman.curious_tunes.model.WaveformModel;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
+import com.github.curiousoddman.curious_tunes.ui.playback.calibration.VisualiserCalibrationWindow;
 import com.github.curiousoddman.curious_tunes.util.Accessibility;
 import com.github.curiousoddman.curious_tunes.util.SliderFill;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
@@ -61,6 +62,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -104,10 +106,10 @@ public class PlaybackWindow {
     private static final double SIMPLE_WAVEFORM_HEIGHT    = 56;
     private static final double MAXIMIZED_WAVEFORM_HEIGHT = 100;
     private static final double LEFT_COLUMN_SHARE         = 0.38;
-    private static final double ART_HEIGHT_SHARE          = 0.45;      // of the window height (maximized view)
+    private static final double ART_HEIGHT_SHARE          = 0.36;      // of the window height (maximized view)
     private static final double SPECTRUM_HEIGHT_SHARE     = 0.32;      // of the album art size
     private static final double MIN_SPECTRUM_HEIGHT       = 56;
-    private static final double MAX_SPECTRUM_HEIGHT       = 140;
+    private static final double MAX_SPECTRUM_HEIGHT       = 100;
 
     private static final String DIM        = "pw-dim";
     private static final String NO_IMAGE   = "/img/noimage.png";
@@ -119,6 +121,8 @@ public class PlaybackWindow {
     private final PlaybackSessionTimer      sessionTimer;
     private final WaveformModel             waveformModel;
     private final SpectrumModel             spectrumModel;
+    private final VisualiserSync            visualiserSync;
+    private final ObjectProvider<VisualiserCalibrationWindow> calibrationWindow;
     private final UserPreferencesService    userPreferencesService;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -402,7 +406,14 @@ public class PlaybackWindow {
 
     private void buildProgressNodes() {
         waveformView = new PlaybackWaveformView(waveformModel, this::seekToFraction);
-        spectrumView = new PlaybackSpectrumView(spectrumModel);
+        spectrumView = new PlaybackSpectrumView(spectrumModel, visualiserSync.delayMillisProperty());
+        MenuItem calibrate = new MenuItem("Calibrate visualiser…");
+        calibrate.setOnAction(e -> calibrationWindow.getObject()
+                                                    .show(stage));
+        ContextMenu spectrumMenu = new ContextMenu(calibrate);
+        spectrumView.getNode()
+                    .setOnContextMenuRequested(e -> spectrumMenu.show(spectrumView.getNode(), e.getScreenX(), e.getScreenY()));
+        Tooltip.install(spectrumView.getNode(), new Tooltip("Right-click to line the visualiser up with the sound"));
 
         elapsedLabel = label("pw-time");
         remainingLabel = label("pw-time");

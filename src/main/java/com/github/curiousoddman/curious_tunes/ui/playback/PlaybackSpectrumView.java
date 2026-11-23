@@ -2,6 +2,7 @@ package com.github.curiousoddman.curious_tunes.ui.playback;
 
 import com.github.curiousoddman.curious_tunes.model.SpectrumModel;
 import javafx.animation.AnimationTimer;
+import javafx.beans.value.ObservableIntegerValue;
 import javafx.scene.AccessibleRole;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -35,7 +36,8 @@ public class PlaybackSpectrumView {
      */
     private static final long   SILENCE_NANOS   = 250_000_000L;
 
-    private final SpectrumModel  model;
+    private final SpectrumModel          model;
+    private final ObservableIntegerValue delayMillis;
     private final SpectrumBars   bars   = new SpectrumBars(BAR_COUNT);
     private final StackPane      pane   = new StackPane();
     private final Canvas         canvas = new Canvas();
@@ -46,12 +48,19 @@ public class PlaybackSpectrumView {
     private Paint           reflectionPaint;
     private Color           capColor;
 
-    private long    lastFrameNanos;
-    private int     seenVersion = -1;
-    private boolean dirty       = true;
+    private long                lastFrameNanos;
+    private SpectrumModel.Frame shownFrame;
+    private boolean             dirty = true;
 
-    public PlaybackSpectrumView(SpectrumModel model) {
+    /**
+     * @param model       where the spectrum comes from
+     * @param delayMillis how long after a spectrum arrives it is drawn: the time the sound takes from the decoder
+     *                    (where the spectrum is measured) to the speakers, so the bars move with what is heard
+     *                    (see {@link VisualiserSync}); read on every frame, so a change shows at once
+     */
+    public PlaybackSpectrumView(SpectrumModel model, ObservableIntegerValue delayMillis) {
         this.model = model;
+        this.delayMillis = delayMillis;
 
         // A Canvas cannot shrink with its parent unless the parent's minimum size is overridden.
         pane.setMinSize(0, 0);
@@ -70,7 +79,6 @@ public class PlaybackSpectrumView {
               });
         pane.setAccessibleRole(AccessibleRole.IMAGE_VIEW);
         pane.setAccessibleText("Audio spectrum");
-        pane.setMouseTransparent(true);
 
         timer = new AnimationTimer() {
             @Override
@@ -104,13 +112,13 @@ public class PlaybackSpectrumView {
         double seconds = lastFrameNanos == 0 ? 0 : (now - lastFrameNanos) / 1e9;
         lastFrameNanos = now;
 
-        int version = model.getVersion();
-        if (version != seenVersion) {
-            seenVersion = version;
-            bars.setSpectrum(model.getMagnitudes(), model.getThresholdDb());
-        }
-        if (model.getLastUpdateNanos() == 0 || System.nanoTime() - model.getLastUpdateNanos() > SILENCE_NANOS) {
+        long                heardNanos = System.nanoTime() - delayMillis.get() * 1_000_000L;
+        SpectrumModel.Frame frame      = model.frameAt(heardNanos);
+        if (frame == null || heardNanos - frame.arrivedNanos() > SILENCE_NANOS) {
             bars.silence();
+        } else if (frame != shownFrame) {
+            shownFrame = frame;
+            bars.setSpectrum(frame.magnitudes(), model.getThresholdDb());
         }
 
         boolean idle = bars.isIdle();
