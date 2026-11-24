@@ -7,24 +7,33 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Runs an action once after a delay; rescheduling before it runs replaces the pending one (debouncing, e.g.
+ * saving a setting once a slider stops moving).
+ * <p>
+ * Thread-safe, and all instances share one daemon scheduler thread (doc/performance-review.md, item 7.2, fix 7),
+ * so the actions of all instances run one after another on that thread: keep them short, and hop to the FX thread
+ * for UI work.
+ * <p>
+ * From the async framework of the sibling project (curious_designer).
+ */
 @RequiredArgsConstructor
 public class DelayedAction {
-    private final long delay;
-    private final TimeUnit timeUnit;
-
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-        Thread t = new Thread(r);
+    private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "delayed-action");
         t.setDaemon(true);
         return t;
     });
 
-    private ScheduledFuture<?> pendingSave = null;
+    private final long     delay;
+    private final TimeUnit timeUnit;
 
-    public void reSchedule(Runnable runnable) {
-        if (pendingSave != null) {
-            pendingSave.cancel(false);
+    private ScheduledFuture<?> pending = null;
+
+    public synchronized void reSchedule(Runnable runnable) {
+        if (pending != null) {
+            pending.cancel(false);
         }
-
-        pendingSave = scheduler.schedule(runnable, delay, timeUnit);
+        pending = SCHEDULER.schedule(runnable, delay, timeUnit);
     }
 }

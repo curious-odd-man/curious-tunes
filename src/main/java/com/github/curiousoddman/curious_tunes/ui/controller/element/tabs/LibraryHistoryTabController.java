@@ -5,7 +5,8 @@ import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.model.HistoryRow;
 import com.github.curiousoddman.curious_tunes.model.HistoryStats;
 import com.github.curiousoddman.curious_tunes.util.HistoryFormat;
-import javafx.application.Platform;
+import com.github.curiousoddman.curious_tunes.util.async.CancellationToken;
+import com.github.curiousoddman.curious_tunes.util.async.Flow;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -38,7 +39,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * What was played: totals for a period and the latest plays (loaded in pages, off the UI thread).
@@ -88,7 +90,7 @@ public class LibraryHistoryTabController implements Initializable {
     public Button                                  loadMoreButton;
 
     private final ObservableList<HistoryRow> rows    = FXCollections.observableArrayList();
-    private final AtomicInteger              loadId  = new AtomicInteger();
+    private final CancellationToken          historyLoad = new CancellationToken();
     private final NumberFormat               numbers = NumberFormat.getIntegerInstance();
 
     private OffsetDateTime since;       // start of the shown period; null = everything
@@ -139,11 +141,11 @@ public class LibraryHistoryTabController implements Initializable {
         if (loading) {
             return;
         }
-        int            id     = loadId.get();
+        CancellationToken.Snapshot load = historyLoad.snapshot();     // cancelled by a reload, not the other way
         int            offset = rows.size();
         OffsetDateTime period = since;
         setLoading(true);
-        runInBackground(id, () -> dataAccess.getHistoryRows(period, PAGE_SIZE, offset), page -> {
+        runInBackground(load, () -> dataAccess.getHistoryRows(period, PAGE_SIZE, offset), page -> {
             rows.addAll(page);
             setLoading(false);
             refreshFooter();
@@ -151,11 +153,11 @@ public class LibraryHistoryTabController implements Initializable {
     }
 
     private void reload() {
-        int            id     = loadId.incrementAndGet();
+        CancellationToken.Snapshot load = historyLoad.cancelAndSnapshot();   // a newer period replaces any load
         OffsetDateTime period = sinceOf(selectedPeriod());
         since = period;
         setLoading(true);
-        runInBackground(id, () -> new Loaded(dataAccess.getHistoryStats(period), dataAccess.getHistoryRows(period, PAGE_SIZE, 0)),
+        runInBackground(load, () -> new Loaded(dataAccess.getHistoryStats(period), dataAccess.getHistoryRows(period, PAGE_SIZE, 0)),
                 loaded -> {
                     showStats(loaded.stats());
                     totalPlays = loaded.stats()
@@ -170,30 +172,21 @@ public class LibraryHistoryTabController implements Initializable {
     }
 
     /**
-     * Runs the query in a thread of its own; the result is shown only if no newer load was started meanwhile.
+     * Runs the query in the background; the result is shown only if no newer load was started meanwhile.
      */
-    private <T> void runInBackground(int id, java.util.function.Supplier<T> query, java.util.function.Consumer<T> show) {
-        Thread t = new Thread(() -> {
-            try {
-                T result = query.get();
-                Platform.runLater(() -> {
-                    if (id == loadId.get()) {
-                        show.accept(result);
-                    }
-                });
-            } catch (Exception e) {
+    private <T> void runInBackground(CancellationToken.Snapshot load, Supplier<T> query, Consumer<T> show) {
+        Flow.begin()
+            .cancelledBy(load)
+            .bg(query)
+            .fx(show)
+            .onError(e -> {
                 log.error("Unable to load the history", e);
-                Platform.runLater(() -> {
-                    if (id == loadId.get()) {
-                        setLoading(false);
-                        refreshFooter();
-                        eventPublisher.publishEvent(UserNotificationEvent.error(this, "Unable to load the history"));
-                    }
-                });
-            }
-        }, "Load history");
-        t.setDaemon(true);
-        t.start();
+                if (load.isValid()) {
+                    setLoading(false);
+                    refreshFooter();
+                    eventPublisher.publishEvent(UserNotificationEvent.error(this, "Unable to load the history"));
+                }
+            });
     }
 
     private Toggle selectedPeriod() {

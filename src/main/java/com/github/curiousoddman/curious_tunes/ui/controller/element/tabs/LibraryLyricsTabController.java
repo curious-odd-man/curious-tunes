@@ -5,6 +5,7 @@ import com.github.curiousoddman.curious_tunes.domain.lyrics.LyricsService;
 import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
 import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
+import com.github.curiousoddman.curious_tunes.util.async.Flow;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -176,16 +177,20 @@ public class LibraryLyricsTabController implements Initializable {
 
         PlaylistItem item = playlistItem;
         String       text = savedText;
-        Thread t = new Thread(() -> {
-            log.info("Saving updated lyrics to {}", item.getFileLocation());
-            dataAccess.storeTrackOverride(item.getTrackRecord(), TRACK.LYRICS, item.getLyrics());
-            item.setLyrics(text);
-            item.getTrackRecord()
-                .update(TRACK.LYRICS);
-            log.info("Update completed...");
-            eventPublisher.publishEvent(UserNotificationEvent.info(this, "Lyrics saved"));
-        }, "Update metadata");
-        t.start();
+        Flow.begin()
+            .bg(() -> {
+                log.info("Saving updated lyrics to {}", item.getFileLocation());
+                dataAccess.storeTrackOverride(item.getTrackRecord(), TRACK.LYRICS, item.getLyrics());
+                item.setLyrics(text);
+                item.getTrackRecord()
+                    .update(TRACK.LYRICS);
+                log.info("Update completed...");
+            })
+            .fx(() -> eventPublisher.publishEvent(UserNotificationEvent.info(this, "Lyrics saved")))
+            .onError(e -> {
+                log.error("Unable to save the lyrics of {}", item.getFileLocation(), e);
+                eventPublisher.publishEvent(UserNotificationEvent.error(this, "Unable to save the lyrics"));
+            });
     }
 
     @FXML

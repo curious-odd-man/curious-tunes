@@ -55,7 +55,9 @@ import com.github.curiousoddman.curious_tunes.util.TrackActions;
 import com.github.curiousoddman.curious_tunes.util.UiIcons;
 import com.github.curiousoddman.curious_tunes.util.UiStyles;
 import com.github.curiousoddman.curious_tunes.util.VersionService;
+import com.github.curiousoddman.curious_tunes.util.async.CancellationToken;
 import com.github.curiousoddman.curious_tunes.util.async.DelayedAction;
+import com.github.curiousoddman.curious_tunes.util.async.Flow;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -131,7 +133,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static com.github.curiousoddman.curious_tunes.domain.tags.FilesScanningService.LIBRARY_SCAN;
@@ -257,7 +258,8 @@ public class LibraryController implements Initializable {
     private final PauseTransition toastTimer = new PauseTransition(Duration.seconds(5));
 
     // ---- albums view (list / grid)
-    private final AtomicInteger                                            albumsRequestId  = new AtomicInteger();
+    private final CancellationToken                                        albumsLoad       = new CancellationToken();
+    private final CancellationToken                                        artistsLoad      = new CancellationToken();
     private final List<LoadedFxml<LibraryArtistAlbumController>>           currentAlbums    = new ArrayList<>();
     private final List<AlbumCard>                                          albumCards       = new ArrayList<>();
     private final Map<LoadedFxml<LibraryArtistAlbumController>, AlbumCard> albumCardByAlbum = new IdentityHashMap<>();
@@ -365,8 +367,9 @@ public class LibraryController implements Initializable {
         String       artistName   = artistRecord.getName();
         artistTitle.setText(artistName);
 
-        // Results of an earlier, slower request must not end up in the view of this artist.
-        int requestId = albumsRequestId.incrementAndGet();
+        // Results of an earlier, slower request must not end up in the view of this artist: choosing another
+        // artist cancels the load still in flight.
+        CancellationToken.Snapshot load = albumsLoad.cancelAndSnapshot();
         artistAlbumsView.getChildren()
                         .remove(1, artistAlbumsView.getChildren()
                                                    .size());
@@ -382,41 +385,57 @@ public class LibraryController implements Initializable {
 
         TrackSelectionModel trackSelectionModel = new TrackSelectionModel();
         currentTrackSelectionModel = trackSelectionModel;
-        Thread t = new Thread(() -> {
-            List<AlbumRecord>       albums            = dataAccess.getArtistAlbums(artistId);
-            List<YearAndLoadedFxml> loadedFxmlsByYear = new ArrayList<>();
-            for (AlbumRecord album : albums) {
-                List<TrackRecord> albumTracks    = dataAccess.getAlbumTracks(album.getId());
-                Integer           yearFromTracks = getYearFromTracks(albumTracks);
-                log.debug("For album {} year {}", album.getName(), yearFromTracks);
-                LoadedFxml<LibraryArtistAlbumController> loaded = fxmlLoader.load(
-                        FxmlView.LIBRARY_ARTIST_ALBUM,
-                        new ArtistAlbumBundle(artistName,
-                                new AlbumInfo(
-                                        artistRecord,
-                                        album,
-                                        yearFromTracks
-                                ),
-                                trackSelectionModel,
-                                albumTracks
-                        )
-                );
-                loadedFxmlsByYear.add(new YearAndLoadedFxml(yearFromTracks, loaded));
-            }
-            List<LoadedFxml<LibraryArtistAlbumController>> sortedAlbums = loadedFxmlsByYear
-                    .stream()
-                    .sorted(comparing(YearAndLoadedFxml::year, nullsLast(naturalOrder())))
-                    .map(YearAndLoadedFxml::loadedFxml)
-                    .toList();
-            runOnFxThread(() -> showAlbums(requestId, sortedAlbums));
-        });
-        t.start();
+        Flow.begin()
+            .cancelledBy(load)
+            .bg(() -> buildAlbums(artistRecord, artistName, trackSelectionModel, load))
+            .fx(this::showAlbums)
+            .onError(e -> {
+                log.error("Unable to load the albums of {}", artistName, e);
+                artistAlbumsView.getChildren()
+                                .remove(albumsLoadingListLabel);
+                albumGrid.getChildren()
+                         .remove(albumsLoadingGridLabel);
+                eventPublisher.publishEvent(UserNotificationEvent.error(this, "Unable to load the albums of " + artistName));
+            });
     }
 
-    private void showAlbums(int requestId, List<LoadedFxml<LibraryArtistAlbumController>> sortedAlbums) {
-        if (requestId != albumsRequestId.get()) {
-            return;     // another artist has been selected in the meantime
+    /**
+     * Builds the album views of an artist, on a background thread. Stops early when another artist is chosen.
+     */
+    private List<LoadedFxml<LibraryArtistAlbumController>> buildAlbums(ArtistRecord artistRecord,
+                                                                       String artistName,
+                                                                       TrackSelectionModel trackSelectionModel,
+                                                                       CancellationToken.Snapshot load) {
+        List<AlbumRecord>               albums            = dataAccess.getArtistAlbums(artistRecord.getId());
+        Map<Integer, List<TrackRecord>> tracksByAlbum     = dataAccess.getTracksByAlbum(albums);     // one query (2.2)
+        List<YearAndLoadedFxml>         loadedFxmlsByYear = new ArrayList<>();
+        for (AlbumRecord album : albums) {
+            load.throwIfInvalid();                      // another artist was chosen: stop (item 7.2, fix 2)
+            List<TrackRecord> albumTracks    = tracksByAlbum.get(album.getId());
+            Integer           yearFromTracks = getYearFromTracks(albumTracks);
+            log.debug("For album {} year {}", album.getName(), yearFromTracks);
+            LoadedFxml<LibraryArtistAlbumController> loaded = fxmlLoader.load(
+                    FxmlView.LIBRARY_ARTIST_ALBUM,
+                    new ArtistAlbumBundle(artistName,
+                            new AlbumInfo(
+                                    artistRecord,
+                                    album,
+                                    yearFromTracks
+                            ),
+                            trackSelectionModel,
+                            albumTracks
+                    )
+            );
+            loadedFxmlsByYear.add(new YearAndLoadedFxml(yearFromTracks, loaded));
         }
+        return loadedFxmlsByYear
+                .stream()
+                .sorted(comparing(YearAndLoadedFxml::year, nullsLast(naturalOrder())))
+                .map(YearAndLoadedFxml::loadedFxml)
+                .toList();
+    }
+
+    private void showAlbums(List<LoadedFxml<LibraryArtistAlbumController>> sortedAlbums) {
         artistAlbumsView.getChildren()
                         .remove(albumsLoadingListLabel);
         albumGrid.getChildren()
@@ -1122,10 +1141,14 @@ public class LibraryController implements Initializable {
     private void onLibraryDataUpdated() {
         int previouslyShown = shownArtistId;     // selected again after the refresh, so its albums are reloaded too
         log.info("Update UI from library in separate thread");
-        Thread t = new Thread(() -> {
-            List<ArtistRecord> artists = new ArrayList<>(dataAccess.getAllArtists());
-            artists.sort(Comparator.comparing((ArtistRecord artist) -> LibraryArtistController.fold(artist.getName())));
-            runOnFxThread(() -> {
+        Flow.begin()
+            .cancelledBy(artistsLoad.cancelAndSnapshot())
+            .bg(() -> {
+                List<ArtistRecord> artists = new ArrayList<>(dataAccess.getAllArtists());
+                artists.sort(Comparator.comparing((ArtistRecord artist) -> LibraryArtistController.fold(artist.getName())));
+                return artists;
+            })
+            .fx(artists -> {
                 shownArtistId = -1;
                 artistsLoaded = true;
                 allArtists.setAll(artists);
@@ -1135,9 +1158,8 @@ public class LibraryController implements Initializable {
                        .findFirst()
                        .ifPresent(artist -> artistListView.getSelectionModel()
                                                           .select(artist));
-            });
-        }, "Load artists");
-        t.start();
+            })
+            .run();
     }
 
     // =========================================================================

@@ -1,6 +1,7 @@
 package com.github.curiousoddman.curious_tunes.domain.lyrics;
 
 import com.github.curiousoddman.curious_tunes.domain.lyrics.sources.LyricsSource;
+import com.github.curiousoddman.curious_tunes.util.async.Flow;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -28,15 +29,17 @@ public class LyricsService {
                                 String title,
                                 Consumer<String> onSuccess,
                                 Runnable onFailure) {
-        Thread t = new Thread(() -> {
-            Optional<String> lyrics = findLyrics(artist, album, title);
-            if (lyrics.isEmpty()) {
-                onFailure.run();
-            } else {
-                onSuccess.accept(lyrics.get());
-            }
-        }, "Find lyrics online");
-        t.start();
+        // The callbacks run on the background thread, as before; callers move to the FX thread themselves.
+        Flow.begin()
+            .bg(() -> {
+                Optional<String> lyrics = findLyrics(artist, album, title);
+                if (lyrics.isEmpty()) {
+                    onFailure.run();
+                } else {
+                    onSuccess.accept(lyrics.get());
+                }
+            })
+            .run();
     }
 
     /**
@@ -54,15 +57,16 @@ public class LyricsService {
                                           String title,
                                           Consumer<LyricsResult> onSuccess,
                                           Runnable onFailure) {
-        Thread t = new Thread(() -> {
-            Optional<LyricsResult> result = findLyricsWithSource(artist, album, title);
-            if (result.isEmpty()) {
-                onFailure.run();
-            } else {
-                onSuccess.accept(result.get());
-            }
-        }, "Find lyrics online");
-        t.start();
+        Flow.begin()
+            .bg(() -> {
+                Optional<LyricsResult> result = findLyricsWithSource(artist, album, title);
+                if (result.isEmpty()) {
+                    onFailure.run();
+                } else {
+                    onSuccess.accept(result.get());
+                }
+            })
+            .run();
     }
 
     public Optional<String> findLyrics(String artist, String album, String title) {

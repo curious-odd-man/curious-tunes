@@ -130,6 +130,23 @@ public class DataAccess {
                 .toList();
     }
 
+    /**
+     * The tracks of all these albums in one query, by album id (doc/performance-review.md, item 2.2). Albums without
+     * tracks have an empty list.
+     */
+    public Map<Integer, List<TrackRecord>> getTracksByAlbum(List<AlbumRecord> albums) {
+        Map<Integer, List<TrackRecord>> byAlbum = new HashMap<>();
+        albums.forEach(album -> byAlbum.put(album.getId(), new ArrayList<>()));
+        if (albums.isEmpty()) {
+            return byAlbum;
+        }
+        dsl.selectFrom(TRACK)
+           .where(TRACK.FK_ALBUM.in(byAlbum.keySet()))
+           .forEach(track -> byAlbum.get(track.getFkAlbum())
+                                    .add(track));
+        return byAlbum;
+    }
+
     public List<TrackRecord> getAlbumTracks(int albumFk) {
         return dsl
                 .selectFrom(TRACK)

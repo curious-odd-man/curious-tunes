@@ -13,6 +13,8 @@ import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistAddMode;
 import com.github.curiousoddman.curious_tunes.util.TrackActions;
 import com.github.curiousoddman.curious_tunes.util.UiIcons;
+import com.github.curiousoddman.curious_tunes.util.async.CancellationToken;
+import com.github.curiousoddman.curious_tunes.util.async.Flow;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -37,7 +39,6 @@ import org.springframework.stereotype.Component;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Search of the whole library. Type, pick with the arrow keys, then Enter plays, Shift+Enter adds to the queue and
@@ -64,12 +65,12 @@ public class SearchController implements Initializable {
     @FXML
     public ProgressIndicator      progress;
 
-    private final PauseTransition debounce  = new PauseTransition(Duration.millis(250));
-    private final AtomicInteger   requestId = new AtomicInteger();
+    private final PauseTransition   debounce    = new PauseTransition(Duration.millis(250));
+    private final CancellationToken searchToken = new CancellationToken();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        requestId.incrementAndGet();
+        searchToken.cancel();
         resultsList.getItems()
                    .clear();
         resultsList.setCellFactory(_ -> new ResultCell());
@@ -138,7 +139,7 @@ public class SearchController implements Initializable {
     private void search() {
         String text = queryField.getText() == null ? "" : queryField.getText()
                                                                     .trim();
-        int    id   = requestId.incrementAndGet();
+        searchToken.cancel();                           // results of an earlier search must not show any more
         if (text.length() < MIN_LENGTH) {
             resultsList.getItems()
                        .clear();
@@ -149,34 +150,26 @@ public class SearchController implements Initializable {
         }
         progress.setVisible(true);
         progress.setManaged(true);
-        Thread t = new Thread(() -> {
-            try {
-                List<SearchResult> found = dataAccess.searchLibrary(text, LIMIT_PER_KIND);
-                Platform.runLater(() -> {
-                    if (id != requestId.get()) {
-                        return;     // a newer search was started
-                    }
-                    progress.setVisible(false);
-                    progress.setManaged(false);
-                    resultsList.getItems()
-                               .setAll(found);
-                    showHint(found.isEmpty() ? "Nothing found for “" + text + "”" : "");
-                    if (!found.isEmpty()) {
-                        resultsList.getSelectionModel()
-                                   .selectFirst();
-                    }
-                });
-            } catch (Exception e) {
+        Flow.begin()
+            .cancelledBy(searchToken.snapshot())        // a newer search cancels this one (see above)
+            .bg(() -> dataAccess.searchLibrary(text, LIMIT_PER_KIND))
+            .fx(found -> {
+                progress.setVisible(false);
+                progress.setManaged(false);
+                resultsList.getItems()
+                           .setAll(found);
+                showHint(found.isEmpty() ? "Nothing found for “" + text + "”" : "");
+                if (!found.isEmpty()) {
+                    resultsList.getSelectionModel()
+                               .selectFirst();
+                }
+            })
+            .onError(e -> {
                 log.error("Search failed", e);
-                Platform.runLater(() -> {
-                    progress.setVisible(false);
-                    progress.setManaged(false);
-                    eventPublisher.publishEvent(UserNotificationEvent.error(this, "The search failed"));
-                });
-            }
-        }, "Search the library");
-        t.setDaemon(true);
-        t.start();
+                progress.setVisible(false);
+                progress.setManaged(false);
+                eventPublisher.publishEvent(UserNotificationEvent.error(this, "The search failed"));
+            });
     }
 
     // =========================================================================

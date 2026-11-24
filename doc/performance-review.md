@@ -669,6 +669,13 @@ number of concurrent queries is still bounded by the connection pool (Hikari, 10
 
 ### 7.2 Changes the async framework needs before it moves over
 
+**Status: done** (step 5). The framework is now in this project, as `util/async` (`Flow`, `CancellationToken`,
+`DelayedAction`) and `util/async/jobs` (`JobManager`, `BackgroundJob`, `JobEventPublisher`, …), with all seven
+changes below. The jobs part is covered by `JobManagerTest`. It still needs moving into a shared library, so the two
+projects don't keep separate copies. The call sites in 7.1 are moved over, except the cover decoder in
+`CoverImages`: it keeps its own pool of two threads on purpose, because virtual threads would let a burst of new rows
+start hundreds of decodes at once.
+
 Found while reviewing it for this app; worth fixing in the shared library so both apps benefit.
 
 1. **Failures are lost when no `onError` is attached.** `Step.run()` returns the raw future; if a step throws and the

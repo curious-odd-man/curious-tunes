@@ -8,16 +8,16 @@ import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.domain.FileStamp;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.CleanerResult;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.LyricsCleaner;
-import com.github.curiousoddman.curious_tunes.event.BackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEvent;
 import com.github.curiousoddman.curious_tunes.event.RescanLibraryEvent;
-import com.github.curiousoddman.curious_tunes.event.types.BackgroundProcessEventType;
 import com.github.curiousoddman.curious_tunes.model.TrackStatus;
+import com.github.curiousoddman.curious_tunes.util.async.jobs.BackgroundJob;
+import com.github.curiousoddman.curious_tunes.util.async.jobs.JobDescriptor;
+import com.github.curiousoddman.curious_tunes.util.async.jobs.JobManager;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -47,72 +47,100 @@ public class FilesScanningService /*implements StartupRunnable*/ {
      * Files per database transaction: one commit per file made the scan wait on the disk thousands of times.
      */
     private static final int                       BATCH_SIZE                     = 200;
-    private static final long                      PROGRESS_INTERVAL_NANOS        = 100_000_000L;
-    private final        ApplicationEventPublisher applicationEventPublisher;
     private final        DataAccess                dataAccess;
     private final        MetadataManager           metadataManager;
     private final        LyricsCleaner             lyricsCleaner;
     private final        TransactionTemplate       transactionTemplate;
-
-    private long lastProgressNanos;
+    private final        JobManager                jobManager;
 
     /**
-     * Set by the event listener thread, read by the scan thread: volatile, so a Stop request is always seen.
+     * The scan last submitted, for Stop.
      */
-    private volatile boolean shouldInterrupt;
+    private volatile JobDescriptor currentScan;
 
+    /**
+     * Queues a scan as a background job; a scan already queued or running makes this one a duplicate, which is
+     * dropped (doc/performance-review.md, item 7.1).
+     */
     @EventListener
     public void onRescanEvent(RescanLibraryEvent event) {
-        String libraryRoot = event.getPath();
-        shouldInterrupt = false;
         log.info("Received rescan library event...");
-        boolean full = event.isFull();
-        Runnable rescanRunnable = () -> {
-            log.info("Starting scanning: discover files...");
-            publishStartedEvent();
-            try {
-                List<ScannedFile> files = doScan(Path.of(libraryRoot));
-                log.info("Discovered {} files. Started processing{}", files.size(), full ? " (reading every file)" : "");
-                publishInProgressEvent(files.size());
-                scanFiles(files, full);
-            } catch (Exception e) {
-                publishFailedEvent(e);
-                log.error("Failed parsing files...", e);
-            } finally {
-                MDC.remove("file");
-            }
-        };
-        Thread rescanThread = new Thread(rescanRunnable, "rescan");
-        rescanThread.start();
+        jobManager.submit(new LibraryScanJob(event.getPath(), event.isFull()))
+                  .ifPresentOrElse(descriptor -> currentScan = descriptor,
+                          () -> log.info("A library scan is already running or queued"));
+    }
+
+    @EventListener
+    public void onInterruptBackgroundProcess(InterruptBackgroundProcessEvent event) {
+        JobDescriptor scan = currentScan;
+        if (scan != null) {
+            jobManager.cancel(scan.getId());
+        }
     }
 
     /**
-     * Files are processed in batches, each in one database transaction (item 5.2). A file whose size and
-     * modification time match the last scan is not read at all (item 5.1), unless {@code full}.
+     * One scan of the library folder. Stops between files when interrupted; the job framework reports the
+     * interruption, and a failure, itself.
      */
-    private void scanFiles(List<ScannedFile> files, boolean full) {
-        Map<String, FileStamp> stamps    = dataAccess.getTrackFileStamps();
-        ScanCache              cache     = new ScanCache();
-        int[]                  counts    = new int[4];      // added, updated, unchanged, failed
-        int                    processed = 0;
-        while (processed < files.size()) {
-            if (shouldInterrupt) {
-                log.info("Scanning interrupted");
-                publishInterruptedEvent();
+    private final class LibraryScanJob extends BackgroundJob {
+        private final String  libraryRoot;
+        private final boolean full;
+
+        LibraryScanJob(String libraryRoot, boolean full) {
+            this.libraryRoot = libraryRoot;
+            this.full = full;
+        }
+
+        @Override
+        public String getProcessName() {
+            return LIBRARY_SCAN;
+        }
+
+        @Override
+        public void runImpl() {
+            try {
+                log.info("Starting scanning: discover files...");
+                publishStarted("Discovering files...");
+                List<ScannedFile> files = doScan(Path.of(libraryRoot));
+                log.info("Discovered {} files. Started processing{}", files.size(), full ? " (reading every file)" : "");
+                publishInProgress("Fetching metadata...", 0, files.size());
+                scanFiles(files);
+            } finally {
+                MDC.remove("file");
+            }
+        }
+
+        /**
+         * Files are processed in batches, each in one database transaction (item 5.2). A file whose size and
+         * modification time match the last scan is not read at all (item 5.1), unless {@code full}.
+         */
+        private void scanFiles(List<ScannedFile> files) {
+            Map<String, FileStamp> stamps    = dataAccess.getTrackFileStamps();
+            ScanCache              cache     = new ScanCache();
+            int[]                  counts    = new int[4];      // added, updated, unchanged, failed
+            int                    processed = 0;
+            while (processed < files.size()) {
+                if (isInterruptRequested()) {
+                    log.info("Scanning interrupted");
+                    return;
+                }
+                int from = processed;
+                int to   = Math.min(files.size(), from + BATCH_SIZE);
+                transactionTemplate.executeWithoutResult(status -> {
+                    for (int i = from; i < to && !isInterruptRequested(); i++) {
+                        scanFile(files.get(i), i, full, stamps, cache, counts);
+                        // At most every 100 ms (item 5.3): thousands of UI updates would flood the JavaFX thread.
+                        publishProgressThrottled("Fetching metadata...", i + 1, files.size(), i + 1 == files.size());
+                    }
+                });
+                processed = to;
+            }
+            if (isInterruptRequested()) {
                 return;
             }
-            int from = processed;
-            int to   = Math.min(files.size(), from + BATCH_SIZE);
-            transactionTemplate.executeWithoutResult(status -> {
-                for (int i = from; i < to && !shouldInterrupt; i++) {
-                    scanFile(files.get(i), i, full, stamps, cache, counts);
-                    publishProgressThrottled(i + 1, files.size());
-                }
-            });
-            processed = to;
+            publishEnded(completedDescription(counts[0], counts[1], counts[2], counts[3]));
+            log.info("Scanning completed: {} added, {} updated, {} unchanged, {} failed", counts[0], counts[1], counts[2], counts[3]);
         }
-        publishCompletedEvent(counts[0], counts[1], counts[2], counts[3]);
-        log.info("Scanning completed: {} added, {} updated, {} unchanged, {} failed", counts[0], counts[1], counts[2], counts[3]);
     }
 
     private void scanFile(ScannedFile scanned, int index, boolean full, Map<String, FileStamp> stamps, ScanCache cache,
@@ -222,10 +250,6 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         return false;
     }
 
-    @EventListener
-    public void onInterruptBackgroundProcess(InterruptBackgroundProcessEvent event) {
-        shouldInterrupt = true;
-    }
 
     /**
      * An audio file found on disk, with the size and time the scan compares with the last scan.
@@ -255,77 +279,12 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         return foundFiles;
     }
 
-    private void publishFailedEvent(Exception e) {
-        applicationEventPublisher.publishEvent(
-                getBackgroundProcessEventBuilder()
-                        .eventType(BackgroundProcessEventType.FAILED)
-                        .description("Failed...")
-                        .error(e)
-                        .build());
-    }
-
-    private void publishCompletedEvent(int added, int updated, int unchanged, int failed) {
+    private static String completedDescription(int added, int updated, int unchanged, int failed) {
         String description = "%d added, %d updated, %d unchanged".formatted(added, updated, unchanged);
         if (failed > 0) {
             description += ", %d could not be read (see the log)".formatted(failed);
         }
-        applicationEventPublisher.publishEvent(
-                getBackgroundProcessEventBuilder()
-                        .eventType(BackgroundProcessEventType.ENDED)
-                        .description(description)
-                        .build());
-    }
-
-    /**
-     * At most every {@link #PROGRESS_INTERVAL_NANOS}, and always for the last file: thousands of UI updates per
-     * scan would only flood the JavaFX thread (item 5.3).
-     */
-    private void publishProgressThrottled(int done, int total) {
-        long now = System.nanoTime();
-        if (done < total && now - lastProgressNanos < PROGRESS_INTERVAL_NANOS) {
-            return;
-        }
-        lastProgressNanos = now;
-        applicationEventPublisher.publishEvent(
-                getBackgroundProcessEventBuilder()
-                        .eventType(BackgroundProcessEventType.IN_PROGRESS)
-                        .progress(done)
-                        .maxProgress(total)
-                        .description("Fetching metadata...")
-                        .build());
-    }
-
-    private void publishInterruptedEvent() {
-        applicationEventPublisher.publishEvent(
-                getBackgroundProcessEventBuilder()
-                        .eventType(BackgroundProcessEventType.INTERRUPTED)
-                        .description("Interrupted")
-                        .build());
-    }
-
-    private void publishInProgressEvent(int total) {
-        applicationEventPublisher.publishEvent(
-                getBackgroundProcessEventBuilder()
-                        .eventType(BackgroundProcessEventType.IN_PROGRESS)
-                        .maxProgress(total)
-                        .description("Fetching metadata...")
-                        .build());
-    }
-
-    private void publishStartedEvent() {
-        applicationEventPublisher.publishEvent(
-                getBackgroundProcessEventBuilder()
-                        .eventType(BackgroundProcessEventType.STARTED)
-                        .description("Discovering files...")
-                        .maxProgress(-1)
-                        .build());
-    }
-
-    private BackgroundProcessEvent.BackgroundProcessEventBuilder getBackgroundProcessEventBuilder() {
-        return BackgroundProcessEvent
-                .builder()
-                .source(this)
-                .processName(LIBRARY_SCAN);
+        return description;
     }
 
     // Uncomment if need to bulk fix lyrics again

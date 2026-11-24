@@ -11,6 +11,8 @@ import com.github.curiousoddman.curious_tunes.model.WaveformModel;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
 import com.github.curiousoddman.curious_tunes.ui.playback.calibration.VisualiserCalibrationWindow;
+import com.github.curiousoddman.curious_tunes.util.async.CancellationToken;
+import com.github.curiousoddman.curious_tunes.util.async.Flow;
 import com.github.curiousoddman.curious_tunes.util.Accessibility;
 import com.github.curiousoddman.curious_tunes.util.SliderFill;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
@@ -204,7 +206,7 @@ public class PlaybackWindow {
     private Duration        lastTotal;
     private PlaybackPalette currentPalette = PlaybackPalette.DEFAULT;
     private Timeline        paletteAnimation;
-    private int             paletteToken;
+    private final CancellationToken paletteLoad = new CancellationToken();
 
     // =========================================================================
     // Opening and closing
@@ -1108,21 +1110,16 @@ public class PlaybackWindow {
     // =========================================================================
 
     private void loadPalette(byte[] image) {
-        int token = ++paletteToken;
+        CancellationToken.Snapshot load = paletteLoad.cancelAndSnapshot();     // a newer track's palette wins
         if (image == null || image.length == 0) {
             moveToPalette(PlaybackPalette.DEFAULT);
             return;
         }
-        Thread thread = new Thread(() -> {
-            PlaybackPalette palette = PlaybackPalette.fromImage(image);
-            Platform.runLater(() -> {
-                if (token == paletteToken) {
-                    moveToPalette(palette);
-                }
-            });
-        }, "Album art palette");
-        thread.setDaemon(true);
-        thread.start();
+        Flow.begin()
+            .cancelledBy(load)
+            .bg(() -> PlaybackPalette.fromImage(image))
+            .fx(this::moveToPalette)
+            .run();
     }
 
     private void moveToPalette(PlaybackPalette target) {
