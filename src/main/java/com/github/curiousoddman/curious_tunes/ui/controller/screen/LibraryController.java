@@ -447,20 +447,9 @@ public class LibraryController implements Initializable {
         for (LoadedFxml<LibraryArtistAlbumController> album : ordered) {
             artistAlbumsView.getChildren()
                             .add(album.parent());
-
-            LibraryArtistAlbumController controller = album.controller();
-            AlbumCard card = new AlbumCard(
-                    controller.getAlbumInfo(),
-                    albumGridCoverSize,
-                    () -> openAlbumInList(album),
-                    controller::playAlbum
-            );
-            card.setOnDragDetected(event -> startAlbumCardDrag(card, controller, event));
-            card.setOnDragDone(_ -> dragPayload.clear());
-            albumCards.add(card);
-            albumCardByAlbum.put(album, card);
-            albumGrid.getChildren()
-                     .add(card);
+        }
+        if (albumsGridMode) {
+            buildAlbumCards();          // otherwise built the first time the grid is shown (item 2.5)
         }
         applyCoverSize();
         revealPendingTrack();
@@ -663,6 +652,31 @@ public class LibraryController implements Initializable {
                                       .toList());
     }
 
+    /**
+     * The grid's cards for the albums shown, built the first time the grid is shown for this artist
+     * (doc/performance-review.md, item 2.5).
+     */
+    private void buildAlbumCards() {
+        if (!albumCards.isEmpty() || currentAlbums.isEmpty()) {
+            return;
+        }
+        for (LoadedFxml<LibraryArtistAlbumController> album : currentAlbums) {
+            LibraryArtistAlbumController controller = album.controller();
+            AlbumCard card = new AlbumCard(
+                    controller.getAlbumInfo(),
+                    albumGridCoverSize,
+                    () -> openAlbumInList(album),
+                    controller::playAlbum
+            );
+            card.setOnDragDetected(event -> startAlbumCardDrag(card, controller, event));
+            card.setOnDragDone(_ -> dragPayload.clear());
+            albumCards.add(card);
+            albumCardByAlbum.put(album, card);
+            albumGrid.getChildren()
+                     .add(card);
+        }
+    }
+
     private void startAlbumCardDrag(AlbumCard card, LibraryArtistAlbumController controller, MouseEvent event) {
         Dragboard        dragboard = card.startDragAndDrop(TransferMode.COPY);
         ClipboardContent content   = new ClipboardContent();
@@ -682,6 +696,9 @@ public class LibraryController implements Initializable {
             albumCoverSizeSlider.setValue(albumsGridMode ? albumGridCoverSize : albumListCoverSize);
         } finally {
             updatingCoverSlider = false;
+        }
+        if (albumsGridMode) {
+            buildAlbumCards();
         }
         albumsScroll.setContent(albumsGridMode ? albumGridBox : artistAlbumsView);
         applyCoverSize();
