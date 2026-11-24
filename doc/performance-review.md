@@ -10,34 +10,36 @@ around artist switching, queue loading and rescans is enough).
 
 ## Summary
 
-| #   | Area         | Problem                                                                               | Impact                        | Effort  | Priority |
-|-----|--------------|---------------------------------------------------------------------------------------|-------------------------------|---------|----------|
-| 1.1 | m4a playback | Every `.m4a` is assumed to be ALAC; an AAC `.m4a` would be sent to the ALAC decoder   | None today (library is ALAC)  | Small   | Low      |
-| 1.2 | m4a playback | Decoded audio is streamed without length or byte ranges: seeking and duration suffer  | Seeking, CPU — every `.m4a`   | Medium  | High     |
-| 1.3 | m4a playback | The endpoint reads any path, on all network interfaces                                | Security                      | Small   | High     |
-| 1.4 | m4a playback | `@Cacheable` on the endpoint caches nothing useful                                    | Misleading                    | Trivial | Low      |
-| 2.1 | Album art    | Covers decoded at full size, on the JavaFX thread, once per row/card, never cached    | Memory, UI stalls             | Medium  | High     |
-| 2.2 | Artist view  | One query per album when an artist is selected (N+1)                                  | Artist switch time            | Small   | Medium   |
-| 2.3 | Artist view  | A new thread per artist click, earlier ones not cancelled                             | Wasted work on fast clicking  | Small   | Medium   |
-| 2.4 | Artist view  | One FXML load (plus a Spring bean) per album, disc and **track row**                  | Artist switch time            | Medium  | Medium   |
-| 2.5 | Artist view  | List view and grid view both built for every artist, though one is shown              | Artist switch time, memory    | Small   | Medium   |
-| 3.1 | Queue        | Queue is a `VBox` of FXML rows: not virtualised                                       | Large queues slow, memory     | Large   | Medium   |
-| 3.2 | Queue        | Every row listens to the shared selection list and is never removed: **memory leak**  | Memory grows all session      | Small   | High     |
-| 4.1 | Waveform bar | Waveform images rebuilt pixel by pixel, one `Color` object per pixel                  | CPU on the JavaFX thread      | Small   | High     |
-| 4.2 | Waveform bar | Its animation timer redraws 60 times a second forever, even paused or minimised       | Constant CPU/GPU use          | Small   | High     |
-| 5.1 | Library scan | Every rescan fully re-parses every file, changed or not                               | Rescan time                   | Medium  | High     |
-| 5.2 | Library scan | Every statement is its own transaction                                                | Rescan time                   | Small   | Medium   |
-| 5.3 | Library scan | A progress event and an INFO log line per file                                        | UI event flood                | Small   | Low      |
-| 5.4 | Library scan | The stop flag is not `volatile`: **Stop may be ignored**                              | Correctness                   | Trivial | High     |
-| 5.5 | Library scan | One unreadable or non-audio file aborts the whole scan                                | Correctness                   | Small   | High     |
-| 5.6 | Library scan | Extension checks are case-sensitive (`.M4A`, `.MP3` rejected)                         | Correctness                   | Trivial | Medium   |
-| 6.1 | Caches       | Album cache keyed on the cover bytes, 5 entries, never evicted: slow and can go stale | Scan time, stale data         | Small   | Medium   |
-| 6.2 | Caches       | Track-override map shared by scan and UI threads without synchronisation              | Rare corruption               | Small   | Low      |
-| 6.3 | Database     | No index on `playback_history.datetime`                                               | History tab on long histories | Trivial | Low      |
-| 6.4 | Database     | Album queries always fetch the cover BLOB                                             | Memory, query time            | Small   | Low      |
-| 7.1 | Threads      | About ten `new Thread(...)` call sites: unbounded, some non-daemon, errors lost       | Robustness                    | Small   | Medium   |
-| 8.1 | Start-up     | Tomcat + Spring MVC + Actuator run only for the audio endpoint                        | Start-up time, memory         | Small   | Medium   |
-| 8.2 | Logging      | DEBUG for two packages in the shipped config; INFO per FXML load and per scanned file | Log volume, a little CPU      | Trivial | Low      |
+| #   | Area         | Problem                                                                                             | Impact                        | Effort  | Priority |
+|-----|--------------|-----------------------------------------------------------------------------------------------------|-------------------------------|---------|----------|
+| 1.1 | m4a playback | Every `.m4a` is assumed to be ALAC; an AAC `.m4a` would be sent to the ALAC decoder                 | None today (library is ALAC)  | Small   | Low      |
+| 1.2 | m4a playback | Decoded audio is streamed without length or byte ranges: seeking and duration suffer                | Seeking, CPU — every `.m4a`   | Medium  | High     |
+| 1.3 | m4a playback | The endpoint reads any path, on all network interfaces                                              | Security                      | Small   | High     |
+| 1.4 | m4a playback | `@Cacheable` on the endpoint caches nothing useful                                                  | Misleading                    | Trivial | Low      |
+| 2.1 | Album art    | Covers decoded at full size, on the JavaFX thread, once per row/card, never cached                  | Memory, UI stalls             | Medium  | High     |
+| 2.2 | Artist view  | One query per album when an artist is selected (N+1)                                                | Artist switch time            | Small   | Medium   |
+| 2.3 | Artist view  | A new thread per artist click, earlier ones not cancelled (→ async framework `Flow`)                | Wasted work on fast clicking  | Small   | Medium   |
+| 2.4 | Artist view  | One FXML load (plus a Spring bean) per album, disc and **track row**                                | Artist switch time            | Medium  | Medium   |
+| 2.5 | Artist view  | List view and grid view both built for every artist, though one is shown                            | Artist switch time, memory    | Small   | Medium   |
+| 3.1 | Queue        | Queue is a `VBox` of FXML rows: not virtualised                                                     | Large queues slow, memory     | Large   | Medium   |
+| 3.2 | Queue        | Every row listens to the shared selection list and is never removed: **memory leak**                | Memory grows all session      | Small   | High     |
+| 4.1 | Waveform bar | Waveform images rebuilt pixel by pixel, one `Color` object per pixel                                | CPU on the JavaFX thread      | Small   | High     |
+| 4.2 | Waveform bar | Its animation timer redraws 60 times a second forever, even paused or minimised                     | Constant CPU/GPU use          | Small   | High     |
+| 5.1 | Library scan | Every rescan fully re-parses every file, changed or not                                             | Rescan time                   | Medium  | High     |
+| 5.2 | Library scan | Every statement is its own transaction                                                              | Rescan time                   | Small   | Medium   |
+| 5.3 | Library scan | A progress event and an INFO log line per file                                                      | UI event flood                | Small   | Low      |
+| 5.4 | Library scan | The stop flag is not `volatile`: **Stop may be ignored**                                            | Correctness                   | Trivial | High     |
+| 5.5 | Library scan | One unreadable or non-audio file aborts the whole scan                                              | Correctness                   | Small   | High     |
+| 5.6 | Library scan | Extension checks are case-sensitive (`.M4A`, `.MP3` rejected)                                       | Correctness                   | Trivial | Medium   |
+| 6.1 | Caches       | Album cache keyed on the cover bytes, 5 entries, never evicted: slow and can go stale               | Scan time, stale data         | Small   | Medium   |
+| 6.2 | Caches       | Track-override map shared by scan and UI threads without synchronisation                            | Rare corruption               | Small   | Low      |
+| 6.3 | Database     | No index on `playback_history.datetime`                                                             | History tab on long histories | Trivial | Low      |
+| 6.4 | Database     | Album queries always fetch the cover BLOB                                                           | Memory, query time            | Small   | Low      |
+| 6.5 | Library scan | A rescan never updates an existing album's cover                                                    | Correctness (stale covers)    | Small   | Medium   |
+| 7.1 | Threads      | About ten `new Thread(...)` call sites: unbounded, some non-daemon, errors lost (→ async framework) | Robustness                    | Medium  | Medium   |
+| 7.2 | Threads      | Changes the async framework needs before it moves over                                              | Robustness                    | Small   | Medium   |
+| 8.1 | Start-up     | Tomcat + Spring MVC + Actuator run only for the audio endpoint                                      | Start-up time, memory         | Small   | Medium   |
+| 8.2 | Logging      | DEBUG for two packages in the shipped config; INFO per FXML load and per scanned file               | Log volume, a little CPU      | Trivial | Low      |
 
 A suggested order is at the end ([Suggested order](#suggested-order)).
 
@@ -293,6 +295,36 @@ switching artists.
   `new Image(...)` is safe to create on a background thread.
 - One shared placeholder `Image` for the whole app.
 
+#### Thumbnails stored with the album
+
+The originals are already on disk (the `ALBUM.IMAGE` BLOB), so reading them is not the slow part: **decoding** a
+full-size cover is (tens of milliseconds for a 1400 px JPEG, about 7.8 MB of pixels). So also store small,
+pre-scaled thumbnails, and decode those instead.
+
+The thumbnail is **the final image** wherever the cover is shown small, not a stand-in replaced by the real art
+later. A queue row shows the cover at about 48 px and a grid card at 128–200 px. Decoding a 1400 px original for that
+only to scale the pixels away is wasted work; a 128 or 512 px thumbnail looks the same at those sizes. A 128 px
+thumbnail decodes in about a millisecond and takes about 64 KB of pixels.
+
+- **Sizes:** 128 px (queue rows, album list, small grid cards) and 512 px (large grid cards, tag editor). The playback
+  window's large art (up to 720 px, one cover at a time, already decoded in the background) keeps using the original.
+- **Format:** JPEG, quality about 85 (covers have no transparency), typically 5–40 KB each. JavaFX cannot encode
+  images, so scale with `Graphics2D` (bilinear or bicubic, in a couple of halving steps for large reductions) and
+  encode with `ImageIO` (`java.desktop` module).
+- **Storage:** a table next to the album rather than loose files, so thumbnails are backed up with the covers, can't be
+  orphaned and need no cleanup:
+  `album_cover_thumb(album_id INTEGER REFERENCES album(id) ON DELETE CASCADE, size SMALLINT, source_md5 CHAR(32), data BLOB, PRIMARY KEY (album_id, size))`.
+- **When to update — tied to the cover, not to the audio files:** many tracks share one cover, and a cover can also
+  change in the tag editor without any audio file changing. Store the MD5 of the original cover with each thumbnail.
+  When an album's cover bytes change (rescan, item 6.5; or tag editor), the hash no longer matches and the thumbnails
+  are regenerated, once.
+- **Existing albums:** generate lazily the first time an album is shown (placeholder first, in the background), or in a
+  one-off background job after the upgrade (a `BackgroundJob`, item 7.1). The placeholder only ever shows once per
+  album, before its thumbnail exists.
+- **Plus the in-memory cache above:** thumbnails make each decode cheap; the memory cache stops repeating it. Each
+  `Image` is decoded once per album and size.
+- **Disk use:** a few KB per album, written once.
+
 ### 2.2 One query per album when an artist is selected
 
 **Where:** `LibraryController` artist selection (around line 385): `getArtistAlbums`, then `getAlbumTracks` inside the
@@ -311,8 +343,28 @@ returns full track rows.
 **Why:** clicking down the artist list fires a thread per artist. Each loads every album, disc and track FXML in full,
 only for all but the last result to be thrown away.
 
-**How:** run on a shared executor (item 7.1); keep the `Future` of the current load and `cancel(true)` it when another
-artist is chosen. Inside the loop, `if (requestId != albumsRequestId.get()) return;` before each album.
+**How:** use the async framework from the sibling project (item 7.1): a `CancellationToken` per kind of load, and a
+`Flow` per load. Choosing an artist takes `cancelAndSnapshot()`, which invalidates the load still in flight. Its
+remaining steps then stop silently, and only the newest result reaches the screen. That replaces the hand-written
+`albumsRequestId` check.
+
+```java
+private final CancellationToken albumsLoad = new CancellationToken();
+
+private void loadArtistAlbums(ArtistRecord artist) {
+    CancellationToken.Snapshot load = albumsLoad.cancelAndSnapshot();
+    showAlbumsLoading();
+    Flow.begin()
+        .cancelledBy(load)
+        .bg(() -> buildAlbums(artist, load))      // one query (2.2); checks load.isValid() before each album
+        .fx(this::showAlbums)                     // skipped if another artist was chosen meanwhile
+        .onError(e -> showAlbumsError(artist, e));
+}
+```
+
+`Flow` checks the token only **between** steps. `buildAlbums` is one long step (it builds every album), so it should
+check `load.isValid()` itself before each album and stop early; otherwise a superseded load still runs to the end
+(its result is just thrown away). See 7.2 for a small framework addition that makes this check easier.
 
 ### 2.4 One FXML load per album, disc and track row
 
@@ -443,7 +495,8 @@ faster.
 
 **Why:** thousands of UI updates (each a hop to the JavaFX thread) and log lines per scan.
 
-**How:** publish progress at most every 100 ms or every 1 %, and always at the end. Log each file at DEBUG.
+**How:** publish progress at most every 100 ms or every 1 %, and always at the end. Log each file at DEBUG. Moving the
+scan to a `BackgroundJob` (item 7.1) gives this for free: `publishProgressThrottled` already does it.
 
 ### 5.4 The stop flag is not `volatile`
 
@@ -452,7 +505,8 @@ faster.
 **Why:** without `volatile` (or another happens-before edge), the Java memory model allows the scan thread to never see
 the change. The JIT may even lift the read out of the loop, so **Stop can be ignored**.
 
-**How:** `private volatile boolean shouldInterrupt;` (or an `AtomicBoolean`).
+**How:** `private volatile boolean shouldInterrupt;` (or an `AtomicBoolean`). Moving the scan to a `BackgroundJob`
+(item 7.1) also fixes it: the job's status field is `volatile`, and the loop polls `isInterruptRequested()`.
 
 ### 5.5 One bad file aborts the whole scan
 
@@ -533,21 +587,95 @@ shared by its tracks; it grows with the library.
 **How:** select the columns you need where the cover isn't shown, and load covers through the `CoverCache` from 2.1
 by album id. Longer term, move covers to their own table.
 
+### 6.5 A rescan never updates an existing album's cover
+
+**Where:** `DataAccess.getOrInsertAlbum(artistId, album, image)`: when the album already exists, it returns it as it
+is and ignores `image`.
+
+**Why:** if the artwork is replaced in the audio files (for example after fixing it in iTunes) and the library is
+rescanned, the new cover never reaches the database. The app keeps showing the old one until the album is deleted or
+the cover is changed in the tag editor. With thumbnails (2.1) the rescan is meant to be one of the ways a cover
+gets updated, so this has to be fixed first.
+
+**How:** compute the MD5 of the file's embedded cover (store it in an `ALBUM.IMAGE_MD5` column, migration `V006`). On
+rescan, when the album exists and the hash differs, update `ALBUM.IMAGE` and the hash; the thumbnails are then
+regenerated (2.1). Decide which cover wins when the tracks of one album embed different covers. Simplest: the first
+track's (lowest disc and track number); or keep the current cover unless *every* track has changed. Skip the update
+when the cover was set by hand in the tag editor, since that's an override (check `TRACK_OVERRIDES_HISTORY` or add an
+`ALBUM.IMAGE_OVERRIDDEN` flag).
+
 ---
 
 ## 7. Threads
 
-### 7.1 About ten raw `new Thread(...)` call sites
+### 7.1 About ten raw `new Thread(...)` call sites → adopt the async framework
 
 **Where:** `LibraryController` (2), `SearchController`, `LibraryLyricsTabController`, `LibraryHistoryTabController`,
-`LyricsService` (2), `FilesScanningService`, `PlaybackWindow` — only some call `setDaemon(true)`.
+`LyricsService` (2), `FilesScanningService`, `PlaybackWindow` — only some call `setDaemon(true)`. Several also hand-roll
+"is this result still wanted?" checks (`albumsRequestId`, the history tab's request ids, `paletteToken`).
 
 **Why:** no limit (a burst of clicks gives a burst of threads), no cancellation, exceptions go to the default handler
 and are easy to miss, and a non-daemon thread still running keeps the JVM alive after the window closes.
 
-**How:** one Spring bean, e.g. `BackgroundTasks`, wrapping `Executors.newVirtualThreadPerTaskExecutor()` (Java 21+) and
-shut down on context close. Give it a helper `submit(Supplier<T> work, Consumer<T> onFxThread)` that logs failures. It
-returns a `Future`, so callers like the artist view (2.3) can cancel the previous task.
+**How:** use the async framework from the sibling project (`util.async`: `Flow`, `CancellationToken`, `DelayedAction`,
+and `jobs`: `JobManager`, `BackgroundJob`). It covers both kinds of background work this app has:
+
+- **`Flow` + `CancellationToken`** for "load in the background, show on the UI": `bg(...)` steps run on virtual threads,
+  `fx(...)` steps on the JavaFX thread. A token makes superseded loads stop silently, and `onError` sees only real
+  failures.
+- **`JobManager` + `BackgroundJob`** for long jobs with progress and a Stop button: one worker thread, a queue,
+  duplicate
+  suppression, and cooperative interruption. It has throttled progress built in (`publishProgressThrottled`).
+
+| Call site                                                   | Today                                | With the framework                                                               |
+|-------------------------------------------------------------|--------------------------------------|----------------------------------------------------------------------------------|
+| Artist selected → albums (`LibraryController`)              | `new Thread` + `albumsRequestId`     | `Flow` + token `albumsLoad` (2.3)                                                |
+| Library updated → artists (`onLibraryDataUpdated`)          | `new Thread`                         | `Flow` + token `artistsLoad`                                                     |
+| Search (`SearchController`)                                 | debounce + `new Thread` + request id | keep the `PauseTransition` debounce; `Flow` + token `search`                     |
+| Lyrics tab load (`LibraryLyricsTabController`)              | `new Thread`                         | `Flow` + token `lyricsLoad`                                                      |
+| History tab (`LibraryHistoryTabController.runInBackground`) | own thread helper + ids              | `Flow` + token per tab (period changes cancel the previous load)                 |
+| Lyrics fetching (`LyricsService`)                           | `new Thread` (×2)                    | `Flow` (one-off fetch); a `BackgroundJob` if it ever runs over the whole library |
+| Album art palette (`PlaybackWindow.loadPalette`)            | daemon thread + `paletteToken`       | `Flow` + token `paletteLoad`                                                     |
+| Cover / thumbnail decoding (2.1)                            | on the JavaFX thread                 | `Flow`; a cell or card that is reused cancels its own previous load              |
+| Library rescan (`FilesScanningService`)                     | `new Thread` + non-volatile flag     | `BackgroundJob` — also fixes 5.3 (throttled progress) and 5.4 (volatile status)  |
+| Thumbnail backfill (2.1), whole-track waveform (section 1)  | —                                    | `BackgroundJob`                                                                  |
+| Debounced saves                                             | `DelayedAction` (already a copy)     | the framework's `DelayedAction` (same class, with named threads)                 |
+
+**Sharing the code:** the two projects already have diverging copies of `DelayedAction`. Rather than copying the
+framework a second time, publish it as a small library, the same way as `alac2wav`
+(`com.github.curious-odd-man:curious-async`), or include it as a Gradle composite build (`includeBuild`) while it's
+still changing. Both apps then get fixes at once.
+
+**Virtual threads and the database:** `Flow` runs `bg` steps on a virtual-thread-per-task executor. On Java 24+ (this
+app is on 25), `synchronized` blocks no longer pin virtual threads (JEP 491), so JDBC and H2 are fine there. The
+number of concurrent queries is still bounded by the connection pool (Hikari, 10 by default).
+
+### 7.2 Changes the async framework needs before it moves over
+
+Found while reviewing it for this app; worth fixing in the shared library so both apps benefit.
+
+1. **Failures are lost when no `onError` is attached.** `Step.run()` returns the raw future; if a step throws and the
+   caller didn't attach `onError`, nothing is logged. *Fix:* in `run()`, attach a handler that logs real failures
+   (not `CancellationException`), so forgetting `onError` can't hide a bug.
+2. **Cancellation is only checked between steps.** A long `bg` step (building every album, scanning a list) runs to
+   the end after it was superseded. *Fix:* let a step check its own token, e.g. a `bg(Function<Snapshot, T>)` variant
+   that passes the snapshot in, or a public `flow.checkCancelled()` that throws `CancellationException` (already
+   treated as silent).
+3. **`JobManager.close()` can hang shutdown.** It spins on `Thread.yield()` until the current job stops; a job that
+   doesn't poll `isInterruptRequested()` keeps the app from exiting and burns a CPU core meanwhile. *Fix:* wait with a
+   timeout (e.g. 5 s, sleeping rather than yielding), then go on. Also make the worker a daemon thread, so a stuck job
+   can never keep the JVM alive.
+4. **A failed job doesn't tell the UI.** `BackgroundJob.run` catches the exception, logs it and sets `FAILED`, but
+   doesn't call `publishFailed(e)`, so a progress bar would stay "running". Interruption is the same: the job only
+   reports it if `runImpl` calls `publishInterrupted()` itself. *Fix:* publish both from `run()`.
+5. **The jobs are tied to the other app's events.** `BackgroundJob` publishes `curious_designer` event payload classes;
+   curiousTunes has its own flat `BackgroundProcessEvent` (process name, description, progress, max, error, type).
+   *Fix:* make the library event-agnostic: a small `JobEventPublisher` interface (`started`, `progress`, `ended`,
+   `interrupted`, `failed`) that each app implements with its own events.
+6. **`JobFactory`** only holds the other app's `TimeProvider`: leave it out of the library.
+7. **`DelayedAction`** isn't thread-safe (`pendingSave` is a plain field) and starts one platform thread per instance.
+   That's fine while it's only used from the JavaFX thread; say so in its Javadoc, or make `reSchedule` `synchronized`
+   and share one scheduler between instances.
 
 ---
 
@@ -589,4 +717,7 @@ per-load and per-file lines DEBUG.
    column in the same migration as a safety net.
 4. **Scan speed**: 5.1 skip unchanged files, 5.2 batched transactions, 5.3 throttled progress, 6.3 index (one `V006`
    migration can carry the columns for 1.1 and 5.1 and the index).
-5. **Larger UI work**: 2.2–2.5 artist view, 7.1 shared executor, then 3.1 virtualised queue.
+5. **Async framework** (a day or two): extract it as a shared library with the 7.2 fixes, then move the call sites in
+   7.1 over, starting with the artist view (2.3) and the rescan (which also settles 5.3 and 5.4).
+6. **Larger UI work**: 2.1 thumbnails with 6.5 (cover updates on rescan), 2.2, 2.4, 2.5 artist view, then 3.1
+   virtualised queue.
