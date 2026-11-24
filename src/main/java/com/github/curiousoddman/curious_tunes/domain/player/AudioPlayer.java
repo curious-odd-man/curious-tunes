@@ -156,7 +156,7 @@ public class AudioPlayer {
             currentPlayer = new MediaPlayer(media);
         } else {
             log.info("Not first song in playlist...");
-            currentPlayer.dispose();
+            dispose(currentPlayer);
             currentPlayer = nextPlayer;
             playlistItemProperty.set(nextPlaylistItem);
             nextPlayer = null;
@@ -298,13 +298,22 @@ public class AudioPlayer {
             return;     // the same track object is already preloaded
         }
         if (nextPlayer != null) {
-            nextPlayer.dispose();
+            dispose(nextPlayer);
             nextPlayer = null;
         }
         setNextPlaylistItem(null);
         if (wanted != null) {
             preloadNext(wanted);
         }
+    }
+
+    /**
+     * Disposes the player and frees what its media holds (for streamed ALAC: the open file).
+     */
+    private void dispose(MediaPlayer player) {
+        Media media = player.getMedia();
+        player.dispose();
+        mediaProvider.release(media);
     }
 
     private void setNextPlaylistItem(PlaylistItem item) {
@@ -324,11 +333,11 @@ public class AudioPlayer {
     public void stop() {
         if (currentPlayer != null) {
             currentPlayer.stop();
-            currentPlayer.dispose();
+            dispose(currentPlayer);
             currentPlayer = null;
         }
         if (nextPlayer != null) {
-            nextPlayer.dispose();
+            dispose(nextPlayer);
             nextPlayer = null;
         }
         setNextPlaylistItem(null);

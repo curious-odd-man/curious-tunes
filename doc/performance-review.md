@@ -220,6 +220,23 @@ before anything touches the disk.
 
 ### Implementation plan
 
+**Status: built** (step 3 of the suggested order), with these differences from the plan below:
+
+- The seekable decoder lives in the app, `domain/audio/alac` (`Mp4AlacTrack`, `AlacPacketDecoder`,
+  `AlacVirtualWav`), not in `alac2wav`: that repository wasn't reachable. It has no dependencies, so it can move
+  there later. It is tested bit for bit against FFmpeg's decoding of FFmpeg-made files: 16-bit stereo and 24-bit
+  mono, compressed and uncompressed packets, silence runs, and random reads. It decodes about 200× faster than
+  real time.
+- The patch is a `jfxPatch` source set in this project (`src/jfxPatch/java`), with the original JavaFX
+  25.0.1 files in `src/jfxPatch/original/` for diffing. It was compile-checked and exercised against JavaFX 25.0.1's
+  real `Locator` and `ConnectionHolder` sources (pull and push reads, seek, close, unregistered URIs).
+- Step 0 (the spike) was folded into the real thing: `AlacStreaming.isAvailable()` checks at run time that the
+  patch is active and otherwise logs a warning and uses the fallback.
+- The fallback is the existing HTTP endpoint, so step 7 (removing the web layer) is not done.
+- **Still to verify on Windows:** an ALAC track plays, seeks and moves on to the next track; the log says
+  `ALAC streaming: JavaFX media patch 25.0.1 active`, in both `gradle run` and the deployed jar.
+
+
 0. **Spike (half a day): prove a Java-side source plays.** Before writing the decoder, try option F: decode one
    track fully, register it with `LocatorCache.locatorCache().registerURICache(...)` under a fake URI, and play it.
    If it plays and seeks on JavaFX 25.0.1 on Windows, the native side accepts Java-side random-access sources and the

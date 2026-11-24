@@ -19,6 +19,11 @@ group = 'com.github.curiousoddman'
 description = 'An audio player resembling iTunes'
 
 def javafxVersion = '25.0.1'
+// The JavaFX media patch (src/jfxPatch) is made for exactly this version: see doc/performance-review.md, section 1.
+def javafxPlatform = {
+    def os = System.getProperty('os.name').toLowerCase()
+    os.contains('win') ? 'win' : os.contains('mac') ? 'mac' : 'linux'
+}()
 def flywayAndJooqDatabase ='jdbc:h2:file:~/ctunes/fw-jooq;DB_CLOSE_ON_EXIT=FALSE'
 
 idea {
@@ -51,10 +56,39 @@ javafx {
     modules = ['javafx.controls', 'javafx.fxml']
 }
 
+// ALAC streaming: a small patch of javafx.media (a copy of its Locator with two guarded additions, plus three new
+// classes in the same package). On the class path it comes before JavaFX's own jar, so the deployed fat jar
+// (BOOT-INF/classes is searched before BOOT-INF/lib) uses it; when javafx.media is a named module (gradle run),
+// --patch-module puts it into the module. See doc/performance-review.md, section 1, option G.
+sourceSets {
+    jfxPatch {
+        java {
+            srcDirs = ['src/jfxPatch/java']
+        }
+    }
+    // Prepended: on a plain class path the first copy of a class wins, and the patch must win over javafx-media.
+    main {
+        compileClasspath = jfxPatch.output + compileClasspath
+        runtimeClasspath = jfxPatch.output + runtimeClasspath
+    }
+    test {
+        compileClasspath = jfxPatch.output + compileClasspath
+        runtimeClasspath = jfxPatch.output + runtimeClasspath
+    }
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+}
+
+def jfxPatchArgs = [
+        "--patch-module", "javafx.media=${sourceSets.jfxPatch.output.classesDirs.asPath}",
+        "--add-exports", "javafx.media/com.sun.media.jfxmedia.locator=ALL-UNNAMED"
+]
+run {
+    jvmArgs(jfxPatchArgs)
 }
 
 repositories {
@@ -179,10 +213,16 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // The JavaFX classes the media patch compiles against (platform jars, which hold the classes).
+    jfxPatchCompileOnly "org.openjfx:javafx-base:${javafxVersion}:${javafxPlatform}"
+    jfxPatchCompileOnly "org.openjfx:javafx-graphics:${javafxVersion}:${javafxPlatform}"
+    jfxPatchCompileOnly "org.openjfx:javafx-media:${javafxVersion}:${javafxPlatform}"
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    jvmArgs(jfxPatchArgs)
     testLogging.showStandardStreams = true
     jvmArgs([
             "--add-reads", "javafx.graphics=ALL-UNNAMED",
