@@ -145,6 +145,16 @@ public class Track extends TableImpl<TrackRecord> {
      */
     public final TableField<TrackRecord, String> LYRICS = createField(DSL.name("LYRICS"), SQLDataType.VARCHAR, this, "");
 
+    /**
+     * The column <code>public.TRACK.FILE_SIZE</code>.
+     */
+    public final TableField<TrackRecord, Long> FILE_SIZE = createField(DSL.name("FILE_SIZE"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.TRACK.FILE_MODIFIED</code>.
+     */
+    public final TableField<TrackRecord, Long> FILE_MODIFIED = createField(DSL.name("FILE_MODIFIED"), SQLDataType.BIGINT, this, "");
+
     private Track(Name alias, Table<TrackRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

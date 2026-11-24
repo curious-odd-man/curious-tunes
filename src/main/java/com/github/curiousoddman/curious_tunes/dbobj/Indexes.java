@@ -43,6 +43,7 @@ public class Indexes {
     public static final Index FILE_LOCATION_UNIQUE_INDX = Internal.createIndex(DSL.name("FILE_LOCATION_UNIQUE_INDX"), Track.TRACK, new OrderField[] { Track.TRACK.FILE_LOCATION }, true);
     public static final Index FLYWAY_SCHEMA_HISTORY_S_IDX = Internal.createIndex(DSL.name("flyway_schema_history_s_idx"), FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, new OrderField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.SUCCESS }, false);
     public static final Index IDX_OVERRIDES_TRACK_ID = Internal.createIndex(DSL.name("IDX_OVERRIDES_TRACK_ID"), TrackOverridesHistory.TRACK_OVERRIDES_HISTORY, new OrderField[] { TrackOverridesHistory.TRACK_OVERRIDES_HISTORY.TRACK_ID }, false);
+    public static final Index PLAYBACK_HISTORY_DATETIME_INDEX = Internal.createIndex(DSL.name("PLAYBACK_HISTORY_DATETIME_INDEX"), PlaybackHistory.PLAYBACK_HISTORY, new OrderField[] { PlaybackHistory.PLAYBACK_HISTORY.DATETIME }, false);
     public static final Index PLAYBACK_HISTORY_TRACK_INDEX = Internal.createIndex(DSL.name("PLAYBACK_HISTORY_TRACK_INDEX"), PlaybackHistory.PLAYBACK_HISTORY, new OrderField[] { PlaybackHistory.PLAYBACK_HISTORY.FK_TRACK }, false);
     public static final Index TRACK_ALBUM_INDEX = Internal.createIndex(DSL.name("TRACK_ALBUM_INDEX"), Track.TRACK, new OrderField[] { Track.TRACK.FK_ALBUM }, false);
     public static final Index TRACK_TITLE_INDEX = Internal.createIndex(DSL.name("TRACK_TITLE_INDEX"), Track.TRACK, new OrderField[] { Track.TRACK.TITLE }, false);

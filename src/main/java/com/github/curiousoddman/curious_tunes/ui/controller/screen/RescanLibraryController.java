@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.stage.DirectoryChooser;
@@ -37,6 +38,8 @@ public class RescanLibraryController implements Initializable {
     public        Label                     errorLabel;
     @FXML
     public        Button                    scanButton;
+    @FXML
+    public        CheckBox                  fullRescan;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -77,7 +80,7 @@ public class RescanLibraryController implements Initializable {
             return;
         }
         userPreferencesService.saveLibraryRoot(libraryRoot);
-        eventPublisher.publishEvent(new RescanLibraryEvent(this, libraryRoot));
+        eventPublisher.publishEvent(new RescanLibraryEvent(this, libraryRoot, fullRescan.isSelected()));
         close();
     }
 

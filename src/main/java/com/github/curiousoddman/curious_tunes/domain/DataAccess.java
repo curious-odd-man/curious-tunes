@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -305,6 +306,17 @@ public class DataAccess {
         initTrackOverrides()
                 .computeIfAbsent(trackRecord.getId(), k -> new ArrayList<>())
                 .add(insertedRow);
+    }
+
+    /**
+     * Size and modification time of every track's file as of its last scan, by file location; one query.
+     */
+    public Map<String, FileStamp> getTrackFileStamps() {
+        Map<String, FileStamp> stamps = new HashMap<>();
+        dsl.select(TRACK.FILE_LOCATION, TRACK.FILE_SIZE, TRACK.FILE_MODIFIED)
+           .from(TRACK)
+           .forEach(row -> stamps.put(row.value1(), new FileStamp(row.value2(), row.value3())));
+        return stamps;
     }
 
     public Optional<TrackRecord> getTrack(Path file) {

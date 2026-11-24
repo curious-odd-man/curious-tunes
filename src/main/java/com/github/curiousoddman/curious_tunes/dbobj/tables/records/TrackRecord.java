@@ -240,6 +240,34 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
         return (String) get(14);
     }
 
+    /**
+     * Setter for <code>public.TRACK.FILE_SIZE</code>.
+     */
+    public void setFileSize(Long value) {
+        set(15, value);
+    }
+
+    /**
+     * Getter for <code>public.TRACK.FILE_SIZE</code>.
+     */
+    public Long getFileSize() {
+        return (Long) get(15);
+    }
+
+    /**
+     * Setter for <code>public.TRACK.FILE_MODIFIED</code>.
+     */
+    public void setFileModified(Long value) {
+        set(16, value);
+    }
+
+    /**
+     * Getter for <code>public.TRACK.FILE_MODIFIED</code>.
+     */
+    public Long getFileModified() {
+        return (Long) get(16);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -263,7 +291,7 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
     /**
      * Create a detached, initialised TrackRecord
      */
-    public TrackRecord(Integer id, Integer fkAlbum, String title, Integer trackNumber, String releaseDate, Integer diskNumber, Integer audioSampleRate, String genre, String composer, String fileLocation, String fileHash, LocalDateTime scannedAt, Long duration, String status, String lyrics) {
+    public TrackRecord(Integer id, Integer fkAlbum, String title, Integer trackNumber, String releaseDate, Integer diskNumber, Integer audioSampleRate, String genre, String composer, String fileLocation, String fileHash, LocalDateTime scannedAt, Long duration, String status, String lyrics, Long fileSize, Long fileModified) {
         super(Track.TRACK);
 
         setId(id);
@@ -281,6 +309,8 @@ public class TrackRecord extends UpdatableRecordImpl<TrackRecord> {
         setDuration(duration);
         setStatus(status);
         setLyrics(lyrics);
+        setFileSize(fileSize);
+        setFileModified(fileModified);
         resetChangedOnNotNull();
     }
 }

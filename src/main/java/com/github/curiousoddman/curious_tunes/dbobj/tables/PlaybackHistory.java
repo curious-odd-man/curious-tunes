@@ -121,7 +121,7 @@ public class PlaybackHistory extends TableImpl<PlaybackHistoryRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.PLAYBACK_HISTORY_TRACK_INDEX);
+        return Arrays.asList(Indexes.PLAYBACK_HISTORY_DATETIME_INDEX, Indexes.PLAYBACK_HISTORY_TRACK_INDEX);
     }
 
     @Override

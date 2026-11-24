@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Tooltip?>
@@ -33,6 +34,11 @@
                 </Button>
             </children>
         </HBox>
+        <CheckBox fx:id="fullRescan" mnemonicParsing="false" text="Read every file again">
+            <tooltip>
+                <Tooltip text="Normally files that haven't changed since the last scan are skipped. Tick this to read them all, for example after tags were changed by another program without changing the files' dates."/>
+            </tooltip>
+        </CheckBox>
         <Label fx:id="errorLabel" minHeight="20.0" styleClass="toast-error"/>
         <HBox alignment="CENTER_RIGHT" spacing="8.0">
             <children>
