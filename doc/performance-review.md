@@ -63,7 +63,8 @@ and `jrt` URLs.
 **Where:** `MediaProvider.getMedia` (`endsWith("m4a")`).
 
 **Status:** not a problem today. The library comes from iTunes and its `.m4a` files are all Apple Lossless (ALAC);
-the rest are MP3. So every `.m4a` really does need the decoder, which makes section 1.2 and option A below matter
+the rest are MP3. So every `.m4a` really does need the decoder, which makes section 1.2 and the chosen streaming
+design (option G) below matter
 for every `.m4a` track played.
 
 **Why it is still worth a small check:** `.m4a` is only a container. It can also hold AAC, which is what an iTunes
@@ -94,7 +95,10 @@ bug.
 - *Check:* `WavFormat.RAW_PCM` keeps the source's bit depth and sample rate. Make sure 24-bit / 96 kHz ALAC files
   play. If they don't, resample to 16-bit / 44.1 kHz or 48 kHz when decoding.
 
-**How:** see [Options](#options-for-playing-alac) below. The recommended option removes the endpoint entirely.
+**How:** solved by the chosen
+design ([option G](#decision-stream-alac-straight-into-javafx-through-a-custom-source-option-g)), which removes the
+endpoint. This also matches how JavaFX's HTTP source seeks: it reopens the connection with a `Range` header and only
+succeeds on `206 Partial Content`; otherwise it falls back to downloading everything.
 
 ### 1.3 The endpoint serves any path, on every network interface
 
@@ -104,7 +108,8 @@ bug.
 `/current/track?name=<any path on the disk>`. Only ALAC files decode, which limits the damage, but it is still an open
 file-reading endpoint. Actuator adds more endpoints on the same port.
 
-**How:** remove the endpoint (option A below). If HTTP stays: set `server.address: 127.0.0.1`, take a track **id**
+**How:** remove the endpoint (option G below). Until then, as a stop-gap: set `server.address: 127.0.0.1`, take a track
+**id**
 instead of a path (look the path up in the database), and remove Actuator (item 8.1).
 
 ### 1.4 `@Cacheable` on the endpoint caches nothing useful
@@ -114,45 +119,153 @@ instead of a path (look the path up in the database), and remove Actuator (item 
 **Why:** the cached value is the `StreamingResponseBody` lambda, not audio. Every request still decodes the whole file.
 The annotation only suggests a cache that does not exist.
 
-**How:** remove it. Real caching is option A.
+**How:** remove it. With option G nothing needs caching.
 
-### Options for playing ALAC
+### Decision: stream ALAC straight into JavaFX through a custom source (option G)
 
-| Option                                                              | Seeking | First play                  | Removes HTTP | Effort | Notes                                                                                                                                                                                                                                                                                               |
-|---------------------------------------------------------------------|---------|-----------------------------|--------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **A. Decode to a WAV file in a disk cache, play it as `file:`**     | Native  | Wait for decode (≈ 0.2–1 s) | Yes          | Medium | **Recommended.** Pre-decode the next queue item so it usually starts at once.                                                                                                                                                                                                                       |
-| B. Keep HTTP, but serve a decoded file with `Range` support         | Native  | Same as A                   | No           | Medium | Same cache as A, served as a Spring `Resource` (Spring handles `Range` and `Content-Length` itself). Only if HTTP is needed for something else.                                                                                                                                                     |
-| B+. Decode on the fly from any byte offset (in `alac2wav`)          | Native  | Instant                     | No           | Large  | ALAC's sample tables (`stsz`/`stco`) map sample positions to packets, so a WAV byte range can be decoded from the nearest packet. Elegant, no disk use, but the most work. `alac2wav` is your own library, so it's possible.                                                                        |
-| C. Custom URL protocol / `InputStream` for `Media`                  | —       | —                           | —            | —      | Not possible: `Media` only accepts http(s)/file/jar/jrt, and JDK-8350282 is unresolved.                                                                                                                                                                                                             |
-| D. Different audio engine (FFmpeg via JavaCV, or vlcj) + Java Sound | Native  | Instant                     | Yes          | Large  | Plays everything (ALAC, FLAC, Opus), allows gapless playback, and Java Sound reports the exact output position, so the visualiser could sync **without calibration**. Loses JavaFX's spectrum: you'd compute your own FFT (e.g. JTransforms). vlcj needs VLC installed. A rewrite of `AudioPlayer`. |
-| E. Convert the library's ALAC to AAC                                | Native  | Instant                     | Yes          | Small  | Lossy: not acceptable for a lossless library.                                                                                                                                                                                                                                                       |
+**Chosen:** option G below. A small patch to JavaFX's media module lets the player read a *virtual WAV file*: the
+ALAC track presented as uncompressed PCM, decoded on demand, packet by packet, as the player asks for bytes. No HTTP
+server, no temporary files, no decoding of the whole track up front.
 
-#### Recommended: option A, step by step
+**Why this one:**
 
-1. **Codec column** (item 1.1), optional for an all-ALAC library but cheap, so only ALAC is ever decoded.
-2. **`PcmCache` component** (domain layer):
-    - Directory: `~/ctunes/cache/pcm/`; file name `<trackId>-<audioMd5>.wav`. `audio_md5` already exists, so an edited
-      or replaced file gets a new cache entry automatically.
-    - `CompletableFuture<Path> get(TrackRecord)`: returns at once if the file exists. Otherwise it decodes on a
-      background executor to `<name>.part`, then does an atomic `Files.move` to the final name, so a crash never leaves
-      a half-written WAV that looks complete.
-    - Size limit, e.g. 2 GB (a user preference), evicting the least recently used files. Touch the file's
-      last-modified time on each use.
-    - Sizes to plan for: iTunes ALAC rips from CD are 16-bit / 44.1 kHz, which is about 10.6 MB of WAV per minute
-      (about 40 MB for a 4-minute track), so 2 GB holds roughly 50 tracks: plenty for the current track, the next few
-      in the queue and recent replays. Hi-res ALAC (24-bit / 96 kHz) is about 34.6 MB per minute.
-3. **`MediaProvider`** becomes asynchronous for ALAC: `AudioPlayer` asks for the media, shows the existing loading
-   animation (`startLoadingAnimation`) while the future completes, then creates `new Media(path.toUri().toString())`
-   on the JavaFX thread.
-4. **Pre-decode the next track:** when a track starts, call `pcmCache.get(next)` for
-   `AudioPlayer.getNextPlaylistItemProperty()`, so the next ALAC track is usually ready before it's needed.
-5. **Remove the web layer:** delete `HttpRestController` and the HTTP branch of `MediaProvider`; remove
-   `spring-boot-starter-web` and `spring-boot-starter-actuator`, `server.port` and the `SERVER_PORT` variable; set
-   `spring.main.web-application-type: none`. The H2 console needs a servlet container, so keep it (and the web
-   starter) in a `dev` profile only, or use the H2 shell or an IDE database view instead.
-6. **Bonus — the whole waveform at once:** while decoding, keep the peak of every 1/2000 of the track. The waveform
-   bar can then show the whole track from the first second instead of filling in as it plays (`WaveformModel`
-   already has 2000 bars). For MP3/AAC it keeps filling in as today.
+- **Instant playback.** Only the first packets (about 0.1 s of audio each) are decoded before sound starts, whatever
+  the track length.
+- **Instant, exact seeking.** The virtual WAV has a known length, so JavaFX knows the duration at once and seeks by
+  byte offset. A byte offset maps straight to a sample, and ALAC's sample tables map a sample to a packet, so a seek
+  decodes one packet, not the track.
+- **Nothing written, little memory.** Nothing goes to disk; memory use is a few decoded packets, not a 40 MB track.
+- **Removes the web layer.** The HTTP endpoint, Tomcat, Actuator and the open port all go (items 1.2–1.4 and 8.1 are
+  solved by this).
+- **It's an interesting piece of engineering**, and the decoder is our own library (`alac2wav`), so the seekable
+  decoding it needs can be added where it belongs.
+
+**What it costs**, accepted knowingly:
+
+- It depends on **internal JavaFX classes** (`com.sun.media.jfxmedia.locator`). Every JavaFX upgrade needs the patch
+  re-checked against the new source. JavaFX is pinned to `25.0.1` in `build.gradle`, which helps.
+- The app must always start with the right JVM arguments (or class-path order) so the patch is in place.
+- Only tested on Windows, where JavaFX uses its GStreamer back-end. macOS uses a different native path that has had
+  bugs with Java-side sources (JDK-8357714, 2025), so other platforms would need their own testing.
+- More code to own than a cache. To limit the risk, the app keeps a fallback (see step 6).
+
+### Options considered
+
+| Option                                                                             | Seeking           | First play                                                                | Removes HTTP | Effort    | Why not chosen                                                                                                                                                                                                                                                                                                                                         |
+|------------------------------------------------------------------------------------|-------------------|---------------------------------------------------------------------------|--------------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| A. Decode to a WAV file in a disk cache, play it as `file:`                        | Native            | Wait for a full decode (≈ 0.2–1 s); hidden by pre-decoding the next track | Yes          | Medium    | The safest option (public API only), and still the **fallback**. But it decodes whole tracks and writes files, and starts are only instant when the track was pre-decoded. Disk wear was considered and is negligible (a 600 TBW SSD would last centuries at this rate), so it isn't the reason.                                                       |
+| B. Keep HTTP, serve a decoded file with `Range` support                            | Native            | Same as A                                                                 | No           | Medium    | Same work as A, plus keeping Tomcat and a local port.                                                                                                                                                                                                                                                                                                  |
+| B+. Keep HTTP, decode on the fly from any byte offset                              | Native            | Instant                                                                   | No           | Large     | Needs the same seekable decoder as G, but keeps the whole web layer. G gets the same result without HTTP.                                                                                                                                                                                                                                              |
+| C. Custom URL protocol handler for `Media`                                         | —                 | —                                                                         | —            | —         | Not possible: `Media` only accepts http(s)/file/jar/jrt URLs.                                                                                                                                                                                                                                                                                          |
+| D. Different audio engine (FFmpeg via JavaCV, or vlcj) + Java Sound                | Native            | Instant                                                                   | Yes          | Large     | A rewrite of `AudioPlayer`, and loses JavaFX's spectrum (we'd need our own FFT). Its one big advantage — exact output position, so the visualiser syncs without calibration — doesn't outweigh that today. Worth revisiting if gapless playback or FLAC is ever wanted.                                                                                |
+| E. Convert the library's ALAC to AAC                                               | Native            | Instant                                                                   | Yes          | Small     | Lossy: not acceptable for a lossless library.                                                                                                                                                                                                                                                                                                          |
+| F. Register a fully decoded WAV in JavaFX's internal memory cache (`LocatorCache`) | Native            | Wait for a full decode                                                    | Yes          | Small     | No patch needed: `Locator` checks this cache first and plays from memory. But it still decodes the whole track before playing, holds ~40 MB per track, and uses the same internal API as G, so it has G's upgrade risk without G's instant start. A good **first experiment** to prove that a Java-side source works with our JavaFX version (step 0). |
+| **G. Custom streaming source (`ConnectionHolder`) via a patched `Locator`**        | **Native, exact** | **Instant**                                                               | **Yes**      | **Large** | **Chosen.**                                                                                                                                                                                                                                                                                                                                            |
+
+### How JavaFX reads media (what the patch hooks into)
+
+`Media` creates an internal `com.sun.media.jfxmedia.locator.Locator` for the URL. `Locator.init()` works out the
+content type and length, and `Locator.createConnectionHolder()` returns a `ConnectionHolder`, the object the native
+player pulls bytes from. The built-in holders are file, HTTP, HLS and memory. In JavaFX's source (checked in
+version 13; re-check against 25.0.1), `ConnectionHolder` has:
+
+- package-private abstract methods `readBlock(long position, int size)`, `needBuffer()`, `isSeekable()`,
+  `isRandomAccess()`, plus a public abstract `seek(long position)`;
+- `readNextBlock()` (sequential reads through a `ReadableByteChannel channel` into a 4 KB direct `ByteBuffer buffer`),
+  `getBuffer()`, `closeConnection()`, `property(int, int)`, `getStreamSize()`.
+
+A holder that says `isRandomAccess() == true` (like the file and memory holders) is read with `readBlock(position,
+size)`: it puts the bytes in `buffer` and returns how many it put there. That positional read is exactly what an
+on-demand decoder needs.
+
+Because those methods are **package-private**, our holder must live in the same package, inside the `javafx.media`
+module. Hence a patch, not just reflection.
+
+### Design
+
+```
+ AudioPlayer ──▶ MediaProvider ──▶ new Media("file:///ctunes-stream/<trackId>.wav")
+                       │
+                       └─ registers AlacWavSource for <trackId> in StreamSources
+                                                       ▲
+ javafx.media (patched)                                │ looks up by URI
+   Locator.init()               ── our URI? ──▶ length + "audio/x-wav" from the source, no file check
+   Locator.createConnectionHolder() ── our URI? ──▶ new StreamConnectionHolder(source)
+   StreamConnectionHolder.readBlock(pos, size) ──▶ source.read(pos, buffer)
+                                                       │
+ app: AlacWavSource (virtual WAV = 44-byte header + PCM)
+   read(pos): pos ▶ sample ▶ ALAC packet(s) ▶ decode (small LRU of packets) ▶ copy bytes
+                                                       │
+ alac2wav: SeekableAlacDecoder (packet index from stsz / stco / stsc / stts, magic cookie from stsd)
+```
+
+The patch contains only JavaFX-side plumbing and no app logic:
+
+- `RandomAccessSource` — a small **public** interface in the patched package (`long length()`,
+  `int read(long position, ByteBuffer target)`, `String contentType()`, `void close()`).
+- `StreamSources` — a public static registry: `register(URI, RandomAccessSource)`, `unregister(URI)`, `lookup(URI)`.
+- `StreamConnectionHolder extends ConnectionHolder` — delegates to a `RandomAccessSource`; `isRandomAccess()`,
+  `isSeekable()` → true; `needBuffer()` → false; `readBlock` fills `buffer`; `seek` checks the bounds;
+  `closeConnection` → `source.close()`.
+- `Locator` — a copy of JavaFX 25.0.1's `Locator.java` with **two small edits**, both guarded by
+  `StreamSources.lookup(uri) != null`: in `init()`, take the length and content type from the source and return
+  early, before the file check and file-signature sniffing; in `createConnectionHolder()`, return a
+  `StreamConnectionHolder`. Every other URI behaves exactly as before.
+
+The URI uses the `file` scheme with a path that never exists on disk (`file:///ctunes-stream/<trackId>.wav`). That
+way it passes `Media`'s protocol check and `.wav` gives the right content type; the patched `init()` handles it
+before anything touches the disk.
+
+### Implementation plan
+
+0. **Spike (half a day): prove a Java-side source plays.** Before writing the decoder, try option F: decode one
+   track fully, register it with `LocatorCache.locatorCache().registerURICache(...)` under a fake URI, and play it.
+   If it plays and seeks on JavaFX 25.0.1 on Windows, the native side accepts Java-side random-access sources and the
+   rest of the plan is only Java work.
+1. **Seekable decoding in `alac2wav`.** Add `SeekableAlacDecoder`:
+    - Open the file once (`FileChannel`), read the `alac` magic cookie from `stsd`, and build a packet index from
+      `stsz` (packet sizes), `stco`/`co64` (chunk offsets), `stsc` (packets per chunk) and `stts` (frames per packet,
+      normally 4096). Result: for packet *i* — file offset, size, first PCM frame.
+    - `decodePacket(int i)` → PCM for that packet; `packetForFrame(long frame)` by binary search.
+    - Unit tests: decoding all packets in order gives byte-for-byte the same PCM as today's full decoder.
+2. **`AlacWavSource implements RandomAccessSource`** (app side): `length() = 44 + totalFrames × blockAlign`. It writes
+   the WAV header itself; for `position ≥ 44` it maps bytes to frames, decodes the packets covering the requested
+   range, and copies the bytes. It keeps a small LRU of decoded packets (8–16), so the player's sequential 4 KB reads
+   decode each packet once. Thread-safe, since the native player may read from its own thread. Unit tests: random
+   reads equal the same ranges of a fully decoded WAV.
+3. **The patch module** `jfx-media-patch` (a Gradle subproject): the four classes above, compiled against
+   `javafx-media-25.0.1` for Windows. Keep the JavaFX source of `Locator.java` next to the patched copy, so a diff
+   shows the two edits; check it in. (JavaFX is GPLv2 with the Classpath Exception, so a modified copy of that file
+   stays under that licence; fine for this app.)
+4. **Getting the patch loaded — check this first.** It depends on how `javafx.media` is loaded at run time; log
+   `Media.class.getModule().isNamed()` at start-up in each launch mode:
+    - *Module path* (likely `gradle run`: the JavaFX plugin handles `controls` and `fxml`; `javafx-media` is added as a
+      plain dependency, so check): add `--patch-module javafx.media=<path>/jfx-media-patch.jar` and
+      `--add-exports javafx.media/com.sun.media.jfxmedia.locator=ALL-UNNAMED` to the run and test JVM arguments.
+    - *Class path* (likely the deployed `java -jar cTunes.jar`, where Spring Boot puts every JavaFX jar in
+      `BOOT-INF/lib`): put the patch classes into the app jar. Spring Boot searches `BOOT-INF/classes` before
+      `BOOT-INF/lib`, so the patched `Locator` wins. `--patch-module` cannot go in a JAR manifest, so this route needs
+      no launcher change.
+    - Simplest is to make both modes the same (e.g. the class-path route for `gradle run` too).
+5. **Wire it in:** `MediaProvider` creates an `AlacWavSource` for ALAC tracks, registers it in `StreamSources` and
+   returns `new Media("file:///ctunes-stream/<trackId>.wav")`. `AudioPlayer` unregisters and closes the source when
+   the player is disposed. MP3 (and AAC, should one appear) keeps using the real file URI.
+6. **Fallback and self-check:** at start-up, check that the patch is active (`StreamSources` loads and `Locator` is
+   the patched class, e.g. a marker constant). If not, log a warning and fall back to option A (the disk cache). That
+   way a JavaFX upgrade or a wrong launch command degrades to "first play takes a second" instead of "ALAC doesn't
+   play". Building option A as well is extra work; if you'd rather not, keep the current HTTP endpoint as the
+   fallback instead and skip step 7. It already works and needs no internal API, it's just slower to seek.
+7. **Remove the web layer** once 5–6 work (only if the fallback is option A, not the HTTP endpoint):
+   `HttpRestController`, the HTTP branch of `MediaProvider`,
+   `spring-boot-starter-web`, `spring-boot-starter-actuator`, `server.port` / `SERVER_PORT`, and set
+   `spring.main.web-application-type: none` (item 8.1). Keep the H2 console in a `dev` profile only, if wanted.
+8. **On every JavaFX upgrade:** diff the new `Locator.java` and `ConnectionHolder.java` against the stored originals,
+   re-apply the two edits, run the spike test (step 0) and a seek test. Add a test that fails when the JavaFX version
+   in `build.gradle` differs from the version the patch was made for, as a reminder.
+
+**Bonus: the whole waveform at once.** With a seekable decoder, a background task can decode the whole track at low
+priority (much faster than real time) and compute the 2000 waveform bars up front. The waveform bar then shows the
+whole track from the first second instead of filling in as it plays. This is optional and independent of playback.
 
 ---
 
@@ -448,7 +561,7 @@ returns a `Future`, so callers like the artist view (2.3) can cancel the previou
 **Why:** embedded Tomcat, Spring MVC and Actuator add start-up time (typically a second or more) and tens of MB of
 memory, and open a network port (see 1.3), all for one internal endpoint.
 
-**How:** after option A (section 1), remove both starters and set `spring.main.web-application-type: none`. Keep the H2
+**How:** after option G (section 1), remove both starters and set `spring.main.web-application-type: none`. Keep the H2
 console in a `dev` profile only, if you still want it.
 
 ### 8.2 Verbose logging in the shipped config
@@ -470,9 +583,10 @@ per-load and per-file lines DEBUG.
    6.1 caches, 1.3 `server.address: 127.0.0.1` as a stop-gap.
 2. **Steady CPU and memory** (a day): 4.2 redraw only on change, 4.1 waveform image building, 3.2 queue listener
    leak, 2.1 cover cache at display size.
-3. **m4a** (a few days): option A (cache, pre-decoding, removing the web layer, 8.1), with the full-waveform bonus.
-   Every `.m4a` in the library is ALAC, so this improves seeking and start-up for most of what you play. Add the 1.1
-   codec column in the same migration as a safety net.
+3. **m4a — option G** (about a week): spike first (step 0), then the seekable decoder in `alac2wav`, the virtual WAV
+   source, the JavaFX patch, wiring and fallback, and finally removing the web layer (8.1). Every `.m4a` in the
+   library is ALAC, so this gives instant starts and exact seeking for most of what you play. Add the 1.1 codec
+   column in the same migration as a safety net.
 4. **Scan speed**: 5.1 skip unchanged files, 5.2 batched transactions, 5.3 throttled progress, 6.3 index (one `V006`
    migration can carry the columns for 1.1 and 5.1 and the index).
 5. **Larger UI work**: 2.2–2.5 artist view, 7.1 shared executor, then 3.1 virtualised queue.
