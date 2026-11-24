@@ -1,20 +1,18 @@
 package com.github.curiousoddman.curious_tunes.ui.controller.element;
 
-import com.github.curiousoddman.curious_tunes.config.FxmlLoader;
-import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
+import com.github.curiousoddman.curious_tunes.model.LibraryDragPayload;
+import com.github.curiousoddman.curious_tunes.model.NowPlayingMarker;
 import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumDiscBundle;
-import com.github.curiousoddman.curious_tunes.model.bundle.ArtistAlbumTrackBundle;
 import com.github.curiousoddman.curious_tunes.model.info.AlbumInfo;
 import com.github.curiousoddman.curious_tunes.util.UiIcons;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -33,7 +31,9 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class LibraryArtistAlbumDiscController implements Initializable {
-    private final FxmlLoader fxmlLoader;
+    private final ApplicationEventPublisher eventPublisher;
+    private final NowPlayingMarker          nowPlayingMarker;
+    private final LibraryDragPayload        dragPayload;
     public        VBox       pane;
     public        Label      diskNumberLabel;
     public        VBox       tracksLeftColumnVbox;
@@ -66,16 +66,16 @@ public class LibraryArtistAlbumDiscController implements Initializable {
             VBox                  col       = tracksLeftColumnVbox;
             while (iterator.hasNext()) {
                 TrackRecord trackRecord = iterator.next();
-                LoadedFxml<LibraryArtistAlbumTrackController> loadedFxml = fxmlLoader.load(
-                        FxmlView.LIBRARY_ALBUM_TRACK,
-                        new ArtistAlbumTrackBundle(
-                                albumInfo.toTrackInfo(trackRecord),
-                                albumDiscBundle.getTrackSelectionModel()
-                        )
+                // Built in code, not from FXML: one per track (doc/performance-review.md, item 2.4).
+                LibraryAlbumTrackRow trackRow = new LibraryAlbumTrackRow(
+                        albumInfo.toTrackInfo(trackRecord),
+                        albumDiscBundle.getTrackSelectionModel(),
+                        eventPublisher,
+                        nowPlayingMarker,
+                        dragPayload
                 );
-                Parent parent = loadedFxml.parent();
                 col.getChildren()
-                   .add(parent);
+                   .add(trackRow);
                 if (row + 1 == tracksPerColumn) {
                     col = tracksRightColumnVbox;
                     row = 0;

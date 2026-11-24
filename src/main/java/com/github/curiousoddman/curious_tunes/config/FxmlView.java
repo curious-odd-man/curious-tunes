@@ -2,7 +2,6 @@ package com.github.curiousoddman.curious_tunes.config;
 
 import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumDiscController;
-import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistAlbumTrackController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryArtistController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.LibraryPlaylistController;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.PlaylistItemController;
@@ -31,7 +30,6 @@ public class FxmlView<T> {
     public static final FxmlView<LibraryHistoryTabController>       LIBRARY_TAB_HISTORY       = new FxmlView<>("/fxml/library-tab-history.fxml", LibraryHistoryTabController.class);
     public static final FxmlView<LibraryLyricsTabController>        LIBRARY_TAB_LYRICS        = new FxmlView<>("/fxml/library-tab-lyrics.fxml", LibraryLyricsTabController.class);
     public static final FxmlView<LibraryTagEditTabController>       LIBRARY_TAB_TAGS_EDIT     = new FxmlView<>("/fxml/library-tab-edit-tags.fxml", LibraryTagEditTabController.class);
-    public static final FxmlView<LibraryArtistAlbumTrackController> LIBRARY_ALBUM_TRACK       = new FxmlView<>("/fxml/library-album-track.fxml", LibraryArtistAlbumTrackController.class);
 
     private final String   fxmlPath;
     private final Class<T> controllerClass;
