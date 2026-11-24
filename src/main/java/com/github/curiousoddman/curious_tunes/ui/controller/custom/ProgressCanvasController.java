@@ -10,12 +10,14 @@ import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.PixelWriter;
+import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -30,15 +32,13 @@ import java.util.function.LongConsumer;
 @RequiredArgsConstructor
 public class ProgressCanvasController implements TrackProgressController {
     private static final int    NUM_BARS           = WaveformModel.NUM_BARS;
-    private static final double BAR_GAP            = 0.0;
     public static final  int    AUDIO_THRESHOLD_DB = -80;
     /**
      * How often the player reports the spectrum. Fast enough for the playback window's visualiser to look smooth.
      */
     public static final  double SPECTRUM_INTERVAL_SEC = 0.04;
     /**
-     * The library waveform images are costly to build, so they are rebuilt no more often than this
-     * (the rate they had before the spectrum came faster).
+     * The waveform images are rebuilt no more often than this while the waveform fills in during playback.
      */
     private static final long   IMAGE_REBUILD_NANOS   = 100_000_000L;
 
@@ -64,8 +64,14 @@ public class ProgressCanvasController implements TrackProgressController {
     private       double          hoverX   = -1;        // pointer over the seek bar, -1 when it is not over it
     private final Tooltip         hoverTip = new Tooltip();
 
-    private LongConsumer animation = now -> render();
+    private LongConsumer animation   = this::renderIfChanged;
     private long         lastImageBuildNanos;
+    private int[]        pixels      = new int[0];
+    private boolean      imagesDirty = true;     // the waveform, the size or the colors changed: rebuild the images
+    private boolean      frameDirty  = true;     // the canvas must be redrawn even if the playhead didn't move
+    private int          drawnSplitX = -1;
+    private double       drawnHoverX = -2;
+    private boolean      wasOnScreen;
 
     public void init(StackPane parentPane, Canvas canvas) {
         this.canvas = canvas;
@@ -73,6 +79,7 @@ public class ProgressCanvasController implements TrackProgressController {
         parentPane.widthProperty()
                   .addListener(w -> {
                       canvas.setWidth(parentPane.getWidth());
+                      imagesDirty = true;
                   });
 
         graphicsContext = canvas.getGraphicsContext2D();
@@ -115,6 +122,7 @@ public class ProgressCanvasController implements TrackProgressController {
             playedBot = readColor(playedBotP, playedBot);
             unplayedTop = readColor(unplayedTopP, unplayedTop);
             unplayedBot = readColor(unplayedBotP, unplayedBot);
+            imagesDirty = true;
         } finally {
             parentPane.getChildren()
                       .removeAll(bg, playedTopP, playedBotP, unplayedTopP, unplayedBotP);
@@ -160,6 +168,8 @@ public class ProgressCanvasController implements TrackProgressController {
         clearWaveform(graphicsContext);
         waveformWriter.stop();
         waveformModel.reset();
+        imagesDirty = true;
+        frameDirty = true;
     }
 
     public void setProgressZero() {
@@ -196,11 +206,7 @@ public class ProgressCanvasController implements TrackProgressController {
         waveformModel.set(barIndex, barMagnitude);
         spectrumModel.update(magnitudes, AUDIO_THRESHOLD_DB);
 
-        long now = System.nanoTime();
-        if (now - lastImageBuildNanos >= IMAGE_REBUILD_NANOS) {
-            lastImageBuildNanos = now;
-            buildImages();
-        }
+        imagesDirty = true;          // rebuilt by the next frame, at most every IMAGE_REBUILD_NANOS
     }
 
     @Override
@@ -226,48 +232,84 @@ public class ProgressCanvasController implements TrackProgressController {
 
     @Override
     public void stopLoadingAnimation() {
-        animation = now -> render();
+        animation = this::renderIfChanged;
+        frameDirty = true;
+    }
+
+    /**
+     * Called on every frame, but only draws when the picture changed: the playhead moved by a pixel, the pointer
+     * moved, the waveform grew, or the size or colors changed. Draws nothing while the window is hidden or
+     * minimised (doc/performance-review.md, item 4.2).
+     */
+    private void renderIfChanged(long now) {
+        boolean onScreen = isOnScreen();
+        if (!onScreen) {
+            wasOnScreen = false;
+            return;
+        }
+        if (!wasOnScreen) {
+            wasOnScreen = true;
+            frameDirty = true;           // shown again: the canvas may not have the latest picture
+        }
+        if (imagesDirty && (playedImage == null || now - lastImageBuildNanos >= IMAGE_REBUILD_NANOS)) {
+            lastImageBuildNanos = now;
+            imagesDirty = false;
+            buildImages();
+            frameDirty = true;
+        }
+        int splitX = splitX();
+        if (!frameDirty && splitX == drawnSplitX && hoverX == drawnHoverX) {
+            return;
+        }
+        render();
+        drawnSplitX = splitX;
+        drawnHoverX = hoverX;
+        frameDirty = false;
+    }
+
+    private boolean isOnScreen() {
+        if (canvas.getScene() == null) {
+            return false;
+        }
+        Window window = canvas.getScene()
+                              .getWindow();
+        return window != null && window.isShowing() && !(window instanceof Stage stage && stage.isIconified());
+    }
+
+    private int splitX() {
+        if (totalDuration == null || currentDuration == null || totalDuration.toMillis() <= 0) {
+            return 0;
+        }
+        return (int) (currentDuration.toMillis() / totalDuration.toMillis() * canvas.getWidth());
     }
 
     private void buildImages() {
-        playedImage = renderImage(playedTop, playedBot);
-        unplayedImage = renderImage(unplayedTop, unplayedBot);
+        int width  = (int) canvas.getWidth();
+        int height = (int) canvas.getHeight();
+        if (width <= 0 || height <= 0) {
+            playedImage = null;
+            unplayedImage = null;
+            return;
+        }
+        if (pixels.length < width * height) {
+            pixels = new int[width * height];
+        }
+        playedImage = renderImage(playedImage, width, height, playedTop, playedBot);
+        unplayedImage = renderImage(unplayedImage, width, height, unplayedTop, unplayedBot);
     }
 
-    private WritableImage renderImage(Color topColor, Color botColor) {
-        double        height   = canvas.getHeight();
-        double        width    = canvas.getWidth();
-        WritableImage img      = new WritableImage((int) width, (int) height);
-        PixelWriter   pw       = img.getPixelWriter();
-        double[]      waveform = waveformModel.getBars();
-        double        barW     = width / NUM_BARS;
-        double        centerY  = height / 2.0;
-
-        // Background
-        int bgArgb = toArgb(bgColor);
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                pw.setArgb(x, y, bgArgb);
-            }
-        }
-
-        // Bars
-        for (int b = 0; b < NUM_BARS; b++) {
-            double amp    = Math.max(0.03, waveform[b]);
-            double halfH  = amp * (centerY - 2);
-            int    xStart = (int) (b * barW) + 1;
-            int    xEnd   = (int) Math.min((b + 1) * barW - BAR_GAP, width - 1);
-            int    yTop   = (int) (centerY - halfH);
-            int    yBot   = (int) (centerY + halfH);
-
-            for (int x = xStart; x <= xEnd; x++) {
-                for (int y = yTop; y <= yBot && y < height; y++) {
-                    double t     = (yBot > yTop) ? (double) (y - yTop) / (yBot - yTop) : 0;
-                    Color  color = topColor.interpolate(botColor, t);
-                    pw.setArgb(x, y, toArgb(color));
-                }
-            }
-        }
+    /**
+     * Draws the waveform into {@code reuse} when it has the right size, else into a new image; computed in one
+     * array and written in one call (item 4.1).
+     */
+    private WritableImage renderImage(WritableImage reuse, int width, int height, Color topColor, Color botColor) {
+        WritableImage img = reuse != null && (int) reuse.getWidth() == width && (int) reuse.getHeight() == height
+                ? reuse
+                : new WritableImage(width, height);
+        WaveformRaster.render(pixels, width, height, waveformModel.getBars(),
+                toArgb(bgColor), toArgb(topColor), toArgb(botColor));
+        img.getPixelWriter()
+           .setPixels(0, 0, width, height, PixelFormat.getIntArgbInstance(), pixels, 0, width);
         return img;
     }
 
@@ -304,9 +346,11 @@ public class ProgressCanvasController implements TrackProgressController {
         double width  = canvas.getWidth();
         double height = canvas.getHeight();
         clearWaveform(graphicsContext);
-        double currentProgress = currentDuration.toMillis() / totalDuration.toMillis();
-        int    splitX          = (int) (currentProgress * width);
+        int splitX = splitX();
 
+        if (playedImage == null || unplayedImage == null) {
+            return;
+        }
         if (splitX > 0) {
             graphicsContext.drawImage(playedImage,
                     0, 0, splitX, height,   // source rect

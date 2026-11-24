@@ -11,7 +11,7 @@ import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.util.ConversionUtils;
 import com.github.curiousoddman.curious_tunes.util.ImageBytes;
-import com.github.curiousoddman.curious_tunes.util.ImageUtils;
+import com.github.curiousoddman.curious_tunes.util.CoverImages;
 import com.github.curiousoddman.curious_tunes.util.styles.CssClasses;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -374,10 +374,8 @@ public class LibraryTagEditTabController implements Initializable {
     }
 
     private void showCover(ImageView view, byte[] bytes) {
-        view.setImage(noCoverImage);
-        if (bytes != null && bytes.length > 0) {
-            ImageUtils.setImageIfPresent(bytes, view);
-        }
+        Image image = CoverImages.get(bytes, Math.max(view.getFitWidth(), view.getFitHeight()));
+        view.setImage(image == null ? noCoverImage : image);
     }
 
     /**

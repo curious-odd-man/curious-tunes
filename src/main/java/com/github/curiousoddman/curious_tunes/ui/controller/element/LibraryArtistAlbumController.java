@@ -78,7 +78,7 @@ public class LibraryArtistAlbumController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         if (resources instanceof ArtistAlbumBundle albumBundle) {
             albumInfo = albumBundle.getAlbumInfo();
-            ImageUtils.setImageIfPresent(albumInfo, albumImage);
+            // The cover is decoded once the view is shown and sized: setCoverSize.
             initDrag();
 
             Integer albumYear = albumBundle.getAlbumInfo()
@@ -165,6 +165,7 @@ public class LibraryArtistAlbumController implements Initializable {
     public void setCoverSize(double size) {
         albumImage.setFitWidth(size);
         albumImage.setFitHeight(size);
+        ImageUtils.setImageIfPresent(albumInfo, albumImage);       // a larger size may need a larger decode
         double overlay = Math.round(size * 0.57);
         playImageButton.setFitWidth(overlay);
         playImageButton.setFitHeight(overlay);

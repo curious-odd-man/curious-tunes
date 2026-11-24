@@ -71,6 +71,7 @@ public class PlaylistItemController implements Initializable {
     private       PlaylistModel             playlistSelectionModel;
     private       PlaylistDragHandler       playlistDragHandler;
     private final Tooltip                   missingFileTooltip = new Tooltip();
+    private final ListChangeListener<PlaylistItem> selectionListener = this::onPlaylistSelectionChanged;
     private       boolean                   missingFileTooltipInstalled;
 
     @Override
@@ -117,9 +118,23 @@ public class PlaylistItemController implements Initializable {
             playlistSelectionModel
                     .getSelectionModel()
                     .getSelectedItems()
-                    .addListener(this::onPlaylistSelectionChanged);
+                    .addListener(selectionListener);
             playlistDragHandler = playlistItemResourceBundle.getPlaylistDragHandler();
         }
+    }
+
+    /**
+     * The row is no longer shown (its track left the queue): stop listening to the shared selection list. Without
+     * this, the selection list keeps every row ever created alive, with its nodes and cover
+     * (doc/performance-review.md, item 3.2), and notifies all of them on every selection change.
+     */
+    public void dispose() {
+        if (playlistSelectionModel != null) {
+            playlistSelectionModel.getSelectionModel()
+                                  .getSelectedItems()
+                                  .removeListener(selectionListener);
+        }
+        image.setImage(null);
     }
 
     private void onPlaylistSelectionChanged(ListChangeListener.Change<? extends PlaylistItem> change) {

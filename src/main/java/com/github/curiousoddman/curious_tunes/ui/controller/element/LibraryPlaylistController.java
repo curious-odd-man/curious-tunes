@@ -324,6 +324,12 @@ public class LibraryPlaylistController implements Initializable {
             nodes.add(row.node());
         }
 
+        rows.forEach((item, row) -> {
+            if (!synced.containsKey(item)) {
+                row.controller()
+                   .dispose();          // its track left the queue
+            }
+        });
         rows.clear();
         rows.putAll(synced);
         playlistItemControllers.clear();
