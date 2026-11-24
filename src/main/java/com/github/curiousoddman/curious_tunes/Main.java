@@ -4,10 +4,8 @@ import com.github.curiousoddman.curious_tunes.app.preloader.AnimatedPreloader;
 import com.github.curiousoddman.curious_tunes.util.ProcessPriority;
 import com.sun.javafx.application.LauncherImpl;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-@EnableCaching
 @SpringBootApplication
 @EnableTransactionManagement
 public class Main {

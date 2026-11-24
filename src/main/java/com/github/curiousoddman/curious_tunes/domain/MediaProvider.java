@@ -10,7 +10,6 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Locale;
 
 @Component
 @RequiredArgsConstructor
@@ -32,7 +31,8 @@ public class MediaProvider {
         String fileLocation = trackRecord.getFileLocation();
         URI fileUri;
 
-        if (fileLocation.toLowerCase(Locale.ROOT).endsWith("m4a")) {
+        if (AudioFormat.of(fileLocation)
+                       .orElse(null) == AudioFormat.M4A) {
             fileUri = URI.create("http://localhost:" + serverPort + "/current/track?name=" + URLEncoder.encode(fileLocation, StandardCharsets.UTF_8));
         } else {
             fileUri = Path.of(fileLocation).toUri();

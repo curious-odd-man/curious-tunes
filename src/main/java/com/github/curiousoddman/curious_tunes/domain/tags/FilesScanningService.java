@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes.domain.tags;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
+import com.github.curiousoddman.curious_tunes.domain.AudioFormat;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.CleanerResult;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.LyricsCleaner;
@@ -26,7 +27,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
@@ -43,7 +46,10 @@ public class FilesScanningService /*implements StartupRunnable*/ {
     private final        MetadataManager           metadataManager;
     private final        LyricsCleaner             lyricsCleaner;
 
-    private boolean shouldInterrupt;
+    /**
+     * Set by the event listener thread, read by the scan thread: volatile, so a Stop request is always seen.
+     */
+    private volatile boolean shouldInterrupt;
 
     @EventListener
     public void onRescanEvent(RescanLibraryEvent event) {
@@ -57,9 +63,11 @@ public class FilesScanningService /*implements StartupRunnable*/ {
                 List<Path> paths = doScan(Path.of(libraryRoot));
                 log.info("Discovered {} files. Started processing", paths.size());
                 publishInProgressEvent(paths);
-                int added     = 0;
-                int updated   = 0;
-                int unchanged = 0;
+                int       added     = 0;
+                int       updated   = 0;
+                int       unchanged = 0;
+                int       failed    = 0;
+                ScanCache cache     = new ScanCache();
                 for (int i = 0; i < paths.size(); i++) {
                     Path file = paths.get(i);
                     MDC.put("file", String.valueOf(i));
@@ -70,14 +78,21 @@ public class FilesScanningService /*implements StartupRunnable*/ {
                         return;
                     }
 
-                    switch (extractMetadataAndUpdateDatabase(file)) {
-                        case ADDED -> added++;
-                        case UPDATED -> updated++;
-                        case UNCHANGED -> unchanged++;
+                    try {
+                        switch (extractMetadataAndUpdateDatabase(file, cache)) {
+                            case ADDED -> added++;
+                            case UPDATED -> updated++;
+                            case UNCHANGED -> unchanged++;
+                        }
+                    } catch (Exception e) {
+                        // One unreadable file must not stop the scan of everything after it.
+                        failed++;
+                        log.warn("Skipped {}: {}", file, e.toString(), e);
                     }
                     publishInProgressStatusEvent(i, paths);
                 }
-                publishCompletedEvent(added, updated, unchanged);
+                MDC.remove("file");
+                publishCompletedEvent(added, updated, unchanged, failed);
                 log.info("Scanning completed...");
             } catch (Exception e) {
                 publishFailedEvent(e);
@@ -93,12 +108,26 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         ADDED, UPDATED, UNCHANGED
     }
 
-    private ScanOutcome extractMetadataAndUpdateDatabase(Path file) {
-        MetadataTags          metadata     = metadataManager.getMetadata(file);
-        ArtistRecord          artistRecord = dataAccess.getOrInsertArtist(metadata.getArtist());
-        AlbumCover            albumCover   = metadata.getAlbumCover();
-        AlbumRecord           albumRecord  = dataAccess.getOrInsertAlbum(artistRecord.getId(), metadata.getAlbum(), albumCover == null ? null : albumCover.getData());
-        Optional<TrackRecord> trackRecord  = dataAccess.getTrack(file);
+    /**
+     * Artists and albums already looked up during one scan, so the tracks of one album don't look the album up again.
+     * Lives for one scan only, so it can never return records from before a tag edit.
+     */
+    private static final class ScanCache {
+        private record AlbumKey(int artistId, String name) {
+        }
+
+        private final Map<String, ArtistRecord>  artists = new HashMap<>();
+        private final Map<AlbumKey, AlbumRecord> albums  = new HashMap<>();
+    }
+
+    private ScanOutcome extractMetadataAndUpdateDatabase(Path file, ScanCache cache) {
+        MetadataTags metadata     = metadataManager.getMetadata(file);
+        ArtistRecord artistRecord = cache.artists.computeIfAbsent(metadata.getArtist(), dataAccess::getOrInsertArtist);
+        AlbumCover   albumCover   = metadata.getAlbumCover();
+        AlbumRecord albumRecord = cache.albums.computeIfAbsent(
+                new ScanCache.AlbumKey(artistRecord.getId(), metadata.getAlbum()),
+                key -> dataAccess.getOrInsertAlbum(key.artistId(), key.name(), albumCover == null ? null : albumCover.getData()));
+        Optional<TrackRecord> trackRecord = dataAccess.getTrack(file);
 
         TrackRecord newTrackRecord;
         ScanOutcome outcome;
@@ -162,7 +191,7 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                if (attrs.isRegularFile()) {
+                if (attrs.isRegularFile() && AudioFormat.isAudioFile(file)) {      // skip covers, playlists, etc.
                     foundFiles.add(file);
                 }
                 return FileVisitResult.CONTINUE;
@@ -180,11 +209,15 @@ public class FilesScanningService /*implements StartupRunnable*/ {
                         .build());
     }
 
-    private void publishCompletedEvent(int added, int updated, int unchanged) {
+    private void publishCompletedEvent(int added, int updated, int unchanged, int failed) {
+        String description = "%d added, %d updated, %d unchanged".formatted(added, updated, unchanged);
+        if (failed > 0) {
+            description += ", %d could not be read (see the log)".formatted(failed);
+        }
         applicationEventPublisher.publishEvent(
                 getBackgroundProcessEventBuilder()
                         .eventType(BackgroundProcessEventType.ENDED)
-                        .description("%d added, %d updated, %d unchanged".formatted(added, updated, unchanged))
+                        .description(description)
                         .build());
     }
 

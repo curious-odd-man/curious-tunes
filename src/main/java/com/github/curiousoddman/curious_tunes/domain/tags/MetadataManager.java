@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.domain.tags;
 
+import com.github.curiousoddman.curious_tunes.domain.AudioFormat;
 import org.mp4parser.CustomizedPropertyBoxParser;
 import com.mpatric.mp3agic.Mp3File;
 import lombok.SneakyThrows;
@@ -25,14 +26,12 @@ public class MetadataManager {
 
     public MetadataTags getMetadata(Path file) {
         try {
-            String pathString = file.toString();
-            if (pathString.endsWith("m4a")) {
-                return extractM4aMetadata(file);
-            } else if (pathString.endsWith("mp3")) {
-                return extractMp3Tags(file);
-            } else {
-                throw new IllegalArgumentException("Unsupported file format: " + pathString);
-            }
+            AudioFormat format = AudioFormat.of(file)
+                                             .orElseThrow(() -> new IllegalArgumentException("Unsupported file format: " + file));
+            return switch (format) {
+                case M4A -> extractM4aMetadata(file);
+                case MP3 -> extractMp3Tags(file);
+            };
         } catch (Exception e) {
             log.error("Failed to parse file {}", file, e);
             throw e;

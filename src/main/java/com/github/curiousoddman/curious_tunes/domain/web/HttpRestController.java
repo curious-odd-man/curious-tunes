@@ -4,7 +4,6 @@ import com.github.curiousoddman.alacdecoder.AlacDecoder;
 import com.github.curiousoddman.alacdecoder.data.WavFormat;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,7 +22,6 @@ public class HttpRestController {
             value = "/current/track",
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
     )
-    @Cacheable(value = "media", key = "#name")
     public @ResponseBody StreamingResponseBody get(@RequestParam("name") String name) throws IOException {
         try {
             log.info("Requested {}", name);

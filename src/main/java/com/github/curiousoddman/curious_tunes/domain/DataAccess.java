@@ -18,7 +18,6 @@ import org.jooq.Record1;
 import org.jooq.TableField;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultDSLContext;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
@@ -45,16 +44,10 @@ import static org.jooq.impl.DSL.val;
 @Component
 @RequiredArgsConstructor
 public class DataAccess {
-    public static class Caches {
-        private static final String ARTISTS = "artists";
-        private static final String ALBUMS  = "albums";
-    }
-
     private final DefaultDSLContext dsl;
 
     private Map<Integer, List<TrackOverridesHistoryRecord>> trackOverrides;
 
-    @Cacheable(Caches.ARTISTS)
     public ArtistRecord getOrInsertArtist(String artist) {
         ArtistRecord artistRecord = dsl.selectFrom(ARTIST)
                                        .where(ARTIST.NAME.eq(artist))
@@ -71,7 +64,6 @@ public class DataAccess {
                 .fetchOne();
     }
 
-    @Cacheable(Caches.ALBUMS)
     public AlbumRecord getOrInsertAlbum(Integer artistId, String album, byte[] image) {
         AlbumRecord albumRecord = dsl.selectFrom(ALBUM)
                                      .where(
