@@ -11,11 +11,17 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 public class ImageUtils {
     public static void setImageIfPresent(AlbumInfo albumInfo, ImageView imageView) {
-        setImageIfPresent(albumInfo.getImage(), imageView);
+        CoverImages.show(imageView, albumInfo.getId(), albumInfo.getImage(),
+                Math.max(imageView.getFitWidth(), imageView.getFitHeight()));
     }
 
+    /**
+     * Like {@link #setImageIfPresent(byte[], ImageView)}; knowing the album, small covers come from a stored
+     * thumbnail (doc/performance-review.md, item 2.1).
+     */
     public static void setImageIfPresent(AlbumRecord albumRecord, ImageView imageView) {
-        setImageIfPresent(albumRecord.getImage(), imageView);
+        CoverImages.show(imageView, albumRecord.getId(), albumRecord.getImage(),
+                Math.max(imageView.getFitWidth(), imageView.getFitHeight()));
     }
 
     /**

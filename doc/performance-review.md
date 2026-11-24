@@ -314,6 +314,13 @@ switching artists.
 
 #### Thumbnails stored with the album
 
+**Status: done** (step 6). Migration V007 adds the `album_cover_thumb` table (album, size, MD5 of the source cover,
+JPEG) and `album.image_overridden`. `CoverThumbnails` makes the thumbnails and is tested. `AlbumCoverService`
+supplies them to `CoverImages`, which decodes a 128 or 512 px thumbnail instead of the original wherever the album
+is known and the cover is shown at up to 512 px. Instead of an `image_md5` column, the thumbnails store the MD5 of the
+cover they were made from: the original bytes come with the album anyway, and its MD5 is cheap to compute on the
+decoder thread.
+
 The originals are already on disk (the `ALBUM.IMAGE` BLOB), so reading them is not the slow part: **decoding** a
 full-size cover is (tens of milliseconds for a 1400 px JPEG, about 7.8 MB of pixels). So also store small,
 pre-scaled thumbnails, and decode those instead.
@@ -605,6 +612,10 @@ shared by its tracks; it grows with the library.
 by album id. Longer term, move covers to their own table.
 
 ### 6.5 A rescan never updates an existing album's cover
+
+**Status: done** (step 6). The first file of an album read in a scan decides its cover, usually its first track,
+since files are visited in name order. A cover set in the tag editor sets `album.image_overridden` and is kept, and
+a file without a cover keeps the current one.
 
 **Where:** `DataAccess.getOrInsertAlbum(artistId, album, image)`: when the album already exists, it returns it as it
 is and ignores `image`.

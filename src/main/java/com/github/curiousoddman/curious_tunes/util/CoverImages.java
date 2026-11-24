@@ -28,6 +28,9 @@ import java.util.concurrent.Executors;
  * </ul>
  * Covers are recognised by their bytes, not only by album, so a cover changed in the tag editor shows the new
  * image without the cache having to be told.
+ * <p>
+ * When the album is known and the cover is shown at up to 512 px, the picture is decoded from a small stored
+ * thumbnail ({@link ThumbnailSource}) instead of from the full-size cover.
  */
 @Slf4j
 public final class CoverImages {
@@ -53,8 +56,24 @@ public final class CoverImages {
         return thread;
     });
 
-    private static volatile double screenScale = 1;
-    private static volatile Image  placeholder;
+    private static volatile double          screenScale = 1;
+    private static volatile Image           placeholder;
+    private static volatile ThumbnailSource thumbnails;
+
+    /**
+     * Supplies small JPEG copies of covers (doc/performance-review.md, item 2.1). Called on the decoder threads.
+     */
+    public interface ThumbnailSource {
+        /**
+         * @param px the thumbnail size: 128 or 512
+         * @return the thumbnail's bytes, or the cover itself when no thumbnail can be made
+         */
+        byte[] thumbnail(int albumId, byte[] cover, int px);
+    }
+
+    public static void setThumbnailSource(ThumbnailSource source) {
+        thumbnails = source;
+    }
 
     private CoverImages() {
     }
@@ -64,6 +83,14 @@ public final class CoverImages {
      * nothing when there is no cover, so the view keeps its placeholder. Safe to call from any thread.
      */
     public static void show(ImageView view, byte[] cover, double displaySize) {
+        show(view, null, cover, displaySize);
+    }
+
+    /**
+     * Like {@link #show(ImageView, byte[], double)}; with the album known, a small stored thumbnail is decoded
+     * instead of the full-size cover where it is enough.
+     */
+    public static void show(ImageView view, Integer albumId, byte[] cover, double displaySize) {
         if (cover == null || cover.length == 0) {
             return;
         }
@@ -79,7 +106,7 @@ public final class CoverImages {
             view.setImage(placeholder());
         }
         DECODER.execute(() -> {
-            Image image = decode(cover, key.size());
+            Image image = decode(source(albumId, cover, key.size()), key.size());
             if (image == null) {
                 return;
             }
@@ -155,6 +182,24 @@ public final class CoverImages {
                                 .getOutputScaleX();      // remembered for calls from other threads
         }
         return bucket((displaySize > 0 ? displaySize : 256) * screenScale);
+    }
+
+    /**
+     * The bytes to decode for {@code size}: a thumbnail when one is enough, else the cover itself.
+     */
+    private static byte[] source(Integer albumId, byte[] cover, int size) {
+        ThumbnailSource source = thumbnails;
+        int             px     = size <= 128 ? 128 : size <= 512 ? 512 : 0;
+        if (albumId == null || source == null || px == 0) {
+            return cover;
+        }
+        try {
+            byte[] thumbnail = source.thumbnail(albumId, cover, px);
+            return thumbnail == null ? cover : thumbnail;
+        } catch (RuntimeException e) {
+            log.warn("No thumbnail for album {}", albumId, e);
+            return cover;
+        }
     }
 
     private static Key key(byte[] cover, int size) {

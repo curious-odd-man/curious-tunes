@@ -6,6 +6,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.domain.AudioFormat;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
 import com.github.curiousoddman.curious_tunes.domain.FileStamp;
+import com.github.curiousoddman.curious_tunes.domain.covers.AlbumCoverStore;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.CleanerResult;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.LyricsCleaner;
 import com.github.curiousoddman.curious_tunes.event.InterruptBackgroundProcessEvent;
@@ -29,11 +30,15 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
+import static com.github.curiousoddman.curious_tunes.dbobj.Tables.ALBUM;
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 import static com.github.curiousoddman.curious_tunes.util.FileUtils.audioMd5;
 
@@ -52,6 +57,7 @@ public class FilesScanningService /*implements StartupRunnable*/ {
     private final        LyricsCleaner             lyricsCleaner;
     private final        TransactionTemplate       transactionTemplate;
     private final        JobManager                jobManager;
+    private final        AlbumCoverStore           albumCoverStore;
 
     /**
      * The scan last submitted, for Stop.
@@ -179,8 +185,9 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         private record AlbumKey(int artistId, String name) {
         }
 
-        private final Map<String, ArtistRecord> artists = new HashMap<>();
-        private final Map<AlbumKey, AlbumRecord> albums  = new HashMap<>();
+        private final Map<String, ArtistRecord> artists      = new HashMap<>();
+        private final Map<AlbumKey, AlbumRecord> albums       = new HashMap<>();
+        private final Set<Integer>               coverChecked = new HashSet<>();     // albums whose cover was checked
     }
 
     private ScanOutcome extractMetadataAndUpdateDatabase(ScannedFile scanned, ScanCache cache) {
@@ -191,6 +198,7 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         AlbumRecord  albumRecord  = cache.albums.computeIfAbsent(
                 new ScanCache.AlbumKey(artistRecord.getId(), metadata.getAlbum()),
                 key -> dataAccess.getOrInsertAlbum(key.artistId(), key.name(), albumCover == null ? null : albumCover.getData()));
+        updateCoverFromFile(albumRecord, albumCover, cache);
         Optional<TrackRecord> trackRecord = dataAccess.getTrack(file);
 
         TrackRecord newTrackRecord;
@@ -233,6 +241,25 @@ public class FilesScanningService /*implements StartupRunnable*/ {
             outcome = ScanOutcome.UPDATED;
         }
         return outcome;
+    }
+
+    /**
+     * Item 6.5: the cover of an existing album follows its files. The first file of the album read in a scan
+     * decides (usually its first track, as files are visited in name order); a cover set by hand in the tag editor
+     * is kept, and so is the current cover when the file has none.
+     */
+    private void updateCoverFromFile(AlbumRecord album, AlbumCover cover, ScanCache cache) {
+        if (cover == null || cover.getData() == null || cover.getData().length == 0
+                || !cache.coverChecked.add(album.getId())) {
+            return;
+        }
+        if (Arrays.equals(album.getImage(), cover.getData()) || albumCoverStore.isOverridden(album.getId())) {
+            return;
+        }
+        albumCoverStore.replaceCoverFromFiles(album.getId(), cover.getData());
+        album.setImage(cover.getData());
+        album.changed(ALBUM.IMAGE, false);          // already stored
+        log.info("Cover of album '{}' updated from its files", album.getName());
     }
 
     /**

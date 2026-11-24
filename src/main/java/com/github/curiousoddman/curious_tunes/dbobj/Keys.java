@@ -5,6 +5,7 @@ package com.github.curiousoddman.curious_tunes.dbobj;
 
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Album;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.AlbumCoverThumb;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Artist;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingAction;
@@ -12,6 +13,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.TrackOverridesHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.UserPreferences;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumCoverThumbRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.FlywaySchemaHistoryRecord;
@@ -50,6 +52,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<AlbumRecord> CONSTRAINT_3 = Internal.createUniqueKey(Album.ALBUM, DSL.name("CONSTRAINT_3"), new TableField[] { Album.ALBUM.ID }, true);
+    public static final UniqueKey<AlbumCoverThumbRecord> CONSTRAINT_F5 = Internal.createUniqueKey(AlbumCoverThumb.ALBUM_COVER_THUMB, DSL.name("CONSTRAINT_F5"), new TableField[] { AlbumCoverThumb.ALBUM_COVER_THUMB.ALBUM_ID, AlbumCoverThumb.ALBUM_COVER_THUMB.PX }, true);
     public static final UniqueKey<ArtistRecord> CONSTRAINT_7 = Internal.createUniqueKey(Artist.ARTIST, DSL.name("CONSTRAINT_7"), new TableField[] { Artist.ARTIST.ID }, true);
     public static final UniqueKey<FlywaySchemaHistoryRecord> FLYWAY_SCHEMA_HISTORY_PK = Internal.createUniqueKey(FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, DSL.name("flyway_schema_history_pk"), new TableField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK }, true);
     public static final UniqueKey<PendingActionRecord> CONSTRAINT_7C = Internal.createUniqueKey(PendingAction.PENDING_ACTION, DSL.name("CONSTRAINT_7C"), new TableField[] { PendingAction.PENDING_ACTION.ID }, true);
@@ -62,5 +65,6 @@ public class Keys {
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final ForeignKey<AlbumCoverThumbRecord, AlbumRecord> CONSTRAINT_F = Internal.createForeignKey(AlbumCoverThumb.ALBUM_COVER_THUMB, DSL.name("CONSTRAINT_F"), new TableField[] { AlbumCoverThumb.ALBUM_COVER_THUMB.ALBUM_ID }, Keys.CONSTRAINT_3, new TableField[] { Album.ALBUM.ID }, true);
     public static final ForeignKey<TrackOverridesHistoryRecord, TrackRecord> CONSTRAINT_AD = Internal.createForeignKey(TrackOverridesHistory.TRACK_OVERRIDES_HISTORY, DSL.name("CONSTRAINT_AD"), new TableField[] { TrackOverridesHistory.TRACK_OVERRIDES_HISTORY.TRACK_ID }, Keys.CONSTRAINT_4, new TableField[] { Track.TRACK.ID }, true);
 }

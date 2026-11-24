@@ -98,6 +98,20 @@ public class AlbumRecord extends UpdatableRecordImpl<AlbumRecord> {
         return (Byte) get(4);
     }
 
+    /**
+     * Setter for <code>public.ALBUM.IMAGE_OVERRIDDEN</code>.
+     */
+    public void setImageOverridden(Boolean value) {
+        set(5, value);
+    }
+
+    /**
+     * Getter for <code>public.ALBUM.IMAGE_OVERRIDDEN</code>.
+     */
+    public Boolean getImageOverridden() {
+        return (Boolean) get(5);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -121,7 +135,7 @@ public class AlbumRecord extends UpdatableRecordImpl<AlbumRecord> {
     /**
      * Create a detached, initialised AlbumRecord
      */
-    public AlbumRecord(Integer id, Integer fkArtist, String name, byte[] image, Byte imageType) {
+    public AlbumRecord(Integer id, Integer fkArtist, String name, byte[] image, Byte imageType, Boolean imageOverridden) {
         super(Album.ALBUM);
 
         setId(id);
@@ -129,6 +143,7 @@ public class AlbumRecord extends UpdatableRecordImpl<AlbumRecord> {
         setName(name);
         setImage(image);
         setImageType(imageType);
+        setImageOverridden(imageOverridden);
         resetChangedOnNotNull();
     }
 }

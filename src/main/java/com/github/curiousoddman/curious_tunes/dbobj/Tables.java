@@ -5,6 +5,7 @@ package com.github.curiousoddman.curious_tunes.dbobj;
 
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Album;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.AlbumCoverThumb;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Artist;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingAction;
@@ -34,6 +35,11 @@ public class Tables {
      * The table <code>public.ALBUM</code>.
      */
     public static final Album ALBUM = Album.ALBUM;
+
+    /**
+     * The table <code>public.ALBUM_COVER_THUMB</code>.
+     */
+    public static final AlbumCoverThumb ALBUM_COVER_THUMB = AlbumCoverThumb.ALBUM_COVER_THUMB;
 
     /**
      * The table <code>public.ARTIST</code>.

@@ -5,6 +5,7 @@ package com.github.curiousoddman.curious_tunes.dbobj;
 
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Album;
+import com.github.curiousoddman.curious_tunes.dbobj.tables.AlbumCoverThumb;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Artist;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingAction;
@@ -48,6 +49,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.ALBUM</code>.
      */
     public final Album ALBUM = Album.ALBUM;
+
+    /**
+     * The table <code>public.ALBUM_COVER_THUMB</code>.
+     */
+    public final AlbumCoverThumb ALBUM_COVER_THUMB = AlbumCoverThumb.ALBUM_COVER_THUMB;
 
     /**
      * The table <code>public.ARTIST</code>.
@@ -101,6 +107,7 @@ public class Public extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.asList(
             Album.ALBUM,
+            AlbumCoverThumb.ALBUM_COVER_THUMB,
             Artist.ARTIST,
             FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY,
             PendingAction.PENDING_ACTION,

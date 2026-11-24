@@ -5,6 +5,7 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackOverridesHistoryRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.domain.DataAccess;
+import com.github.curiousoddman.curious_tunes.domain.covers.AlbumCoverStore;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.LyricsService;
 import com.github.curiousoddman.curious_tunes.event.AlbumCoverChangedEvent;
 import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
@@ -142,6 +143,7 @@ public class LibraryTagEditTabController implements Initializable {
 
     private final LyricsService             lyricsService;
     private final DataAccess                dataAccess;
+    private final AlbumCoverStore           albumCoverStore;
     private final ApplicationEventPublisher eventPublisher;
 
     private       TrackInfo                         trackInfo;                         // the track in single mode
@@ -650,6 +652,7 @@ public class LibraryTagEditTabController implements Initializable {
                 AlbumRecord album = dataAccess.getAlbum(albumId);
                 album.setImage(pendingCover);
                 album.update();
+                albumCoverStore.setOverridden(albumId, true);   // a rescan keeps a cover set by hand (item 6.5)
             }
         }
         pendingCover = null;
