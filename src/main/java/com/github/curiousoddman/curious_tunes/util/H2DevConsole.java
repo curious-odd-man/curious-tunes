@@ -22,8 +22,8 @@ import java.sql.SQLException;
 @Component
 @ConditionalOnProperty(name = "ctunes.h2-console.enabled", havingValue = "true")
 public class H2DevConsole implements InitializingBean, DisposableBean {
-    private final int port;
-    private Server    server;
+    private final int    port;
+    private       Server server;
 
     public H2DevConsole(@Value("${ctunes.h2-console.port:8082}") int port) {
         this.port = port;

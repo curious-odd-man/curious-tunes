@@ -2,7 +2,6 @@ package com.github.curiousoddman.curious_tunes.util;
 
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Control;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.Tooltip;
 

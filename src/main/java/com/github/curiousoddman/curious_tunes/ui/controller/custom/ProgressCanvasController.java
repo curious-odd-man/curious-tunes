@@ -31,8 +31,8 @@ import java.util.function.LongConsumer;
 @Component
 @RequiredArgsConstructor
 public class ProgressCanvasController implements TrackProgressController {
-    private static final int    NUM_BARS           = WaveformModel.NUM_BARS;
-    public static final  int    AUDIO_THRESHOLD_DB = -80;
+    private static final int    NUM_BARS              = WaveformModel.NUM_BARS;
+    public static final  int    AUDIO_THRESHOLD_DB    = -80;
     /**
      * How often the player reports the spectrum. Fast enough for the playback window's visualiser to look smooth.
      */

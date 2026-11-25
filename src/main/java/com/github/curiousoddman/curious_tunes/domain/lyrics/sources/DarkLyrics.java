@@ -32,11 +32,13 @@ public class DarkLyrics implements LyricsSource {
     @Override
     public Map.Entry<String, Map<String, String>> prepareRequest(SongData songData) {
         String artist = REGEX_NON_ALPHANUMERIC
-                .matcher(songData.getArtist().toLowerCase())
+                .matcher(songData.artist()
+                                 .toLowerCase())
                 .replaceAll("");
 
         String album = REGEX_NON_ALPHANUMERIC
-                .matcher(songData.getAlbum().toLowerCase())
+                .matcher(songData.album()
+                                 .toLowerCase())
                 .replaceAll("");
 
         // Plain HTTP on purpose: DarkLyrics doesn't serve HTTPS.
@@ -58,14 +60,14 @@ public class DarkLyrics implements LyricsSource {
 
     @Override
     public String parseLyrics(String html, String songTitle) {
-        Document soup = Jsoup.parse(html);
+        Document            soup            = Jsoup.parse(html);
         Map<String, String> songsWithLyrics = splitBySongs(soup);
 
         if (songsWithLyrics == null || songsWithLyrics.isEmpty()) {
             return null;
         }
 
-        String key = formatSong(songTitle);
+        String key        = formatSong(songTitle);
         String songLyrics = songsWithLyrics.get(key);
 
         if (songLyrics == null) {
@@ -91,8 +93,8 @@ public class DarkLyrics implements LyricsSource {
         }
 
         Map<String, String> songsWithLyrics = new HashMap<>();
-        String currentSong = null;
-        StringBuilder currentLyrics = new StringBuilder();
+        String              currentSong     = null;
+        StringBuilder       currentLyrics   = new StringBuilder();
 
         for (Element lyricsDiv : lyricsDivs) {
             for (Element element : lyricsDiv.children()) {
@@ -100,7 +102,8 @@ public class DarkLyrics implements LyricsSource {
                     if (currentSong != null) {
                         songsWithLyrics.put(
                                 formatSong(currentSong),
-                                currentLyrics.toString().trim()
+                                currentLyrics.toString()
+                                             .trim()
                         );
                     }
                     currentSong = element.text();
@@ -114,7 +117,8 @@ public class DarkLyrics implements LyricsSource {
         if (currentSong != null && !currentLyrics.isEmpty()) {
             songsWithLyrics.put(
                     formatSong(currentSong),
-                    currentLyrics.toString().trim()
+                    currentLyrics.toString()
+                                 .trim()
             );
         }
 

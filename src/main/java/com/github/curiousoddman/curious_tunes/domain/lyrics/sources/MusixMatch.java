@@ -34,8 +34,8 @@ public class MusixMatch implements LyricsSource {
     @Override
     public Map.Entry<String, Map<String, String>> prepareRequest(SongData songData) {
 
-        String refinedArtist = refineText(songData.getArtist());
-        String refinedTitle = refineText(songData.getTitle());
+        String refinedArtist = refineText(songData.artist());
+        String refinedTitle  = refineText(songData.title());
 
         String url = String.format(
                 "https://www.musixmatch.com/lyrics/%s/%s",
@@ -55,10 +55,12 @@ public class MusixMatch implements LyricsSource {
         String result = rawString.replace("'", "-");
 
         // Remove non-alphanumeric (unicode aware), except spaces and dashes
-        result = REGEX_NON_ALPHANUM.matcher(result).replaceAll("");
+        result = REGEX_NON_ALPHANUM.matcher(result)
+                                   .replaceAll("");
 
         // Replace spaces with dashes
-        result = REGEX_SPACES.matcher(result).replaceAll("-");
+        result = REGEX_SPACES.matcher(result)
+                             .replaceAll("-");
 
         return result;
     }
@@ -70,14 +72,15 @@ public class MusixMatch implements LyricsSource {
     @Override
     public String parseLyrics(String html, String songTitle) {
 
-        Document soup = Jsoup.parse(html);
+        Document      soup          = Jsoup.parse(html);
         StringBuilder lyricsBuilder = new StringBuilder();
 
         Elements paragraphs =
                 soup.select("p.mxm-lyrics__content");
 
         for (Element p : paragraphs) {
-            lyricsBuilder.append(p.text().strip());
+            lyricsBuilder.append(p.text()
+                                  .strip());
         }
 
         String lyrics = lyricsBuilder.toString();

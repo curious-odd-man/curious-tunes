@@ -17,7 +17,7 @@ class ClickTrackTest {
         Path file = Files.createTempFile("click-track-test", ".wav");
         try {
             ClickTrack.write(file);
-            byte[]     bytes  = Files.readAllBytes(file);
+            byte[] bytes = Files.readAllBytes(file);
             ByteBuffer header = ByteBuffer.wrap(bytes)
                                           .order(ByteOrder.LITTLE_ENDIAN);
             assertEquals("RIFF", new String(bytes, 0, 4));

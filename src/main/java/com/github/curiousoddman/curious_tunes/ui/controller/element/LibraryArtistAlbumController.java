@@ -69,8 +69,8 @@ public class LibraryArtistAlbumController implements Initializable {
     public        BorderPane                pane;
     public        ImageView                 playImageButton;
 
-    private       AlbumInfo                              albumInfo;
-    private       FadeTransition                         playFade;
+    private AlbumInfo      albumInfo;
+    private FadeTransition playFade;
 
     @Override
     @SneakyThrows
@@ -81,7 +81,7 @@ public class LibraryArtistAlbumController implements Initializable {
             initDrag();
 
             Integer albumYear = albumBundle.getAlbumInfo()
-                                           .getAlbumYear();
+                                           .albumYear();
             albumTitle.setText(albumInfo.getName());
             List<TrackRecord> albumsTracks = albumBundle.getAlbumTracks();
             albumDetails.setText(buildDetails(albumYear, albumsTracks));
@@ -180,7 +180,7 @@ public class LibraryArtistAlbumController implements Initializable {
         AddToPlaylistEvent event = AddToPlaylistEvent
                 .builder()
                 .source(this)
-                .albums(List.of(albumInfo.getAlbumRecord()))
+                .albums(List.of(albumInfo.albumRecord()))
                 .shuffle(userPreferencesService.isPlayShuffled() ? Shuffle.AFTER_ADDING_TO_PLAYLIST : Shuffle.SKIP)
                 .playlistAddMode(PlaylistAddMode.REPLACE)
                 .build();
@@ -206,7 +206,7 @@ public class LibraryArtistAlbumController implements Initializable {
         applicationEventPublisher.publishEvent(AddToPlaylistEvent
                 .builder()
                 .source(this)
-                .albums(List.of(albumInfo.getAlbumRecord()))
+                .albums(List.of(albumInfo.albumRecord()))
                 .shuffle(shuffle)
                 .playlistAddMode(mode)
                 .build());
@@ -238,7 +238,7 @@ public class LibraryArtistAlbumController implements Initializable {
             SnapshotParameters parameters = new SnapshotParameters();
             parameters.setFill(Color.TRANSPARENT);
             dragboard.setDragView(preview.snapshot(parameters, null));
-            dragPayload.setAlbums(List.of(albumInfo.getAlbumRecord()));
+            dragPayload.setAlbums(List.of(albumInfo.albumRecord()));
             event.consume();
         });
         dragHandle.setOnDragDone(event -> dragPayload.clear());

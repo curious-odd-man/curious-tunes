@@ -20,8 +20,8 @@ public class CollapseBlankLinesStep implements CleaningStep {
 
     @Override
     public List<String> apply(List<String> lyrics) {
-        List<String> result = new ArrayList<>();
-        boolean prevBlank = false;
+        List<String> result    = new ArrayList<>();
+        boolean      prevBlank = false;
 
         for (String line : lyrics) {
             boolean isBlank = line.isBlank();
@@ -33,12 +33,14 @@ public class CollapseBlankLinesStep implements CleaningStep {
         }
 
         // strip leading blank lines
-        while (!result.isEmpty() && result.getFirst().isBlank()) {
+        while (!result.isEmpty() && result.getFirst()
+                                          .isBlank()) {
             result.removeFirst();
         }
 
         // strip trailing blank lines
-        while (!result.isEmpty() && result.getLast().isBlank()) {
+        while (!result.isEmpty() && result.getLast()
+                                          .isBlank()) {
             result.removeLast();
         }
 

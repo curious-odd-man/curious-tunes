@@ -20,10 +20,13 @@ public final class UiStyles {
     }
 
     public static void apply(Scene scene) {
-        scene.getStylesheets().add(globalStylesheet());
+        scene.getStylesheets()
+             .add(globalStylesheet());
     }
 
     public static void apply(Dialog<?> dialog) {
-        dialog.getDialogPane().getStylesheets().add(globalStylesheet());
+        dialog.getDialogPane()
+              .getStylesheets()
+              .add(globalStylesheet());
     }
 }

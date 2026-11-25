@@ -16,19 +16,19 @@ import static com.github.curiousoddman.curious_tunes.util.JooqUtils.updateFieldI
 @Getter
 @RequiredArgsConstructor
 public abstract class MetadataTagsBase implements MetadataTags {
-    protected final String fileLocation;
-    protected String artist;
-    protected String album;
-    protected String title;
-    protected Integer trackNumber;
-    protected String releaseDate;
-    protected Integer diskNumber;
-    protected Integer sampleRate;
-    protected String genre;
-    protected String composer;
-    protected Long duration;
-    protected String lyrics;
-    protected AlbumCover albumCover;
+    protected final String     fileLocation;
+    protected       String     artist;
+    protected       String     album;
+    protected       String     title;
+    protected       Integer    trackNumber;
+    protected       String     releaseDate;
+    protected       Integer    diskNumber;
+    protected       Integer    sampleRate;
+    protected       String     genre;
+    protected       String     composer;
+    protected       Long       duration;
+    protected       String     lyrics;
+    protected       AlbumCover albumCover;
 
     /**
      * @return {@code newValue}; logs when a file has the same tag twice with different values

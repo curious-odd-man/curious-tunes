@@ -37,8 +37,8 @@ class DominantColorTest {
     @Test
     void blackAndWhiteImageFallsBackToAverage() {
         int[] pixels = {0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF};
-        int color = DominantColor.extract(pixels);
-        int red = (color >> 16) & 0xFF;
+        int   color  = DominantColor.extract(pixels);
+        int   red    = (color >> 16) & 0xFF;
         assertTrue(red >= 120 && red <= 135);
     }
 

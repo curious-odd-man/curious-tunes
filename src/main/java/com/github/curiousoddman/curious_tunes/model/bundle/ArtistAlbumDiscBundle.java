@@ -12,10 +12,10 @@ import java.util.ListResourceBundle;
 @Getter
 @RequiredArgsConstructor
 public class ArtistAlbumDiscBundle extends ListResourceBundle {
-    private final Integer discNumber;
-    private final List<TrackRecord> trackRecords;
+    private final Integer             discNumber;
+    private final List<TrackRecord>   trackRecords;
     private final TrackSelectionModel trackSelectionModel;
-    private final AlbumInfo albumInfo;
+    private final AlbumInfo           albumInfo;
 
     @Override
     protected Object[][] getContents() {

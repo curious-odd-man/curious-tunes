@@ -32,8 +32,10 @@ public final class SliderFill {
                             + "-fx-background-insets: 0; -fx-background-radius: 3;",
                     filledColor.get(), percent, emptyColor.get(), percent));
         };
-        slider.valueProperty().addListener(o -> update.run());
-        slider.skinProperty().addListener(o -> Platform.runLater(update));
+        slider.valueProperty()
+              .addListener(o -> update.run());
+        slider.skinProperty()
+              .addListener(o -> Platform.runLater(update));
         Platform.runLater(update);
         return update;
     }

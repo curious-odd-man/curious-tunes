@@ -28,8 +28,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.control.Tooltip;
+import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
@@ -170,8 +170,8 @@ public class LibraryPlaylistController implements Initializable {
 
         // Scroll the list while a track is dragged close to its top or bottom edge.
         playlistList.addEventFilter(DragEvent.DRAG_OVER, event -> {
-            double      zone = 36;
-            double      y    = event.getY();
+            double         zone = 36;
+            double         y    = event.getY();
             VirtualFlow<?> flow = flow();
             if (flow == null) {
                 return;
@@ -265,8 +265,8 @@ public class LibraryPlaylistController implements Initializable {
         }
         int first = flow.getFirstVisibleCell()
                         .getIndex();
-        int last  = flow.getLastVisibleCell()
-                        .getIndex();
+        int last = flow.getLastVisibleCell()
+                       .getIndex();
         if (onlyIfHidden && index > first && index < last) {
             return;                                     // fully visible (the first and last may be cut off)
         }
@@ -320,7 +320,7 @@ public class LibraryPlaylistController implements Initializable {
     }
 
     private void syncRows() {
-        List<PlaylistItem>     items   = playlistModel.getPlaylistItems();
+        List<PlaylistItem>           items = playlistModel.getPlaylistItems();
         ObservableList<PlaylistItem> shown = playlistList.getItems();
         if (!sameItems(shown, items)) {
             boolean reused = containsAny(shown, items);
@@ -340,7 +340,7 @@ public class LibraryPlaylistController implements Initializable {
     private int firstVisibleIndex() {
         VirtualFlow<?> flow = flow();
         return flow == null || flow.getFirstVisibleCell() == null ? 0 : flow.getFirstVisibleCell()
-                                                                          .getIndex();
+                                                                            .getIndex();
     }
 
     private static boolean sameItems(List<PlaylistItem> a, List<PlaylistItem> b) {

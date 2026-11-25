@@ -8,12 +8,12 @@ import org.springframework.context.ApplicationEvent;
 @Getter
 @Builder
 public class BackgroundProcessEvent extends ApplicationEvent {
-    private final Object source;        // Duplicate this for @Builder to work
-    private final String processName;
-    private final String description;
-    private final int progress;
-    private final int maxProgress;
-    private final Exception error;
+    private final Object                     source;        // Duplicate this for @Builder to work
+    private final String                     processName;
+    private final String                     description;
+    private final int                        progress;
+    private final int                        maxProgress;
+    private final Exception                  error;
     private final BackgroundProcessEventType eventType;
 
     public BackgroundProcessEvent(Object source, String processName, String description, int progress, int maxProgress, Exception error, BackgroundProcessEventType eventType) {

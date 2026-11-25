@@ -28,9 +28,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AlacStreaming {
     private static final String URI_PREFIX = "file:///ctunes-stream/";
 
-    private final AtomicLong        counter = new AtomicLong();
-    private final Map<Media, Entry> open    = new IdentityHashMap<>();
-    private volatile Boolean        available;
+    private final    AtomicLong        counter = new AtomicLong();
+    private final    Map<Media, Entry> open    = new IdentityHashMap<>();
+    private volatile Boolean           available;
 
     private record Entry(URI uri, AlacVirtualWav wav) {
     }
@@ -63,9 +63,9 @@ public class AlacStreaming {
      * Opens the file and returns a {@code Media} that plays it. Call {@link #release(Media)} when the player is
      * disposed.
      *
-     * @throws IOException                                                     if the file cannot be read
+     * @throws IOException                                                            if the file cannot be read
      * @throws com.github.curiousoddman.curious_tunes.domain.audio.alac.AlacException if it isn't ALAC this decoder
-     *                                                                         supports
+     *                                                                                supports
      */
     public Media open(Path file, Object trackId) throws IOException {
         AlacVirtualWav wav = AlacVirtualWav.open(file);

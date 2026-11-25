@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationEvent;
 @Getter
 public class PlaySpecificTrackEvent extends ApplicationEvent {
     private final TrackInfo trackToPlay;
-    private final boolean addToPlaylistFirst;
+    private final boolean   addToPlaylistFirst;
 
     public PlaySpecificTrackEvent(Object source, TrackInfo trackToPlay, boolean addToPlaylistFirst) {
         super(source);

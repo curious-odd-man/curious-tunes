@@ -17,14 +17,14 @@ public final class AlacPacketDecoder {
     private static final int TYPE_END = 7;
 
     private final AlacConfig config;
-    private final BitReader  bits = new BitReader();
+    private final BitReader  bits           = new BitReader();
     private final int[][]    predictionError;
     private final int[][]    extraBits;
-    private final int[][]    lpcCoefs      = new int[2][32];
-    private final int[]      lpcOrder      = new int[2];
-    private final int[]      lpcQuant      = new int[2];
+    private final int[][]    lpcCoefs       = new int[2][32];
+    private final int[]      lpcOrder       = new int[2];
+    private final int[]      lpcQuant       = new int[2];
     private final int[]      predictionType = new int[2];
-    private final int[]      riceMult      = new int[2];
+    private final int[]      riceMult       = new int[2];
 
     public AlacPacketDecoder(AlacConfig config) {
         this.config = config;

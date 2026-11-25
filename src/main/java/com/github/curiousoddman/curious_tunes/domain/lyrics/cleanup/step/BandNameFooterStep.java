@@ -32,13 +32,16 @@ public class BandNameFooterStep implements CleaningStep {
 
         // skip trailing blanks to find the last content line
         int lastContentIndex = lines.size() - 1;
-        while (lastContentIndex >= 0 && lines.get(lastContentIndex).isBlank()) {
+        while (lastContentIndex >= 0 && lines.get(lastContentIndex)
+                                             .isBlank()) {
             lastContentIndex--;
         }
 
         if (lastContentIndex >= 0) {
-            String lastContent = lines.get(lastContentIndex).strip();
-            if (BAND_NAME_PATTERN.matcher(lastContent).matches()) {
+            String lastContent = lines.get(lastContentIndex)
+                                      .strip();
+            if (BAND_NAME_PATTERN.matcher(lastContent)
+                                 .matches()) {
                 lines.remove(lastContentIndex);
             }
         }

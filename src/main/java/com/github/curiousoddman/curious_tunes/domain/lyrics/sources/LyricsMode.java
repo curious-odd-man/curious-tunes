@@ -39,14 +39,19 @@ public class LyricsMode implements LyricsSource {
     @Override
     public Map.Entry<String, Map<String, String>> prepareRequest(SongData songData) {
 
-        String artist = LyricsHelper.removeAccents(songData.getArtist())
-                .toLowerCase();
-        artist = REGEX_NON_ALPHANUMERIC.matcher(artist).replaceAll("");
-        artist = REGEX_UNDERSCORES.matcher(artist).replaceAll("_");
+        String artist = LyricsHelper.removeAccents(songData.artist())
+                                    .toLowerCase();
+        artist = REGEX_NON_ALPHANUMERIC.matcher(artist)
+                                       .replaceAll("");
+        artist = REGEX_UNDERSCORES.matcher(artist)
+                                  .replaceAll("_");
 
-        String title = songData.getTitle().toLowerCase();
-        title = REGEX_NON_ALPHANUMERIC.matcher(title).replaceAll("");
-        title = REGEX_UNDERSCORES.matcher(title).replaceAll("_");
+        String title = songData.title()
+                               .toLowerCase();
+        title = REGEX_NON_ALPHANUMERIC.matcher(title)
+                                      .replaceAll("");
+        title = REGEX_UNDERSCORES.matcher(title)
+                                 .replaceAll("_");
 
         // If the artist is empty, pad with space
         if (artist.isEmpty()) {
@@ -77,7 +82,8 @@ public class LyricsMode implements LyricsSource {
         // Lyrics are inside a div with id 'lyrics_text'
         Element lyricsText = soup.getElementById("lyrics_text");
         String lyrics = lyricsText != null
-                ? lyricsText.text().trim()
+                ? lyricsText.text()
+                            .trim()
                 : null;
 
         if (LyricsHelper.testLyrics(lyrics)) {

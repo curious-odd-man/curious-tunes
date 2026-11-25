@@ -118,10 +118,10 @@ public class LibraryLyricsTabController implements Initializable {
      * One place that decides what is visible: the reading view, the editor or the empty state.
      */
     private void refreshState() {
-        boolean edited    = isEdited();
-        boolean editing   = playlistItem != null && editButton.isSelected();
-        boolean noText    = lyricsTextArea.getText() == null || lyricsTextArea.getText()
-                                                                              .isBlank();
+        boolean edited  = isEdited();
+        boolean editing = playlistItem != null && editButton.isSelected();
+        boolean noText = lyricsTextArea.getText() == null || lyricsTextArea.getText()
+                                                                           .isBlank();
         boolean showEmpty = playlistItem == null || (!editing && noText);
 
         setShown(readScroll, !editing && !showEmpty);

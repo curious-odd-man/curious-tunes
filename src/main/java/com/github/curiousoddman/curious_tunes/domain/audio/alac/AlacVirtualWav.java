@@ -25,17 +25,17 @@ public final class AlacVirtualWav implements Closeable {
     public static final  int HEADER_SIZE    = 44;
     private static final int CACHED_PACKETS = 16;
 
-    private final FileChannel         file;
-    private final Mp4AlacTrack        track;
-    private final AlacPacketDecoder   decoder;
-    private final int                 channels;
-    private final int                 bytesPerSample;
-    private final int                 blockAlign;
-    private final int                 sampleShift;      // 20-bit samples are written as 24-bit
-    private final byte[]              header;
-    private final long                length;
-    private final int[][]             samples;
-    private final ByteBuffer          packetBuffer;
+    private final FileChannel          file;
+    private final Mp4AlacTrack         track;
+    private final AlacPacketDecoder    decoder;
+    private final int                  channels;
+    private final int                  bytesPerSample;
+    private final int                  blockAlign;
+    private final int                  sampleShift;      // 20-bit samples are written as 24-bit
+    private final byte[]               header;
+    private final long                 length;
+    private final int[][]              samples;
+    private final ByteBuffer           packetBuffer;
     private final Map<Integer, byte[]> decoded = new LinkedHashMap<>(CACHED_PACKETS * 2, 0.75f, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Integer, byte[]> eldest) {
@@ -115,8 +115,8 @@ public final class AlacVirtualWav implements Closeable {
         if (position < 0 || position >= length) {
             return -1;
         }
-        int start = target.position();
-        long at   = position;
+        int  start = target.position();
+        long at    = position;
         while (target.hasRemaining() && at < length) {
             if (at < HEADER_SIZE) {
                 int count = (int) Math.min(HEADER_SIZE - at, target.remaining());
@@ -124,13 +124,13 @@ public final class AlacVirtualWav implements Closeable {
                 at += count;
                 continue;
             }
-            long dataOffset = at - HEADER_SIZE;
-            long frame      = dataOffset / blockAlign;
-            int  packet     = track.packetForFrame(frame);
-            byte[] pcm      = packetPcm(packet);
-            long packetStart = track.packetFirstFrame(packet) * blockAlign;
-            int  offset     = (int) (dataOffset - packetStart);
-            int  count      = Math.min(pcm.length - offset, target.remaining());
+            long   dataOffset  = at - HEADER_SIZE;
+            long   frame       = dataOffset / blockAlign;
+            int    packet      = track.packetForFrame(frame);
+            byte[] pcm         = packetPcm(packet);
+            long   packetStart = track.packetFirstFrame(packet) * blockAlign;
+            int    offset      = (int) (dataOffset - packetStart);
+            int    count       = Math.min(pcm.length - offset, target.remaining());
             if (count <= 0) {
                 break;                                  // cannot happen with a consistent index
             }
@@ -164,11 +164,11 @@ public final class AlacVirtualWav implements Closeable {
                 throw new AlacException("File ends inside packet " + packet);
             }
         }
-        int frames   = decoder.decode(packetBuffer.array(), size, samples);
-        int expected = track.packetFrames(packet);
-        byte[] pcm   = new byte[expected * blockAlign];
-        int    usable = Math.min(frames, expected);
-        int    p      = 0;
+        int    frames   = decoder.decode(packetBuffer.array(), size, samples);
+        int    expected = track.packetFrames(packet);
+        byte[] pcm      = new byte[expected * blockAlign];
+        int    usable   = Math.min(frames, expected);
+        int    p        = 0;
         for (int i = 0; i < usable; i++) {
             for (int ch = 0; ch < channels; ch++) {
                 int value = samples[ch][i] << sampleShift;
@@ -187,10 +187,10 @@ public final class AlacVirtualWav implements Closeable {
     }
 
     private static byte[] wavHeader(int sampleRate, int channels, int bitsPerSample, long dataBytes) {
-        int        blockAlign = channels * bitsPerSample / 8;
-        long       riffSize   = Math.min(0xFFFFFFFFL, 36 + dataBytes);
-        ByteBuffer header     = ByteBuffer.allocate(HEADER_SIZE)
-                                          .order(ByteOrder.LITTLE_ENDIAN);
+        int  blockAlign = channels * bitsPerSample / 8;
+        long riffSize   = Math.min(0xFFFFFFFFL, 36 + dataBytes);
+        ByteBuffer header = ByteBuffer.allocate(HEADER_SIZE)
+                                      .order(ByteOrder.LITTLE_ENDIAN);
         header.put(new byte[]{'R', 'I', 'F', 'F'})
               .putInt((int) riffSize)
               .put(new byte[]{'W', 'A', 'V', 'E'})

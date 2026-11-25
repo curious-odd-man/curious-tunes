@@ -11,8 +11,8 @@ import com.github.curiousoddman.curious_tunes.event.AlbumCoverChangedEvent;
 import com.github.curiousoddman.curious_tunes.event.UserNotificationEvent;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
 import com.github.curiousoddman.curious_tunes.util.ConversionUtils;
-import com.github.curiousoddman.curious_tunes.util.ImageBytes;
 import com.github.curiousoddman.curious_tunes.util.CoverImages;
+import com.github.curiousoddman.curious_tunes.util.ImageBytes;
 import com.github.curiousoddman.curious_tunes.util.styles.CssClasses;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -675,12 +675,12 @@ public class LibraryTagEditTabController implements Initializable {
         log.info("Updating track info \n{}", track);
         TrackRecord trackRecord = track.getTrackRecord();
 
-        ArtistRecord artist        = track.getTrackArtist();
-        boolean      artistChanged = batch ? isChanged(artistField) : !artistField.getText()
-                                                                                  .equals(track.getArtistName());
-        boolean      albumChanged  = batch ? isChanged(albumField) : !albumField.getText()
-                                                                                .equals(track.getAlbumName());
-        String       albumName     = batch && !albumChanged ? track.getAlbumName() : albumField.getText();
+        ArtistRecord artist = track.getTrackArtist();
+        boolean artistChanged = batch ? isChanged(artistField) : !artistField.getText()
+                                                                             .equals(track.getArtistName());
+        boolean albumChanged = batch ? isChanged(albumField) : !albumField.getText()
+                                                                          .equals(track.getAlbumName());
+        String albumName = batch && !albumChanged ? track.getAlbumName() : albumField.getText();
         if (artistChanged) {
             log.info("Artist name changed!");
             artist = dataAccess.getOrInsertArtist(artistField.getText());

@@ -15,7 +15,7 @@ public class WaveformModel {
     public static final int NUM_BARS = 2000;
 
     private final double[] bars = new double[NUM_BARS];
-    private int version;
+    private       int      version;
 
     /**
      * @return live array (not a copy), values are 0..1; read only

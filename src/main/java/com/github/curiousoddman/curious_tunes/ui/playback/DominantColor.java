@@ -5,7 +5,7 @@ package com.github.curiousoddman.curious_tunes.ui.playback;
  */
 public final class DominantColor {
     private static final int LEVELS = 16;        // buckets per channel
-    private static final int SHIFT = 4;          // 256 / 16 = 2^4
+    private static final int SHIFT  = 4;          // 256 / 16 = 2^4
 
     private DominantColor() {
     }
@@ -16,9 +16,9 @@ public final class DominantColor {
      */
     public static int extract(int[] argbPixels) {
         double[] weight = new double[LEVELS * LEVELS * LEVELS];
-        double[] sumR = new double[weight.length];
-        double[] sumG = new double[weight.length];
-        double[] sumB = new double[weight.length];
+        double[] sumR   = new double[weight.length];
+        double[] sumG   = new double[weight.length];
+        double[] sumB   = new double[weight.length];
 
         long opaque = 0;
         long totalR = 0;
@@ -38,9 +38,9 @@ public final class DominantColor {
             totalG += g;
             totalB += b;
 
-            int max = Math.max(r, Math.max(g, b));
-            int min = Math.min(r, Math.min(g, b));
-            double value = max / 255.0;
+            int    max        = Math.max(r, Math.max(g, b));
+            int    min        = Math.min(r, Math.min(g, b));
+            double value      = max / 255.0;
             double saturation = max == 0 ? 0 : (max - min) / (double) max;
 
             boolean nearBlack = value < 0.12;
@@ -49,8 +49,8 @@ public final class DominantColor {
                 continue;
             }
 
-            int bucket = ((r >> SHIFT) * LEVELS + (g >> SHIFT)) * LEVELS + (b >> SHIFT);
-            double w = 0.1 + saturation;
+            int    bucket = ((r >> SHIFT) * LEVELS + (g >> SHIFT)) * LEVELS + (b >> SHIFT);
+            double w      = 0.1 + saturation;
             weight[bucket] += w;
             sumR[bucket] += r * w;
             sumG[bucket] += g * w;
@@ -61,7 +61,7 @@ public final class DominantColor {
             return -1;
         }
 
-        int best = -1;
+        int    best       = -1;
         double bestWeight = 0;
         for (int i = 0; i < weight.length; i++) {
             if (weight[i] > bestWeight) {

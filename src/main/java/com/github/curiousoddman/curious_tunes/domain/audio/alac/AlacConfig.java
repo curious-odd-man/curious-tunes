@@ -6,14 +6,14 @@ import java.nio.ByteBuffer;
  * The ALAC "magic cookie" ({@code ALACSpecificConfig}, 24 bytes, big-endian): how the packets of a track are encoded.
  * In an MP4 file it is the payload of the {@code alac} box inside the {@code alac} sample entry of {@code stsd}.
  *
- * @param frameLength      frames (samples per channel) in a full packet, normally 4096
- * @param bitDepth         bits per sample: 16, 20, 24 or 32
- * @param historyMult      Rice history multiplier ("pb", normally 40)
- * @param initialHistory   Rice initial history ("mb", normally 10)
- * @param riceLimit        Rice parameter limit ("kb", normally 14)
- * @param channels         channel count
- * @param maxFrameBytes    largest packet, in bytes (0 if unknown)
- * @param sampleRate       frames per second
+ * @param frameLength    frames (samples per channel) in a full packet, normally 4096
+ * @param bitDepth       bits per sample: 16, 20, 24 or 32
+ * @param historyMult    Rice history multiplier ("pb", normally 40)
+ * @param initialHistory Rice initial history ("mb", normally 10)
+ * @param riceLimit      Rice parameter limit ("kb", normally 14)
+ * @param channels       channel count
+ * @param maxFrameBytes  largest packet, in bytes (0 if unknown)
+ * @param sampleRate     frames per second
  */
 public record AlacConfig(int frameLength,
                          int bitDepth,

@@ -73,7 +73,7 @@ public final class Mp4AlacTrack {
      * @return the packet that contains {@code frame} (0-based), clamped to the last packet
      */
     public int packetForFrame(long frame) {
-        int index = Arrays.binarySearch(packetFirstFrame, 0, packetSize.length, frame);
+        int index  = Arrays.binarySearch(packetFirstFrame, 0, packetSize.length, frame);
         int packet = index >= 0 ? index : -index - 2;
         return Math.max(0, Math.min(packetSize.length - 1, packet));
     }

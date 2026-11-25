@@ -168,8 +168,8 @@ public final class CoverImages {
      * cost more than the cache saves.
      */
     static long fingerprint(byte[] bytes) {
-        long hash   = 1125899906842597L;
-        int  step   = Math.max(1, bytes.length / 512);
+        long hash = 1125899906842597L;
+        int  step = Math.max(1, bytes.length / 512);
         for (int i = 0; i < bytes.length; i += step) {
             hash = 31 * hash + bytes[i];
         }
@@ -228,7 +228,7 @@ public final class CoverImages {
                 cachedBytes += weight(image);
             }
             for (Iterator<Image> it = CACHE.values()
-                                          .iterator(); cachedBytes > MAX_CACHE_BYTES && it.hasNext(); ) {
+                                           .iterator(); cachedBytes > MAX_CACHE_BYTES && it.hasNext(); ) {
                 Image eldest = it.next();
                 if (eldest == image) {
                     continue;

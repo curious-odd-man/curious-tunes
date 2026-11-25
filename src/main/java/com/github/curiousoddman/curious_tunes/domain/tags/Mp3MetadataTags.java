@@ -9,7 +9,8 @@ import java.nio.file.Path;
 
 public class Mp3MetadataTags extends MetadataTagsBase {
     public Mp3MetadataTags(Mp3File mp3file, Path path) {
-        super(path.toAbsolutePath().toString());
+        super(path.toAbsolutePath()
+                  .toString());
 
         duration = mp3file.getLengthInSeconds();
 

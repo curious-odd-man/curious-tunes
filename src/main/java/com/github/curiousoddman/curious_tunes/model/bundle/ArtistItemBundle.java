@@ -10,7 +10,7 @@ import java.util.ListResourceBundle;
 @Getter
 @RequiredArgsConstructor
 public class ArtistItemBundle extends ListResourceBundle {
-    private final ArtistRecord artist;
+    private final ArtistRecord         artist;
     private final ArtistSelectionModel artistSelectionModel;
 
     @Override

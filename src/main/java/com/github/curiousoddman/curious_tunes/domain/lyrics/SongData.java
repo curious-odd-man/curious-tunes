@@ -1,20 +1,10 @@
 package com.github.curiousoddman.curious_tunes.domain.lyrics;
 
-import lombok.Getter;
-
-@Getter
-public class SongData {
-    private final String artist;
-    private final String album;
-    private final String title;
-
-    public SongData(String artist, String album, String title) {
+public record SongData(String artist, String album, String title) {
+    public SongData {
         if (artist == null || album == null || title == null) {
             throw new IllegalArgumentException("artist, album and title must be not null");
         }
-        this.artist = artist;
-        this.album = album;
-        this.title = title;
     }
 
     @Override

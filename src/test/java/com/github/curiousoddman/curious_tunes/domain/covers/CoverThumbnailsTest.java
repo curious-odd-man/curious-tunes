@@ -3,13 +3,13 @@ package com.github.curiousoddman.curious_tunes.domain.covers;
 import org.junit.jupiter.api.Test;
 
 import javax.imageio.ImageIO;
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CoverThumbnailsTest {
@@ -45,7 +45,7 @@ class CoverThumbnailsTest {
 
     @Test
     void notAnImageGivesNull() throws Exception {
-        assertEquals(null, CoverThumbnails.make(new byte[]{1, 2, 3, 4}, 128));
+        assertNull(CoverThumbnails.make(new byte[]{1, 2, 3, 4}, 128));
     }
 
     @Test

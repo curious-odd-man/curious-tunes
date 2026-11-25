@@ -46,18 +46,18 @@ import static com.github.curiousoddman.curious_tunes.util.FileUtils.audioMd5;
 @Component
 @RequiredArgsConstructor
 public class FilesScanningService /*implements StartupRunnable*/ {
-    private static final int                       APPROXIMATE_SIZE_OF_MY_LIBRARY = 5000;
-    public static final  String                    LIBRARY_SCAN                   = "Library Scan";
+    private static final int                 APPROXIMATE_SIZE_OF_MY_LIBRARY = 5000;
+    public static final  String              LIBRARY_SCAN                   = "Library Scan";
     /**
      * Files per database transaction: one commit per file made the scan wait on the disk thousands of times.
      */
-    private static final int                       BATCH_SIZE                     = 200;
-    private final        DataAccess                dataAccess;
-    private final        MetadataManager           metadataManager;
-    private final        LyricsCleaner             lyricsCleaner;
-    private final        TransactionTemplate       transactionTemplate;
-    private final        JobManager                jobManager;
-    private final        AlbumCoverStore           albumCoverStore;
+    private static final int                 BATCH_SIZE                     = 200;
+    private final        DataAccess          dataAccess;
+    private final        MetadataManager     metadataManager;
+    private final        LyricsCleaner       lyricsCleaner;
+    private final        TransactionTemplate transactionTemplate;
+    private final        JobManager          jobManager;
+    private final        AlbumCoverStore     albumCoverStore;
 
     /**
      * The scan last submitted, for Stop.
@@ -185,7 +185,7 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         private record AlbumKey(int artistId, String name) {
         }
 
-        private final Map<String, ArtistRecord> artists      = new HashMap<>();
+        private final Map<String, ArtistRecord>  artists      = new HashMap<>();
         private final Map<AlbumKey, AlbumRecord> albums       = new HashMap<>();
         private final Set<Integer>               coverChecked = new HashSet<>();     // albums whose cover was checked
     }
@@ -195,7 +195,7 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         MetadataTags metadata     = metadataManager.getMetadata(file);
         ArtistRecord artistRecord = cache.artists.computeIfAbsent(metadata.getArtist(), dataAccess::getOrInsertArtist);
         AlbumCover   albumCover   = metadata.getAlbumCover();
-        AlbumRecord  albumRecord  = cache.albums.computeIfAbsent(
+        AlbumRecord albumRecord = cache.albums.computeIfAbsent(
                 new ScanCache.AlbumKey(artistRecord.getId(), metadata.getAlbum()),
                 key -> dataAccess.getOrInsertAlbum(key.artistId(), key.name(), albumCover == null ? null : albumCover.getData()));
         updateCoverFromFile(albumRecord, albumCover, cache);
@@ -292,7 +292,7 @@ public class FilesScanningService /*implements StartupRunnable*/ {
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (attrs.isRegularFile() && AudioFormat.isAudioFile(file)) {      // skip covers, playlists, etc.
                     foundFiles.add(new ScannedFile(file, attrs.size(), attrs.lastModifiedTime()
-                                                                             .toMillis()));
+                                                                            .toMillis()));
                 }
                 return FileVisitResult.CONTINUE;
             }

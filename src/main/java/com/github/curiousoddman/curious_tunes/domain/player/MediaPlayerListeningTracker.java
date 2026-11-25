@@ -17,10 +17,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MediaPlayerListeningTracker {
     private final ApplicationEventPublisher eventPublisher;
-    private final WindowsVolumeService windowsVolumeService;
+    private final WindowsVolumeService      windowsVolumeService;
 
     private Duration totalListenedTime = Duration.ZERO;
-    private Duration lastRecordedTime = Duration.ZERO;
+    private Duration lastRecordedTime  = Duration.ZERO;
 
     public void attachToPlayer(MediaPlayer mediaPlayer, TrackRecord trackRecord) {
         totalListenedTime = Duration.ZERO;
@@ -46,8 +46,8 @@ public class MediaPlayerListeningTracker {
 
                             if (listenedPercentage >= 0.30) {
                                 log.info("Preparing to report 30% track played");
-                                double mpVol = mediaPlayer.getVolume();
-                                float master = windowsVolumeService.getMasterVolume();
+                                double mpVol     = mediaPlayer.getVolume();
+                                float  master    = windowsVolumeService.getMasterVolume();
                                 double effective = windowsVolumeService.getEffectiveVolume(mpVol);
 
                                 log.info("MediaPlayer volume: {}%", Math.round(mpVol * 100));

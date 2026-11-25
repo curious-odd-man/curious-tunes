@@ -3,6 +3,7 @@ package com.github.curiousoddman.curious_tunes.model;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpectrumModelTest {
@@ -11,7 +12,7 @@ class SpectrumModelTest {
     void frameAtGivesTheNewestFrameThatHadArrivedByThen() throws InterruptedException {
         SpectrumModel model  = new SpectrumModel();
         long          before = System.nanoTime();
-        assertTrue(model.frameAt(before) == null);
+        assertNull(model.frameAt(before));
 
         float[] magnitudes = {-10f};
         model.update(magnitudes, -80);
@@ -21,7 +22,7 @@ class SpectrumModelTest {
         magnitudes[0] = -20f;           // the player reuses its array: the model must have copied it
         model.update(magnitudes, -80);
 
-        assertTrue(model.frameAt(before) == null);
+        assertNull(model.frameAt(before));
         assertEquals(-10, (int) model.frameAt(between)
                                      .magnitudes()[0]);
         assertEquals(-20, (int) model.frameAt(System.nanoTime())

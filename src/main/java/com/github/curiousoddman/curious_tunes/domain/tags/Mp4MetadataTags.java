@@ -2,7 +2,16 @@ package com.github.curiousoddman.curious_tunes.domain.tags;
 
 import lombok.extern.slf4j.Slf4j;
 import org.mp4parser.Box;
-import org.mp4parser.boxes.apple.*;
+import org.mp4parser.boxes.apple.AppleAlbumBox;
+import org.mp4parser.boxes.apple.AppleArtistBox;
+import org.mp4parser.boxes.apple.AppleCoverBox;
+import org.mp4parser.boxes.apple.AppleDiskNumberBox;
+import org.mp4parser.boxes.apple.AppleGenreBox;
+import org.mp4parser.boxes.apple.AppleLyricsBox;
+import org.mp4parser.boxes.apple.AppleNameBox;
+import org.mp4parser.boxes.apple.AppleRecordingYear2Box;
+import org.mp4parser.boxes.apple.AppleTrackAuthorBox;
+import org.mp4parser.boxes.apple.AppleTrackNumberBox;
 import org.mp4parser.boxes.iso14496.part12.MediaHeaderBox;
 
 import java.nio.file.Path;
@@ -11,7 +20,8 @@ import java.util.List;
 @Slf4j
 public class Mp4MetadataTags extends MetadataTagsBase {
     public Mp4MetadataTags(List<Box> allBoxes, Path path) {
-        super(path.toAbsolutePath().toString());
+        super(path.toAbsolutePath()
+                  .toString());
         for (Box box : allBoxes) {
             switch (box) {
                 case AppleNameBox nameBox -> {

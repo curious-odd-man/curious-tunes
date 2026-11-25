@@ -49,7 +49,7 @@ public class BackgroundProcessJobEvents implements JobEventPublisher {
     }
 
     private static BackgroundProcessEvent.BackgroundProcessEventBuilder builder(BackgroundJob job,
-                                                                              BackgroundProcessEventType type) {
+                                                                                BackgroundProcessEventType type) {
         return BackgroundProcessEvent.builder()
                                      .source(job)
                                      .processName(job.getProcessName())

@@ -20,7 +20,9 @@ public class PlaylistItem extends TrackInfo {
 
     @Override
     public final boolean equals(Object o) {
-        if (!(o instanceof PlaylistItem that)) return false;
+        if (!(o instanceof PlaylistItem that)) {
+            return false;
+        }
 
         return Objects.equals(trackRecord.getId(), that.trackRecord.getId());
     }

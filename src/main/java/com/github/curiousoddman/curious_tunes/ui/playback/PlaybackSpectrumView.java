@@ -27,21 +27,21 @@ public class PlaybackSpectrumView {
     /**
      * Share of the height used by the bars; the rest is the reflection.
      */
-    private static final double BARS_SHARE      = 0.76;
-    private static final double GAP             = 3;
-    private static final double CAP_HEIGHT      = 3;
-    private static final double MIN_BAR_HEIGHT  = 2;
+    private static final double BARS_SHARE     = 0.76;
+    private static final double GAP            = 3;
+    private static final double CAP_HEIGHT     = 3;
+    private static final double MIN_BAR_HEIGHT = 2;
     /**
      * No spectrum for this long means nothing is playing (the player reports every 40 ms while playing).
      */
-    private static final long   SILENCE_NANOS   = 250_000_000L;
+    private static final long   SILENCE_NANOS  = 250_000_000L;
 
     private final SpectrumModel          model;
     private final ObservableIntegerValue delayMillis;
-    private final SpectrumBars   bars   = new SpectrumBars(BAR_COUNT);
-    private final StackPane      pane   = new StackPane();
-    private final Canvas         canvas = new Canvas();
-    private final AnimationTimer timer;
+    private final SpectrumBars           bars   = new SpectrumBars(BAR_COUNT);
+    private final StackPane              pane   = new StackPane();
+    private final Canvas                 canvas = new Canvas();
+    private final AnimationTimer         timer;
 
     private PlaybackPalette palette = PlaybackPalette.DEFAULT;
     private Paint           barPaint;

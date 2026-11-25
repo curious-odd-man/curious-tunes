@@ -34,11 +34,13 @@ public class WindowsVolumeService {
             ProcessBuilder pb = new ProcessBuilder(
                     "powershell.exe", "-NoProfile", "-NonInteractive",
                     "-ExecutionPolicy", "Bypass",
-                    "-File", scriptFile.toAbsolutePath().toString());
+                    "-File", scriptFile.toAbsolutePath()
+                                       .toString());
             pb.redirectErrorStream(true);
 
-            Process p = pb.start();
-            String out = new String(p.getInputStream().readAllBytes()).trim();
+            Process p        = pb.start();
+            String  out      = new String(p.getInputStream()
+                                           .readAllBytes()).trim();
             boolean finished = p.waitFor(5, TimeUnit.SECONDS);
 
             if (!finished) {
@@ -49,9 +51,9 @@ public class WindowsVolumeService {
 
             // Take the last non-empty line as the result
             String lastLine = Arrays.stream(out.split("\\R"))
-                    .map(String::trim)
-                    .filter(l -> !l.isEmpty())
-                    .reduce("", (a, b) -> b);
+                                    .map(String::trim)
+                                    .filter(l -> !l.isEmpty())
+                                    .reduce("", (a, b) -> b);
 
             return Float.parseFloat(lastLine);
 

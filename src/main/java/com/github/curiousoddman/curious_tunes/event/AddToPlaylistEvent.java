@@ -14,12 +14,12 @@ import java.util.List;
 @Getter
 @Builder
 public class AddToPlaylistEvent extends ApplicationEvent {
-    private final Object source;        // Duplicate this for @Builder to work
-    private final List<TrackInfo> tracks;
+    private final Object            source;        // Duplicate this for @Builder to work
+    private final List<TrackInfo>   tracks;
     private final List<AlbumRecord> albums;
-    private final ArtistRecord artistRecord;
-    private final Shuffle shuffle;
-    private final PlaylistAddMode playlistAddMode;
+    private final ArtistRecord      artistRecord;
+    private final Shuffle           shuffle;
+    private final PlaylistAddMode   playlistAddMode;
 
     public AddToPlaylistEvent(Object source,
                               List<TrackInfo> tracks,

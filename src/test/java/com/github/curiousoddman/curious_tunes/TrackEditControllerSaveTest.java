@@ -22,7 +22,16 @@ import java.util.concurrent.TimeUnit;
 
 import static com.github.curiousoddman.curious_tunes.dbobj.Tables.TRACK;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 
 // AI Generated
@@ -41,19 +50,19 @@ class TrackEditControllerSaveTest {
     // ── Mocks ────────────────────────────────────────────────────────────────
 
     @Mock
-    DataAccess dataAccess;
+    DataAccess   dataAccess;
     @Mock
-    TrackInfo trackInfo;
+    TrackInfo    trackInfo;
     @Mock
-    TrackRecord trackRecord;
+    TrackRecord  trackRecord;
     @Mock
     ArtistRecord existingArtist;
     @Mock
     ArtistRecord newArtist;
     @Mock
-    AlbumRecord existingAlbum;
+    AlbumRecord  existingAlbum;
     @Mock
-    AlbumRecord newAlbum;
+    AlbumRecord  newAlbum;
 
     // ── System under test ────────────────────────────────────────────────────
 
@@ -64,23 +73,38 @@ class TrackEditControllerSaveTest {
     @BeforeEach
     void setup() throws Exception {
         // Common stubs
-        lenient().when(trackInfo.getTrackRecord()).thenReturn(trackRecord);
-        lenient().when(trackInfo.getTrackArtist()).thenReturn(existingArtist);
-        lenient().when(trackInfo.getAlbumImage()).thenReturn(null);
-        lenient().when(existingArtist.getId()).thenReturn(1);
-        lenient().when(existingAlbum.getId()).thenReturn(10);
-        lenient().when(trackRecord.getFkAlbum()).thenReturn(10);
+        lenient().when(trackInfo.getTrackRecord())
+                 .thenReturn(trackRecord);
+        lenient().when(trackInfo.getTrackArtist())
+                 .thenReturn(existingArtist);
+        lenient().when(trackInfo.getAlbumImage())
+                 .thenReturn(null);
+        lenient().when(existingArtist.getId())
+                 .thenReturn(1);
+        lenient().when(existingAlbum.getId())
+                 .thenReturn(10);
+        lenient().when(trackRecord.getFkAlbum())
+                 .thenReturn(10);
 
         // Default: UI fields match trackInfo — no changes
-        lenient().when(trackInfo.getArtistName()).thenReturn("Artist");
-        lenient().when(trackInfo.getAlbumName()).thenReturn("Album");
-        lenient().when(trackInfo.getTitle()).thenReturn("Title");
-        lenient().when(trackInfo.getTrackNumber()).thenReturn(1);
-        lenient().when(trackInfo.getDiskNumber()).thenReturn(1);
-        lenient().when(trackInfo.getGenre()).thenReturn("Rock");
-        lenient().when(trackInfo.getComposer()).thenReturn("Composer");
-        lenient().when(trackInfo.getReleaseDate()).thenReturn("2020");
-        lenient().when(trackInfo.getLyrics()).thenReturn("Lyrics");
+        lenient().when(trackInfo.getArtistName())
+                 .thenReturn("Artist");
+        lenient().when(trackInfo.getAlbumName())
+                 .thenReturn("Album");
+        lenient().when(trackInfo.getTitle())
+                 .thenReturn("Title");
+        lenient().when(trackInfo.getTrackNumber())
+                 .thenReturn(1);
+        lenient().when(trackInfo.getDiskNumber())
+                 .thenReturn(1);
+        lenient().when(trackInfo.getGenre())
+                 .thenReturn("Rock");
+        lenient().when(trackInfo.getComposer())
+                 .thenReturn("Composer");
+        lenient().when(trackInfo.getReleaseDate())
+                 .thenReturn("2020");
+        lenient().when(trackInfo.getLyrics())
+                 .thenReturn("Lyrics");
 
         runOnJfxThread(() -> {
             sut = new LibraryTagEditTabController(mock(), dataAccess, mock(), mock());

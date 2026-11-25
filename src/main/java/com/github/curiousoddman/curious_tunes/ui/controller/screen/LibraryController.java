@@ -224,14 +224,14 @@ public class LibraryController implements Initializable {
     @FXML
     private AnchorPane             playlistAnchorPane;
 
-    private final ProgressCanvasController progressCanvasController;
-    private final PlaylistModel            playlistModel;
-    private final AudioPlayer              audioPlayer;
-    private final UserPreferencesService   userPreferencesService;
-    private final PlaybackWindow           playbackWindow;
-    private final VersionService           versionService;
-    private final NowPlayingMarker         nowPlayingMarker;
-    private final LibraryDragPayload       dragPayload;
+    private final ProgressCanvasController                    progressCanvasController;
+    private final PlaylistModel                               playlistModel;
+    private final AudioPlayer                                 audioPlayer;
+    private final UserPreferencesService                      userPreferencesService;
+    private final PlaybackWindow                              playbackWindow;
+    private final VersionService                              versionService;
+    private final NowPlayingMarker                            nowPlayingMarker;
+    private final LibraryDragPayload                          dragPayload;
     private final ObjectProvider<VisualiserCalibrationWindow> calibrationWindow;
 
     // ---- artists: all of them, and the ones that match the search text
@@ -625,8 +625,8 @@ public class LibraryController implements Initializable {
     private Comparator<LoadedFxml<LibraryArtistAlbumController>> albumComparator() {
         Comparator<AlbumInfo> byName = Comparator.comparing(album -> album.getName() == null ? "" : album.getName()
                                                                                                          .toLowerCase(Locale.ROOT));
-        Comparator<AlbumInfo> byYear           = Comparator.comparing(AlbumInfo::getAlbumYear, Comparator.nullsLast(Comparator.naturalOrder()));
-        Comparator<AlbumInfo> byYearDescending = Comparator.comparing(AlbumInfo::getAlbumYear, Comparator.nullsLast(Comparator.reverseOrder()));
+        Comparator<AlbumInfo> byYear           = Comparator.comparing(AlbumInfo::albumYear, Comparator.nullsLast(Comparator.naturalOrder()));
+        Comparator<AlbumInfo> byYearDescending = Comparator.comparing(AlbumInfo::albumYear, Comparator.nullsLast(Comparator.reverseOrder()));
         Comparator<AlbumInfo> chosen = switch (albumSort) {
             case YEAR_ASC -> byYear.thenComparing(byName);
             case YEAR_DESC -> byYearDescending.thenComparing(byName);
@@ -683,7 +683,7 @@ public class LibraryController implements Initializable {
                                     .getName());
         dragboard.setContent(content);
         dragPayload.setAlbums(List.of(controller.getAlbumInfo()
-                                                .getAlbumRecord()));
+                                                .albumRecord()));
         event.consume();
     }
 

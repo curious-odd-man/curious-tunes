@@ -11,20 +11,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SessionClockTest {
     private static final long SECOND = 1_000_000_000L;
 
-    private final AtomicLong now = new AtomicLong(5 * SECOND);
+    private final AtomicLong   now   = new AtomicLong(5 * SECOND);
     private final SessionClock clock = new SessionClock(now::get);
 
     @Test
     void emptyUntilStarted() {
         assertFalse(clock.isStarted());
-        assertTrue(clock.elapsedSeconds().isEmpty());
+        assertTrue(clock.elapsedSeconds()
+                        .isEmpty());
     }
 
     @Test
     void countsWallClockTimeFromFirstStart() {
         clock.startIfNotStarted();
         now.addAndGet(5 * SECOND + SECOND / 2);
-        assertEquals(5, clock.elapsedSeconds().getAsLong());
+        assertEquals(5, clock.elapsedSeconds()
+                             .getAsLong());
     }
 
     @Test
@@ -33,7 +35,8 @@ class SessionClockTest {
         now.addAndGet(10 * SECOND);
         clock.startIfNotStarted();
         now.addAndGet(5 * SECOND);
-        assertEquals(15, clock.elapsedSeconds().getAsLong());
+        assertEquals(15, clock.elapsedSeconds()
+                              .getAsLong());
     }
 
     @Test
@@ -41,11 +44,13 @@ class SessionClockTest {
         clock.startIfNotStarted();
         now.addAndGet(30 * SECOND);
         clock.reset();
-        assertTrue(clock.elapsedSeconds().isEmpty());
+        assertTrue(clock.elapsedSeconds()
+                        .isEmpty());
 
         now.addAndGet(100 * SECOND);
         clock.startIfNotStarted();
-        assertEquals(0, clock.elapsedSeconds().getAsLong());
+        assertEquals(0, clock.elapsedSeconds()
+                             .getAsLong());
     }
 
     @Test

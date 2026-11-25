@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class LyricsCleaner {
-    private final List<CleaningStep> steps;
+    private final List<CleaningStep>     steps;
     private final List<SuspicionFlagger> flaggers;
 
     public CleanerResult clean(String lyrics) {
@@ -23,9 +23,9 @@ public class LyricsCleaner {
         }
 
         List<Flag> flags = flaggers.stream()
-                .filter(f -> f.test(lyrics))
-                .map(SuspicionFlagger::flag)
-                .toList();
+                                   .filter(f -> f.test(lyrics))
+                                   .map(SuspicionFlagger::flag)
+                                   .toList();
 
         // broken songs are returned as-is — cleaning could corrupt the artifact evidence
         if (flags.contains(Flag.PARSING_ERROR)) {

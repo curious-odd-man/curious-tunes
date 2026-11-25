@@ -9,9 +9,9 @@ import lombok.RequiredArgsConstructor;
 @Data
 @RequiredArgsConstructor
 public class TrackInfo {
-    protected final TrackRecord trackRecord;
+    protected final TrackRecord  trackRecord;
     protected final ArtistRecord trackArtist;
-    protected final AlbumRecord trackAlbum;
+    protected final AlbumRecord  trackAlbum;
 
     // ============================================================
     // TrackRecord Delegates

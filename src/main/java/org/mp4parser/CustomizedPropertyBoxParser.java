@@ -43,13 +43,13 @@ import java.util.regex.Pattern;
 @Slf4j
 public class CustomizedPropertyBoxParser extends AbstractBoxParser {
     public static Properties BOX_MAP_CACHE = null;
-    public Properties mapping;
+    public        Properties mapping;
 
     static String[] EMPTY_STRING_ARRAY = new String[0];
-    Pattern constuctorPattern = Pattern.compile("(.*)\\((.*?)\\)");
-    StringBuilder buildLookupStrings = new StringBuilder();
-    ThreadLocal<String> clazzName = new ThreadLocal<>();
-    ThreadLocal<String[]> param = new ThreadLocal<>();
+    Pattern               constuctorPattern  = Pattern.compile("(.*)\\((.*?)\\)");
+    StringBuilder         buildLookupStrings = new StringBuilder();
+    ThreadLocal<String>   clazzName          = new ThreadLocal<>();
+    ThreadLocal<String[]> param              = new ThreadLocal<>();
 
     private List<String> skippedTypes;
 
@@ -63,7 +63,8 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
                 mapping = new Properties();
                 try {
                     mapping.load(is);
-                    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                    ClassLoader cl = Thread.currentThread()
+                                           .getContextClassLoader();
                     if (cl == null) {
                         cl = ClassLoader.getSystemClassLoader();
                     }
@@ -107,8 +108,8 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
         try {
             Class<ParsableBox> clazz = (Class<ParsableBox>) Class.forName(clazzName.get());
             if (param.length > 0) {
-                Class[] constructorArgsClazz = new Class[param.length];
-                Object[] constructorArgs = new Object[param.length];
+                Class[]  constructorArgsClazz = new Class[param.length];
+                Object[] constructorArgs      = new Object[param.length];
                 for (int i = 0; i < param.length; i++) {
                     if ("userType".equals(param[i])) {
                         constructorArgs[i] = userType;
@@ -127,7 +128,8 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
                 Constructor<ParsableBox> constructorObject = clazz.getConstructor(constructorArgsClazz);
                 return constructorObject.newInstance(constructorArgs);
             } else {
-                return clazz.getDeclaredConstructor().newInstance();
+                return clazz.getDeclaredConstructor()
+                            .newInstance();
             }
 
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException |
@@ -142,9 +144,11 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
             if (!"uuid".equals((type))) {
                 throw new RuntimeException("we have a userType but no uuid box type. Something's wrong");
             }
-            constructor = mapping.getProperty("uuid[" + Hex.encodeHex(userType).toUpperCase() + "]");
+            constructor = mapping.getProperty("uuid[" + Hex.encodeHex(userType)
+                                                           .toUpperCase() + "]");
             if (constructor == null) {
-                constructor = mapping.getProperty((parent) + "-uuid[" + Hex.encodeHex(userType).toUpperCase() + "]");
+                constructor = mapping.getProperty((parent) + "-uuid[" + Hex.encodeHex(userType)
+                                                                           .toUpperCase() + "]");
             }
             if (constructor == null) {
                 constructor = mapping.getProperty("uuid");
@@ -152,7 +156,10 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
         } else {
             constructor = mapping.getProperty((type));
             if (constructor == null) {
-                String lookup = buildLookupStrings.append(parent).append('-').append(type).toString();
+                String lookup = buildLookupStrings.append(parent)
+                                                  .append('-')
+                                                  .append(type)
+                                                  .toString();
                 buildLookupStrings.setLength(0);
                 constructor = mapping.getProperty(lookup);
 
@@ -168,16 +175,19 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
             param.set(EMPTY_STRING_ARRAY);
             clazzName.set(constructor);
         } else {
-            Matcher m = constuctorPattern.matcher(constructor);
+            Matcher m       = constuctorPattern.matcher(constructor);
             boolean matches = m.matches();
             if (!matches) {
                 throw new RuntimeException("Cannot work with that constructor: " + constructor);
             }
             clazzName.set(m.group(1));
-            if (m.group(2).length() == 0) {
+            if (m.group(2)
+                 .length() == 0) {
                 param.set(EMPTY_STRING_ARRAY);
             } else {
-                param.set(m.group(2).length() > 0 ? m.group(2).split(",") : new String[]{});
+                param.set(m.group(2)
+                           .length() > 0 ? m.group(2)
+                                            .split(",") : new String[]{});
             }
         }
 
@@ -185,7 +195,8 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
 
     @Override
     public ParsableBox parseBox(ReadableByteChannel byteChannel, String parentType) throws IOException {
-        ((Buffer) header.get()).rewind().limit(8);
+        ((Buffer) header.get()).rewind()
+                               .limit(8);
 
         int bytesRead = 0;
         int b;
@@ -209,38 +220,46 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
         String type = IsoTypeReader.read4cc(header.get());
         //System.err.println(type);
         byte[] usertype = null;
-        long contentSize;
+        long   contentSize;
 
         if (size == 1) {
-            header.get().limit(16);
+            header.get()
+                  .limit(16);
             byteChannel.read(header.get());
-            header.get().position(8);
+            header.get()
+                  .position(8);
             size = IsoTypeReader.readUInt64(header.get());
             contentSize = size - 16;
         } else if (size == 0) {
-             // size == 0 means the box extends to the end of the file
-        if (byteChannel instanceof FileChannel fileChannel) {
-            long currentPosition = fileChannel.position();
-            long fileSize = fileChannel.size();
-            // current position is after reading the 8-byte header
-            size = fileSize - (currentPosition - 8);
-            contentSize = size - 8;
-            log.debug("Box size 0 resolved to end-of-file: size={}, type={}", size, type);
-        } else {
-            // For non-FileChannel, drain the rest of the stream
-            log.warn("Box size 0 (end-of-file) on non-FileChannel — reading remaining bytes into buffer");
-            contentSize = drainToSize(byteChannel);
-            size = contentSize + 8;
-        }
+            // size == 0 means the box extends to the end of the file
+            if (byteChannel instanceof FileChannel fileChannel) {
+                long currentPosition = fileChannel.position();
+                long fileSize        = fileChannel.size();
+                // current position is after reading the 8-byte header
+                size = fileSize - (currentPosition - 8);
+                contentSize = size - 8;
+                log.debug("Box size 0 resolved to end-of-file: size={}, type={}", size, type);
+            } else {
+                // For non-FileChannel, drain the rest of the stream
+                log.warn("Box size 0 (end-of-file) on non-FileChannel — reading remaining bytes into buffer");
+                contentSize = drainToSize(byteChannel);
+                size = contentSize + 8;
+            }
         } else {
             contentSize = size - 8;
         }
         if (UserBox.TYPE.equals(type)) {
-            header.get().limit(header.get().limit() + 16);
+            header.get()
+                  .limit(header.get()
+                               .limit() + 16);
             byteChannel.read(header.get());
             usertype = new byte[16];
-            for (int i = header.get().position() - 16; i < header.get().position(); i++) {
-                usertype[i - (header.get().position() - 16)] = header.get().get(i);
+            for (int i = header.get()
+                               .position() - 16; i < header.get()
+                                                           .position(); i++) {
+                usertype[i - (header.get()
+                                    .position() - 16)] = header.get()
+                                                               .get(i);
             }
             contentSize -= 16;
         }
@@ -265,9 +284,9 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
      * Used when size==0 but we can't seek to determine file size.
      */
     private long drainToSize(ReadableByteChannel byteChannel) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(8192);
-        long total = 0;
-        int read;
+        ByteBuffer buf   = ByteBuffer.allocate(8192);
+        long       total = 0;
+        int        read;
         while ((read = byteChannel.read(buf)) != -1) {
             total += read;
             buf.clear();

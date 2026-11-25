@@ -197,7 +197,7 @@ public class VisualiserCalibrationWindow {
             plus.setAccessibleText("Increase the delay by " + FINE_STEP_MILLIS + " milliseconds");
 
             Label delayLabel = new Label("Delay");
-            HBox sliderRow = new HBox(10, delayLabel, minus, slider, plus, valueLabel);
+            HBox  sliderRow  = new HBox(10, delayLabel, minus, slider, plus, valueLabel);
             sliderRow.setAlignment(Pos.CENTER_LEFT);
 
             errorLabel.setWrapText(true);

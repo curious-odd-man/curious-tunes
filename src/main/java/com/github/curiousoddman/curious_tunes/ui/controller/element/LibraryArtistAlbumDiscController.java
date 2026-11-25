@@ -34,10 +34,10 @@ public class LibraryArtistAlbumDiscController implements Initializable {
     private final ApplicationEventPublisher eventPublisher;
     private final NowPlayingMarker          nowPlayingMarker;
     private final LibraryDragPayload        dragPayload;
-    public        VBox       pane;
-    public        Label      diskNumberLabel;
-    public        VBox       tracksLeftColumnVbox;
-    public        VBox       tracksRightColumnVbox;
+    public        VBox                      pane;
+    public        Label                     diskNumberLabel;
+    public        VBox                      tracksLeftColumnVbox;
+    public        VBox                      tracksRightColumnVbox;
 
     @Override
     @SneakyThrows

@@ -17,8 +17,8 @@ class JfxPatchVersionTest {
     @Test
     void patchWasMadeForTheJavafxVersionInUse() throws Exception {
         Class<?> versionInfo = Class.forName("com.sun.javafx.runtime.VersionInfo");
-        String   version     = (String) versionInfo.getMethod("getVersion")
-                                                   .invoke(null);
+        String version = (String) versionInfo.getMethod("getVersion")
+                                             .invoke(null);
         assertEquals(StreamSources.PATCH_VERSION, version,
                 "JavaFX is " + version + " but the media patch was made for " + StreamSources.PATCH_VERSION);
     }

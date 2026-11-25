@@ -7,8 +7,8 @@ import java.util.function.DoubleUnaryOperator;
  * Measuring is delegated, so there is no JavaFX dependency here.
  */
 public final class LyricsFitter {
-    private static final int MAX_ITERATIONS = 16;
-    private static final double PRECISION = 0.25;
+    private static final int    MAX_ITERATIONS = 16;
+    private static final double PRECISION      = 0.25;
 
     private LyricsFitter() {
     }
@@ -29,7 +29,7 @@ public final class LyricsFitter {
             return minSize;
         }
 
-        double low = minSize;      // fits
+        double low  = minSize;      // fits
         double high = maxSize;     // does not fit
         for (int i = 0; i < MAX_ITERATIONS && high - low > PRECISION; i++) {
             double mid = (low + high) / 2;

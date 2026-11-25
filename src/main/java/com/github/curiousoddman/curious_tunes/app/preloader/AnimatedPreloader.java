@@ -30,8 +30,8 @@ public class AnimatedPreloader extends Preloader {
     public void handleApplicationNotification(PreloaderNotification info) {
         if (info instanceof MainSceneVisible) {
             stage.hide();
-        } else if (info instanceof PreloaderStatus status && controller != null) {
-            controller.setStatus(status.message());
+        } else if (info instanceof PreloaderStatus(String message) && controller != null) {
+            controller.setStatus(message);
         }
     }
 }

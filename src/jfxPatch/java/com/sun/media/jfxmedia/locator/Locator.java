@@ -29,6 +29,7 @@ import com.sun.media.jfxmedia.MediaException;
 import com.sun.media.jfxmedia.MediaManager;
 import com.sun.media.jfxmedia.logging.Logger;
 import com.sun.media.jfxmediaimpl.MediaUtils;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,48 +74,48 @@ public class Locator {
     /**
      * The content type used if no more specific one may be derived.
      */
-    public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
+    public static final  String              DEFAULT_CONTENT_TYPE      = "application/octet-stream";
     /**
      * The number of times to attempt to open a URL connection to test the URI.
      */
-    private static final int MAX_CONNECTION_ATTEMPTS = 5;
+    private static final int                 MAX_CONNECTION_ATTEMPTS   = 5;
     /**
      * The number of milliseconds between attempts to open a URL connection.
      */
-    private static final long CONNECTION_RETRY_INTERVAL = 1000L;
+    private static final long                CONNECTION_RETRY_INTERVAL = 1000L;
     /**
      * Timeout in milliseconds to wait for connection (5 min).
      */
-    private static final int CONNECTION_TIMEOUT = 300000;
+    private static final int                 CONNECTION_TIMEOUT        = 300000;
     /**
      * The content type of the media content.
      */
-    protected String contentType = DEFAULT_CONTENT_TYPE;
+    protected            String              contentType               = DEFAULT_CONTENT_TYPE;
     /**
      * A hint for the internal player.
      */
-    protected long contentLength = -1;    //Used as a hint for the native layer
+    protected            long                contentLength             = -1;    //Used as a hint for the native layer
     /**
      * The URI source.
      */
-    protected URI uri;
+    protected            URI                 uri;
     /**
      * Properties to be associated with the connection made to the URI. The
      * significance of the properties depends on the URI protocol and type of
      * media source.
      */
-    private Map<String, Object> connectionProperties;
+    private              Map<String, Object> connectionProperties;
     /**
      * Mutex for connectionProperties;
      */
-    private final Object propertyLock = new Object();
+    private final        Object              propertyLock              = new Object();
 
     /*
      * These variables will be initialized by constructor and used by init()
      */
     private String uriString = null;
-    private String scheme = null;
-    private String protocol = null;
+    private String scheme    = null;
+    private String protocol  = null;
 
     /*
      * if cached, we store a hard reference to keep it alive
@@ -130,7 +131,7 @@ public class Locator {
     /*
      * Used to block getContentLength() and getContentType().
      */
-    private CountDownLatch readySignal = new CountDownLatch(1);
+    private final CountDownLatch readySignal = new CountDownLatch(1);
 
     /**
      * iOS only: determines if the given URL points to the iPod library
@@ -142,16 +143,17 @@ public class Locator {
      */
     private static class LocatorConnection {
 
-        public HttpURLConnection connection = null;
-        public int responseCode = HttpURLConnection.HTTP_OK;
+        public HttpURLConnection connection   = null;
+        public int               responseCode = HttpURLConnection.HTTP_OK;
     }
 
     private LocatorConnection getConnection(URI uri, String requestMethod)
-            throws MalformedURLException, IOException {
+            throws IOException {
 
         // Check ability to connect.
         LocatorConnection locatorConnection = new LocatorConnection();
-        HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
+        HttpURLConnection connection        = (HttpURLConnection) uri.toURL()
+                                                                     .openConnection();
         connection.setRequestMethod(requestMethod);
         // Set timeouts, otherwise we can wait forever.
         connection.setConnectTimeout(CONNECTION_TIMEOUT);
@@ -204,20 +206,20 @@ public class Locator {
      * Constructs an object representing a media source.
      *
      * @param uri The URI source.
-     * @throws NullPointerException if
-     * <code>uri</code> is
-     * <code>null</code>.
-     * @throws IllegalArgumentException if the URI's scheme is
-     * <code>null</code>.
-     * @throws URISyntaxException if the supplied URI requires some further
-     * manipulation in order to be used and this procedure fails to produce a
-     * usable URI.
-     * @throws IllegalArgumentException if the URI is a Jar URL as described in
-     * {@link JarURLConnection https://docs.oracle.com/javase/8/docs/api/java/net/JarURLConnection.html},
-     * and the scheme of the URL after removing the leading four characters is
-     * <code>null</code>.
+     * @throws NullPointerException          if
+     *                                       <code>uri</code> is
+     *                                       <code>null</code>.
+     * @throws IllegalArgumentException      if the URI's scheme is
+     *                                       <code>null</code>.
+     * @throws URISyntaxException            if the supplied URI requires some further
+     *                                       manipulation in order to be used and this procedure fails to produce a
+     *                                       usable URI.
+     * @throws IllegalArgumentException      if the URI is a Jar URL as described in
+     *                                       {@link JarURLConnection https://docs.oracle.com/javase/8/docs/api/java/net/JarURLConnection.html},
+     *                                       and the scheme of the URL after removing the leading four characters is
+     *                                       <code>null</code>.
      * @throws UnsupportedOperationException if the URI's protocol is
-     * unsupported.
+     *                                       unsupported.
      */
     public Locator(URI uri) throws URISyntaxException {
         // Check for NULL parameter.
@@ -264,8 +266,8 @@ public class Locator {
     }
 
     private InputStream getInputStream(URI uri)
-            throws MalformedURLException, IOException {
-        URL url = uri.toURL();
+            throws IOException {
+        URL           url        = uri.toURL();
         URLConnection connection = url.openConnection();
 
         // Set request headers.
@@ -290,7 +292,8 @@ public class Locator {
      * already.
      */
     public void cacheMedia() {
-        LocatorCache.CacheReference ref = LocatorCache.locatorCache().fetchURICache(uri);
+        LocatorCache.CacheReference ref = LocatorCache.locatorCache()
+                                                      .fetchURICache(uri);
         if (null == ref) {
             ByteBuffer cacheBuffer;
 
@@ -305,8 +308,8 @@ public class Locator {
             // contentLength is set now, so we can go ahead and allocate
             cacheBuffer = ByteBuffer.allocateDirect((int) contentLength);
             byte[] readBuf = new byte[8192];
-            int total = 0;
-            int count;
+            int    total   = 0;
+            int    count;
             while (total < contentLength) {
                 try {
                     count = is.read(readBuf);
@@ -333,7 +336,8 @@ public class Locator {
             } catch (Throwable t) {
             }
 
-            cacheEntry = LocatorCache.locatorCache().registerURICache(uri, cacheBuffer, contentType);
+            cacheEntry = LocatorCache.locatorCache()
+                                     .registerURICache(uri, cacheBuffer, contentType);
             canBlock = false;
         }
     }
@@ -355,7 +359,7 @@ public class Locator {
      * content type of the media is not supported. @throws FileNotFoundException
      * if the media is not available.
      */
-    public void init() throws URISyntaxException, IOException, FileNotFoundException {
+    public void init() throws URISyntaxException, IOException {
         try {
             // Ensure the correct number of '/'s follows the ':'.
             int firstSlash = uriString.indexOf("/");
@@ -398,11 +402,13 @@ public class Locator {
             }
 
             // First check if this URI is cached, if it is then we're done
-            cacheEntry = LocatorCache.locatorCache().fetchURICache(uri);
+            cacheEntry = LocatorCache.locatorCache()
+                                     .fetchURICache(uri);
             if (null != cacheEntry) {
                 // Cache hit! Grab contentType and contentLength and be done
                 contentType = cacheEntry.getMIMEType();
-                contentLength = cacheEntry.getBuffer().capacity();
+                contentLength = cacheEntry.getBuffer()
+                                          .capacity();
                 if (Logger.canLog(Logger.DEBUG)) {
                     Logger.logMsg(Logger.DEBUG, "Locator init cache hit:"
                             + "\n    uri " + uri
@@ -413,9 +419,9 @@ public class Locator {
             }
 
             // Try to open a connection on the corresponding URL.
-            boolean isConnected = false;
+            boolean isConnected        = false;
             boolean isMediaUnAvailable = false;
-            boolean isMediaSupported = true;
+            boolean isMediaSupported   = true;
             if (!isIpod) {
                 for (int numConnectionAttempts = 0; numConnectionAttempts < MAX_CONNECTION_ATTEMPTS; numConnectionAttempts++) {
                     try {
@@ -444,7 +450,7 @@ public class Locator {
                             }
 
                             // FIXME: get cache settings from server, honor them
-                        } else if (scheme.equals("file") || scheme.equals("jar") || scheme.equals("jrt") || (scheme.equals("resource")) ) {
+                        } else if (scheme.equals("file") || scheme.equals("jar") || scheme.equals("jrt") || (scheme.equals("resource"))) {
                             InputStream stream = getInputStream(uri);
                             stream.close();
                             isConnected = true;
@@ -493,8 +499,7 @@ public class Locator {
                         // Ignore it.
                     }
                 }
-            }
-            else {
+            } else {
                 // in case of iPod files we can be sure all files are supported
                 contentType = MediaUtils.filenameToContentType(uri);
             }
@@ -594,7 +599,8 @@ public class Locator {
      */
     @Override
     public String toString() {
-        if (LocatorCache.locatorCache().isCached(uri)) {
+        if (LocatorCache.locatorCache()
+                        .isCached(uri)) {
             return "{LocatorURI uri: " + uri.toString() + " (media cached)}";
         }
         return "{LocatorURI uri: " + uri.toString() + "}";
@@ -611,7 +617,7 @@ public class Locator {
      * calling {@link #createConnectionHolder()} or it will have no effect.
      *
      * @param property The name of the property.
-     * @param value The value of the property.
+     * @param value    The value of the property.
      */
     public void setConnectionProperty(String property, Object value) {
         synchronized (propertyLock) {
@@ -647,18 +653,18 @@ public class Locator {
         //    - contentType is "application/vnd.apple.mpegurl" or "audio/mpegurl"
         String uriPath = uri.getPath();
         if (uriPath != null && (uriPath.endsWith(".m3u8") ||
-                                uriPath.endsWith(".m3u"))) {
+                uriPath.endsWith(".m3u"))) {
             return ConnectionHolder.createHLSConnectionHolder(uri);
         }
 
         String type = getContentType(); // Should be ready by now
         if (type != null && (type.equals(MediaUtils.CONTENT_TYPE_M3U8) ||
-                             type.equals(MediaUtils.CONTENT_TYPE_M3U))) {
+                type.equals(MediaUtils.CONTENT_TYPE_M3U))) {
             return ConnectionHolder.createHLSConnectionHolder(uri);
         }
 
         // media file over http/https
-        synchronized  (propertyLock) {
+        synchronized (propertyLock) {
             return ConnectionHolder.createURIConnectionHolder(uri, connectionProperties);
         }
     }
@@ -671,29 +677,31 @@ public class Locator {
         return connectionHolder.getAudioStream();
     }
 
-    private String getContentTypeFromFileSignature(URI uri) throws MalformedURLException, IOException {
-        InputStream stream = getInputStream(uri);
-        byte[] signature = new byte[MediaUtils.MAX_FILE_SIGNATURE_LENGTH];
-        int size = stream.read(signature);
+    private String getContentTypeFromFileSignature(URI uri) throws IOException {
+        InputStream stream    = getInputStream(uri);
+        byte[]      signature = new byte[MediaUtils.MAX_FILE_SIGNATURE_LENGTH];
+        int         size      = stream.read(signature);
         stream.close();
 
         return MediaUtils.fileSignatureToContentType(signature, size);
     }
 
     static void closeConnection(URLConnection connection) {
-        if (connection instanceof HttpURLConnection) {
-            HttpURLConnection httpConnection = (HttpURLConnection)connection;
+        if (connection instanceof HttpURLConnection httpConnection) {
             try {
                 if (httpConnection.getResponseCode() < HttpURLConnection.HTTP_BAD_REQUEST &&
-                    httpConnection.getInputStream() != null) {
-                    httpConnection.getInputStream().close();
+                        httpConnection.getInputStream() != null) {
+                    httpConnection.getInputStream()
+                                  .close();
                 }
             } catch (IOException ex) {
                 try {
                     if (httpConnection.getErrorStream() != null) {
-                        httpConnection.getErrorStream().close();
+                        httpConnection.getErrorStream()
+                                      .close();
                     }
-                } catch (IOException e) {}
+                } catch (IOException e) {
+                }
             }
         }
     }

@@ -1,11 +1,11 @@
 package com.github.curiousoddman.curious_tunes;
 
-import com.github.curiousoddman.curious_tunes.util.AppResources;
 import com.github.curiousoddman.curious_tunes.app.preloader.MainSceneVisible;
 import com.github.curiousoddman.curious_tunes.app.preloader.PreloaderStatus;
 import com.github.curiousoddman.curious_tunes.config.FxmlView;
 import com.github.curiousoddman.curious_tunes.config.StageManager;
 import com.github.curiousoddman.curious_tunes.ui.controller.screen.LibraryController;
+import com.github.curiousoddman.curious_tunes.util.AppResources;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;

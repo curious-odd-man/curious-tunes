@@ -11,8 +11,8 @@ import java.util.function.LongSupplier;
  */
 public class SessionClock {
     private final LongSupplier nanoTime;
-    private long startNanos;
-    private boolean started;
+    private       long         startNanos;
+    private       boolean      started;
 
     public SessionClock() {
         this(System::nanoTime);
@@ -53,9 +53,9 @@ public class SessionClock {
      */
     public static String format(long totalSeconds) {
         long seconds = Math.max(0, totalSeconds);
-        long h = seconds / 3600;
-        long m = (seconds % 3600) / 60;
-        long s = seconds % 60;
+        long h       = seconds / 3600;
+        long m       = (seconds % 3600) / 60;
+        long s       = seconds % 60;
         if (h > 0) {
             return "%d:%02d:%02d".formatted(h, m, s);
         }

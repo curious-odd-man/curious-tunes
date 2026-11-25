@@ -87,9 +87,9 @@ public final class ClickTrack {
     }
 
     private static byte[] wavHeader(int sampleCount) {
-        int        dataBytes = sampleCount * 2;
-        ByteBuffer header    = ByteBuffer.allocate(44)
-                                         .order(ByteOrder.LITTLE_ENDIAN);
+        int dataBytes = sampleCount * 2;
+        ByteBuffer header = ByteBuffer.allocate(44)
+                                      .order(ByteOrder.LITTLE_ENDIAN);
         header.put(new byte[]{'R', 'I', 'F', 'F'})
               .putInt(36 + dataBytes)
               .put(new byte[]{'W', 'A', 'V', 'E'})

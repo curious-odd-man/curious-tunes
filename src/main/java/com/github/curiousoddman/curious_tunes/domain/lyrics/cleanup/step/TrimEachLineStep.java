@@ -18,7 +18,7 @@ public class TrimEachLineStep implements CleaningStep {
     @Override
     public List<String> apply(List<String> lyrics) {
         return lyrics.stream()
-                .map(String::trim)
-                .toList();
+                     .map(String::trim)
+                     .toList();
     }
 }

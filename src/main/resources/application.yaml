@@ -13,7 +13,7 @@ spring:
   title: cTunes
 
 ctunes:
-  h2-console:                 # H2's own web console (H2DevConsole), for development
+  h2-console: # H2's own web console (H2DevConsole), for development
     enabled: ${H2_CONSOLE_ENABLED}
     port: ${H2_CONSOLE_PORT:8082}
 

@@ -93,10 +93,10 @@ class AlacVirtualWavTest {
         try (AlacVirtualWav wav = AlacVirtualWav.open(STEREO16)) {
             Random random = new Random(7);
             for (int i = 0; i < 300; i++) {
-                long       position = random.nextInt(expected.length);
-                int        size     = 1 + random.nextInt(20_000);
-                ByteBuffer target   = ByteBuffer.allocate(size);
-                int        read     = wav.read(position, target);
+                long       position      = random.nextInt(expected.length);
+                int        size          = 1 + random.nextInt(20_000);
+                ByteBuffer target        = ByteBuffer.allocate(size);
+                int        read          = wav.read(position, target);
                 int        expectedCount = (int) Math.min(size, expected.length - position);
                 assertEquals(expectedCount, read, "at " + position);
                 assertArrayEquals(Arrays.copyOfRange(expected, (int) position, (int) position + read),
@@ -132,7 +132,7 @@ class AlacVirtualWavTest {
     private static Path resource(String name) {
         try {
             return Path.of(AlacVirtualWavTest.class.getResource("/alac/" + name)
-                                                    .toURI());
+                                                   .toURI());
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

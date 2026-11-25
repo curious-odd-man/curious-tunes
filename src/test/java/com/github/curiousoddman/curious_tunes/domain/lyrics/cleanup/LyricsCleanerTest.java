@@ -2,7 +2,11 @@ package com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup;
 
 import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.flagger.BoxSizeOfZeroMeansFlagger;
 import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.flagger.Flag;
-import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.step.*;
+import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.step.BandNameFooterStep;
+import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.step.CollapseBlankLinesStep;
+import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.step.FooterStripStep;
+import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.step.GluedLineStep;
+import com.github.curiousoddman.curious_tunes.domain.lyrics.cleanup.step.TrimEachLineStep;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -30,21 +34,21 @@ class LyricsCleanerTest {
 
     @Test
     void footerStrip_removesFullFooterBlock() {
-        var step = new FooterStripStep();
+        var    step  = new FooterStripStep();
         String input = "Some lyrics line\n\n(fade)\nExplain\nRequest\n×";
         assertThat(step.apply(l(input))).isEqualTo(l("Some lyrics line"));
     }
 
     @Test
     void footerStrip_removesPartialFooter() {
-        var step = new FooterStripStep();
+        var    step  = new FooterStripStep();
         String input = "Some lyrics line\nExplain\nRequest\n×";
         assertThat(step.apply(l(input))).isEqualTo(l("Some lyrics line"));
     }
 
     @Test
     void footerStrip_leavesCleanLyricsUntouched() {
-        var step = new FooterStripStep();
+        var    step  = new FooterStripStep();
         String input = "Line one\nLine two\nLine three";
         assertThat(step.apply(l(input))).isEqualTo(l(input));
     }
@@ -69,7 +73,7 @@ class LyricsCleanerTest {
 
     @Test
     void bandNameFooter_leavesNormalLastLineUntouched() {
-        var step = new BandNameFooterStep();
+        var    step  = new BandNameFooterStep();
         String input = "Some lyrics\nI could never let you go.";
         assertThat(step.apply(l(input))).isEqualTo(l(input));
     }
@@ -94,7 +98,7 @@ class LyricsCleanerTest {
 
     @Test
     void collapseBlankLines_preservesSingleBlankBetweenVerses() {
-        var step = new CollapseBlankLinesStep();
+        var    step  = new CollapseBlankLinesStep();
         String input = "Verse one\n\nVerse two";
         assertThat(step.apply(l(input))).isEqualTo(l(input));
     }
@@ -119,7 +123,7 @@ class LyricsCleanerTest {
 
     @Test
     void gluedLine_leavesNormalLinesUntouched() {
-        var step = new GluedLineStep();
+        var    step  = new GluedLineStep();
         String input = "I'm feeling like a Monday";
         assertThat(step.apply(l(input))).isEqualTo(l(input));
     }
@@ -183,7 +187,7 @@ class LyricsCleanerTest {
                 List.of(new BoxSizeOfZeroMeansFlagger())
         );
 
-        String input = "box size of zero means 'till end of file. That is not yet supported";
+        String        input  = "box size of zero means 'till end of file. That is not yet supported";
         CleanerResult result = cleaner.clean(input);
 
         assertThat(result.flags()).contains(Flag.PARSING_ERROR);
@@ -201,7 +205,7 @@ class LyricsCleanerTest {
                 List.of(new BoxSizeOfZeroMeansFlagger())
         );
 
-        String input = "Some lyrics\nRequest\n×\n";
+        String        input  = "Some lyrics\nRequest\n×\n";
         CleanerResult result = cleaner.clean(input);
 
         assertThat(result.cleaned()).isEqualTo("Some lyrics");

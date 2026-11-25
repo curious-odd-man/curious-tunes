@@ -31,9 +31,11 @@ public class AlbumCard extends VBox {
 
         title.setText(albumInfo.getName());
         title.setTextOverrun(OverrunStyle.ELLIPSIS);
-        title.getStyleClass().add("text-body");
-        year.setText(albumInfo.getAlbumYear() == null ? "" : String.valueOf(albumInfo.getAlbumYear()));
-        year.getStyleClass().addAll("text-small", "dim-text");
+        title.getStyleClass()
+             .add("text-body");
+        year.setText(albumInfo.albumYear() == null ? "" : String.valueOf(albumInfo.albumYear()));
+        year.getStyleClass()
+            .addAll("text-small", "dim-text");
         Tooltip.install(this, new Tooltip(albumInfo.getName() + "\nClick to open, double-click to play"));
 
         getChildren().addAll(cover, title, year);

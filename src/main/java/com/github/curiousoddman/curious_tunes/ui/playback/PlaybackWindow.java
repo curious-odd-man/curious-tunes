@@ -1,6 +1,5 @@
 package com.github.curiousoddman.curious_tunes.ui.playback;
 
-import com.github.curiousoddman.curious_tunes.util.AppResources;
 import com.github.curiousoddman.curious_tunes.domain.player.AudioPlayer;
 import com.github.curiousoddman.curious_tunes.domain.player.PlaybackSessionTimer;
 import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
@@ -12,14 +11,15 @@ import com.github.curiousoddman.curious_tunes.model.WaveformModel;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.ui.controller.element.tabs.LibraryLyricsTabController;
 import com.github.curiousoddman.curious_tunes.ui.playback.calibration.VisualiserCalibrationWindow;
-import com.github.curiousoddman.curious_tunes.util.async.CancellationToken;
-import com.github.curiousoddman.curious_tunes.util.async.Flow;
 import com.github.curiousoddman.curious_tunes.util.Accessibility;
+import com.github.curiousoddman.curious_tunes.util.AppResources;
 import com.github.curiousoddman.curious_tunes.util.SliderFill;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.UiIcons;
 import com.github.curiousoddman.curious_tunes.util.UiStyles;
+import com.github.curiousoddman.curious_tunes.util.async.CancellationToken;
 import com.github.curiousoddman.curious_tunes.util.async.DelayedAction;
+import com.github.curiousoddman.curious_tunes.util.async.Flow;
 import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
@@ -120,14 +120,14 @@ public class PlaybackWindow {
 
     private static Image placeholderImage;
 
-    private final AudioPlayer               audioPlayer;
-    private final PlaybackSessionTimer      sessionTimer;
-    private final WaveformModel             waveformModel;
-    private final SpectrumModel             spectrumModel;
-    private final VisualiserSync            visualiserSync;
+    private final AudioPlayer                                 audioPlayer;
+    private final PlaybackSessionTimer                        sessionTimer;
+    private final WaveformModel                               waveformModel;
+    private final SpectrumModel                               spectrumModel;
+    private final VisualiserSync                              visualiserSync;
     private final ObjectProvider<VisualiserCalibrationWindow> calibrationWindow;
-    private final UserPreferencesService    userPreferencesService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final UserPreferencesService                      userPreferencesService;
+    private final ApplicationEventPublisher                   eventPublisher;
 
     private final DelayedAction delayedSaveBounds = new DelayedAction(500, TimeUnit.MILLISECONDS);
     private final List<Pane>    layoutPanes       = new ArrayList<>();
@@ -201,12 +201,12 @@ public class PlaybackWindow {
     private       Button               libraryButton;
 
     // ── State ────────────────────────────────────────────────────────────────
-    private PlaylistItem    currentItem;
-    private Duration        lastCurrent    = Duration.ZERO;
-    private Duration        lastTotal;
-    private PlaybackPalette currentPalette = PlaybackPalette.DEFAULT;
-    private Timeline        paletteAnimation;
-    private final CancellationToken paletteLoad = new CancellationToken();
+    private       PlaylistItem      currentItem;
+    private       Duration          lastCurrent    = Duration.ZERO;
+    private       Duration          lastTotal;
+    private       PlaybackPalette   currentPalette = PlaybackPalette.DEFAULT;
+    private       Timeline          paletteAnimation;
+    private final CancellationToken paletteLoad    = new CancellationToken();
 
     // =========================================================================
     // Opening and closing

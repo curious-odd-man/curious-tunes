@@ -37,18 +37,18 @@ public final class Avatar {
             return word.substring(0, Math.min(2, word.length()))
                        .toUpperCase();
         }
-        return (words.get(0)
-                     .substring(0, 1) + words.get(1)
-                                             .substring(0, 1)).toUpperCase();
+        return ("" + words.get(0)
+                          .charAt(0) + words.get(1)
+                                            .charAt(0)).toUpperCase();
     }
 
     /**
      * A calm colour that is dark enough for white text (contrast of about 4.5 or better).
      */
     public static Color color(String name) {
-        int    hash = name == null ? 0 : name.toLowerCase()
-                                             .hashCode();
-        double hue  = Math.floorMod(hash, 360);
+        int hash = name == null ? 0 : name.toLowerCase()
+                                          .hashCode();
+        double hue = Math.floorMod(hash, 360);
         return Color.hsb(hue, 0.55, 0.52);
     }
 }

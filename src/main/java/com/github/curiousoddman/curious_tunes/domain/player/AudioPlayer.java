@@ -242,9 +242,9 @@ public class AudioPlayer {
      * missing are marked, the user is told, and playback goes on with the track after them.
      */
     private Optional<PlaylistItem> nextPlayable() {
-        List<PlaylistItem> items   = playlistModel.getPlaylistItems();
-        PlaylistItem       current = playlistModel.getCurrentlyPlayingItem()
-                                                  .orElse(null);
+        List<PlaylistItem> items = playlistModel.getPlaylistItems();
+        PlaylistItem current = playlistModel.getCurrentlyPlayingItem()
+                                            .orElse(null);
         for (int index = current == null ? 0 : items.indexOf(current) + 1; index < items.size(); index++) {
             PlaylistItem item = items.get(index);
             if (isPlayable(item)) {

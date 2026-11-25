@@ -23,7 +23,8 @@ public final class ImageBytes {
     }
 
     public static boolean isImageFile(File file) {
-        String name = file.getName().toLowerCase(Locale.ROOT);
+        String name = file.getName()
+                          .toLowerCase(Locale.ROOT);
         int    dot  = name.lastIndexOf('.');
         return dot >= 0 && IMAGE_EXTENSIONS.contains(name.substring(dot + 1));
     }

@@ -37,7 +37,9 @@ public class GluedLineStep implements CleaningStep {
     @Override
     public List<String> apply(List<String> lyrics) {
         return lyrics.stream()
-                .flatMap(line -> Arrays.stream(GLUE_PATTERN.matcher(line).replaceAll("$1\n$2").split("\n")))
-                .toList();
+                     .flatMap(line -> Arrays.stream(GLUE_PATTERN.matcher(line)
+                                                                .replaceAll("$1\n$2")
+                                                                .split("\n")))
+                     .toList();
     }
 }

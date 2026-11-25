@@ -37,13 +37,13 @@ public final class WaveformRaster {
         if (bars.length == 0) {
             return;
         }
-        double centerY  = height / 2.0;
-        int    topR     = (top >> 16) & 0xFF;
-        int    topG     = (top >> 8) & 0xFF;
-        int    topB     = top & 0xFF;
-        int    bottomR  = (bottom >> 16) & 0xFF;
-        int    bottomG  = (bottom >> 8) & 0xFF;
-        int    bottomB  = bottom & 0xFF;
+        double centerY = height / 2.0;
+        int    topR    = (top >> 16) & 0xFF;
+        int    topG    = (top >> 8) & 0xFF;
+        int    topB    = top & 0xFF;
+        int    bottomR = (bottom >> 16) & 0xFF;
+        int    bottomG = (bottom >> 8) & 0xFF;
+        int    bottomB = bottom & 0xFF;
 
         for (int x = 0; x < width; x++) {
             int    first = (int) ((long) x * bars.length / width);

@@ -3,16 +3,8 @@ package com.github.curiousoddman.curious_tunes.model.info;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
-@Data
-@RequiredArgsConstructor
-public class AlbumInfo {
-    protected final ArtistRecord artistRecord;
-    protected final AlbumRecord albumRecord;
-    protected final Integer albumYear;
-
+public record AlbumInfo(ArtistRecord artistRecord, AlbumRecord albumRecord, Integer albumYear) {
     public TrackInfo toTrackInfo(TrackRecord trackRecord) {
         return new TrackInfo(
                 trackRecord,

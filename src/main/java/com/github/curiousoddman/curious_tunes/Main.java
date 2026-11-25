@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableTransactionManagement
 public class Main {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         ProcessPriority.apply();        // first, so every thread started later gets the higher priority
         LauncherImpl.launchApplication(JavafxApplication.class, AnimatedPreloader.class, args);
     }

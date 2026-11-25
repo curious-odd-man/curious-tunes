@@ -68,7 +68,8 @@ public class RequestUtils {
     }
 
     private static <T> T randomFrom(List<T> list) {
-        int index = ThreadLocalRandom.current().nextInt(list.size());
+        int index = ThreadLocalRandom.current()
+                                     .nextInt(list.size());
         return list.get(index);
     }
 }

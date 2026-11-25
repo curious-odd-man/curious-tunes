@@ -23,7 +23,8 @@ public final class HistoryFormat {
      */
     public static String playedAt(OffsetDateTime playedAt, Instant now, ZoneId zone, Locale locale) {
         ZonedDateTime time  = playedAt.atZoneSameInstant(zone);
-        LocalDate     today = now.atZone(zone).toLocalDate();
+        LocalDate     today = now.atZone(zone)
+                                 .toLocalDate();
         LocalDate     day   = time.toLocalDate();
         if (day.equals(today)) {
             return "Today " + time.format(TIME);
@@ -39,7 +40,8 @@ public final class HistoryFormat {
      */
     public static String full(OffsetDateTime playedAt, ZoneId zone, Locale locale) {
         return playedAt.atZoneSameInstant(zone)
-                       .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(locale));
+                       .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                                                .withLocale(locale));
     }
 
     /**

@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationEvent;
 @Getter
 public class PlayedThirdOfTrackEvent extends ApplicationEvent {
     private final TrackRecord trackRecord;
-    private final int volume;
+    private final int         volume;
 
     public PlayedThirdOfTrackEvent(Object source,
                                    TrackRecord trackRecord,

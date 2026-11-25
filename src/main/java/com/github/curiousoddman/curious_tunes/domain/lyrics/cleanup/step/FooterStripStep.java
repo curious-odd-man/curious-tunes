@@ -35,7 +35,8 @@ public class FooterStripStep implements CleaningStep {
         List<String> lines = new ArrayList<>(lyrics);
 
         while (!lines.isEmpty()) {
-            String last = lines.getLast().strip();
+            String last = lines.getLast()
+                               .strip();
             if (last.isEmpty() || FOOTER_LINES.contains(last.toLowerCase())) {
                 lines.removeLast();
             } else {

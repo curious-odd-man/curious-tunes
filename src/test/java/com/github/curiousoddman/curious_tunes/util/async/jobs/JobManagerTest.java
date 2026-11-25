@@ -99,14 +99,16 @@ class JobManagerTest {
         CountDownLatch  release = new CountDownLatch(1);
         try {
             assertTrue(manager.submit(new TestJob(() -> {
-                try {
-                    release.await();
-                } catch (InterruptedException ignored) {
-                }
-            }, "first")).isPresent());
+                                  try {
+                                      release.await();
+                                  } catch (InterruptedException ignored) {
+                                  }
+                              }, "first"))
+                              .isPresent());
             Thread.sleep(100);
             assertFalse(manager.submit(new TestJob(() -> {
-            }, "second")).isPresent());
+                               }, "second"))
+                               .isPresent());
             release.countDown();
             assertTrue(events.awaitTerminal());
         } finally {

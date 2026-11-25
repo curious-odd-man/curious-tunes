@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationEvent;
 @Getter
 public class PlayerStatusEvent extends ApplicationEvent {
     private final PlaybackState status;
-    private final PlaylistItem playlistItem;
+    private final PlaylistItem  playlistItem;
 
     public PlayerStatusEvent(Object source, PlaybackState status, PlaylistItem playlistItem) {
         super(source);

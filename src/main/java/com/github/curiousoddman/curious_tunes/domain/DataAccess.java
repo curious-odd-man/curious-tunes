@@ -169,9 +169,9 @@ public class DataAccess {
      * Artists, albums and tracks whose name contains the text (ignoring the case): at most {@code limitPerKind} of each.
      */
     public List<SearchResult> searchLibrary(String text, int limitPerKind) {
-        String             pattern = "%" + text.replace("\\", "\\\\")
-                                               .replace("%", "\\%")
-                                               .replace("_", "\\_") + "%";
+        String pattern = "%" + text.replace("\\", "\\\\")
+                                   .replace("%", "\\%")
+                                   .replace("_", "\\_") + "%";
         List<SearchResult> results = new ArrayList<>();
 
         dsl.select(ARTIST.ID, ARTIST.NAME)

@@ -13,20 +13,30 @@ import org.mp4parser.support.AbstractBox;
 import org.mp4parser.support.AbstractContainerBox;
 
 import java.io.FileInputStream;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 @Slf4j
 public class Manual {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         scrapeAllAudioFilesForTagsTest();
     }
 
     @SneakyThrows
     private static void scrapeAllAudioFilesForTagsTest() {
-        Path resultPath = Path.of("parsing-result.txt");
-        Map<String, Integer> stats = new HashMap<>();
+        Path                 resultPath = Path.of("parsing-result.txt");
+        Map<String, Integer> stats      = new HashMap<>();
         // Walk directory tree
         Files.walkFileTree(Path.of("D:\\iTunes\\iTunes 1\\iTunes Media\\Music"), new SimpleFileVisitor<>() {
             private int i = 1;
@@ -46,10 +56,15 @@ public class Manual {
                         log.warn("{} contained no metadata", file);
                         return FileVisitResult.CONTINUE;
                     }
-                    StringBuilder sb = new StringBuilder("File: ").append(file.toAbsolutePath()).append('\n');
+                    StringBuilder sb = new StringBuilder("File: ").append(file.toAbsolutePath())
+                                                                  .append('\n');
                     tags.forEach((k, v) -> {
                         stats.compute(k, (_, vv) -> vv == null ? 1 : vv + 1);
-                        sb.append('\t').append(k).append('\t').append(v).append('\n');
+                        sb.append('\t')
+                          .append(k)
+                          .append('\t')
+                          .append(v)
+                          .append('\n');
                     });
                     Files.writeString(resultPath, sb.toString(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
                 } catch (Exception e) {
@@ -61,7 +76,10 @@ public class Manual {
 
         StringBuilder sb = new StringBuilder();
         stats.forEach((k, v) ->
-                sb.append(k).append('\t').append(v).append('\n')
+                sb.append(k)
+                  .append('\t')
+                  .append(v)
+                  .append('\n')
         );
         Files.writeString(Path.of("tag-stats.txt"), sb.toString(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
     }
@@ -72,8 +90,8 @@ public class Manual {
         // https://github.com/sannies/mp4parser/blob/master/examples/src/main/java/org/mp4parser/examples/metadata/MetaDataRead.java
         List<Box> resultBoxes = new ArrayList<>();
         try (FileInputStream fileInputStream = new FileInputStream(file.toFile())) {
-            IsoFile isoFile = new IsoFile(fileInputStream.getChannel());
-            Queue<Box> boxes = new LinkedList<>(isoFile.getBoxes());
+            IsoFile    isoFile = new IsoFile(fileInputStream.getChannel());
+            Queue<Box> boxes   = new LinkedList<>(isoFile.getBoxes());
             while (!boxes.isEmpty()) {
                 Box box = boxes.remove();
                 if (box instanceof AbstractContainerBox container) {

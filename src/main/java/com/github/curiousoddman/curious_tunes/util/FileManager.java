@@ -23,9 +23,9 @@ public final class FileManager {
         if (location == null || location.isBlank()) {
             return false;
         }
-        Path   file = Path.of(location);
-        String os   = System.getProperty("os.name", "")
-                            .toLowerCase(Locale.ROOT);
+        Path file = Path.of(location);
+        String os = System.getProperty("os.name", "")
+                          .toLowerCase(Locale.ROOT);
         try {
             if (os.contains("win")) {
                 new ProcessBuilder("explorer.exe", "/select,", file.toString()).start();

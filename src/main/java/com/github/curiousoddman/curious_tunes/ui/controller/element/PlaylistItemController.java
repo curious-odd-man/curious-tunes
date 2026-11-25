@@ -56,25 +56,25 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 public class PlaylistItemController implements Initializable {
     private static final double COVER_MIN_ROW_WIDTH = 230;
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final ApplicationEventPublisher        eventPublisher;
     @FXML
-    public        ImageView                 image;
+    public        ImageView                        image;
     @FXML
-    public        Label                     rightText;
+    public        Label                            rightText;
     @FXML
-    public        Label                     topText;
+    public        Label                            topText;
     @FXML
-    public        Label                     bottomText;
+    public        Label                            bottomText;
     @FXML
-    public        AnchorPane                pane;
-    private       ContextMenu               contextMenu;
-    private       PlaylistItem              playlistItem;
-    private       PlaylistModel             playlistSelectionModel;
-    private       PlaylistDragHandler       playlistDragHandler;
-    private       IntSupplier               rowIndex;
-    private final Tooltip                   missingFileTooltip = new Tooltip();
-    private final ListChangeListener<PlaylistItem> selectionListener = this::onPlaylistSelectionChanged;
-    private       boolean                   missingFileTooltipInstalled;
+    public        AnchorPane                       pane;
+    private       ContextMenu                      contextMenu;
+    private       PlaylistItem                     playlistItem;
+    private       PlaylistModel                    playlistSelectionModel;
+    private       PlaylistDragHandler              playlistDragHandler;
+    private       IntSupplier                      rowIndex;
+    private final Tooltip                          missingFileTooltip = new Tooltip();
+    private final ListChangeListener<PlaylistItem> selectionListener  = this::onPlaylistSelectionChanged;
+    private       boolean                          missingFileTooltipInstalled;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {

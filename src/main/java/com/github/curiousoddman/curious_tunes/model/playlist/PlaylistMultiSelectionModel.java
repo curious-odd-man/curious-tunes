@@ -17,8 +17,8 @@ import java.util.stream.IntStream;
 public class PlaylistMultiSelectionModel extends MultipleSelectionModel<PlaylistItem> {
     private final List<PlaylistItem> playlistItems;
 
-    private final ObservableList<Integer> selectedIndices = FXCollections.observableArrayList();
-    private final ObservableList<PlaylistItem> selectedItems = FXCollections.observableArrayList();
+    private final ObservableList<Integer>      selectedIndices = FXCollections.observableArrayList();
+    private final ObservableList<PlaylistItem> selectedItems   = FXCollections.observableArrayList();
 
     public PlaylistMultiSelectionModel(List<PlaylistItem> playlistItems) {
         this.playlistItems = playlistItems;
@@ -33,7 +33,9 @@ public class PlaylistMultiSelectionModel extends MultipleSelectionModel<Playlist
         if (!selectedIndices.contains(index)) {
             selectedIndices.add(index);
             FXCollections.sort(selectedIndices);
-            selectedItems.setAll(selectedIndices.stream().map(playlistItems::get).toList());
+            selectedItems.setAll(selectedIndices.stream()
+                                                .map(playlistItems::get)
+                                                .toList());
         }
         // Always update the single-item selectedIndex / selectedItem properties
         setSelectedIndex(index);
@@ -62,7 +64,9 @@ public class PlaylistMultiSelectionModel extends MultipleSelectionModel<Playlist
     @Override
     public void clearSelection(int index) {
         if (selectedIndices.remove(Integer.valueOf(index))) {
-            selectedItems.setAll(selectedIndices.stream().map(playlistItems::get).toList());
+            selectedItems.setAll(selectedIndices.stream()
+                                                .map(playlistItems::get)
+                                                .toList());
             if (getSelectedIndex() == index) {
                 // Move primary selection to the last remaining item, or clear it
                 if (selectedIndices.isEmpty()) {
@@ -109,7 +113,9 @@ public class PlaylistMultiSelectionModel extends MultipleSelectionModel<Playlist
         if (!validIndexes.isEmpty()) {
             selectedIndices.addAll(validIndexes);
             FXCollections.sort(selectedIndices);
-            selectedItems.setAll(selectedIndices.stream().map(playlistItems::get).toList());
+            selectedItems.setAll(selectedIndices.stream()
+                                                .map(playlistItems::get)
+                                                .toList());
 
             setSelectedIndex(validIndexes.getFirst());
             setSelectedItem(playlistItems.get(validIndexes.getFirst()));
@@ -119,8 +125,9 @@ public class PlaylistMultiSelectionModel extends MultipleSelectionModel<Playlist
     @Override
     public void selectRange(int start, int end) {
         int from = Math.min(start, end);
-        int to = Math.max(start, end);
-        selectIndices(from, IntStream.range(from + 1, to).toArray());
+        int to   = Math.max(start, end);
+        selectIndices(from, IntStream.range(from + 1, to)
+                                     .toArray());
     }
 
     public void selectRangeInclusive(int from, int to) {
@@ -201,7 +208,9 @@ public class PlaylistMultiSelectionModel extends MultipleSelectionModel<Playlist
             selectedIndices.add(i1);
         }
         FXCollections.sort(selectedIndices);
-        selectedItems.setAll(selectedIndices.stream().map(playlistItems::get).toList());
+        selectedItems.setAll(selectedIndices.stream()
+                                            .map(playlistItems::get)
+                                            .toList());
 
         int primary = getSelectedIndex();
         if (primary == i1) {
@@ -221,7 +230,9 @@ public class PlaylistMultiSelectionModel extends MultipleSelectionModel<Playlist
             updated.add(idx > removedIndex ? idx - 1 : idx);
         }
         selectedIndices.setAll(updated);
-        selectedItems.setAll(selectedIndices.stream().map(playlistItems::get).toList());
+        selectedItems.setAll(selectedIndices.stream()
+                                            .map(playlistItems::get)
+                                            .toList());
 
         int primary = getSelectedIndex();
         if (primary == removedIndex) {

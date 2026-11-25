@@ -7,11 +7,15 @@ import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class AsyncFileWriter implements AutoCloseable {
     private final ExecutorService executor;
-    private final BufferedWriter writer;
+    private final BufferedWriter  writer;
 
     /**
      * @param filePath path to the output file
@@ -83,7 +87,8 @@ public class AsyncFileWriter implements AutoCloseable {
             }
             writer.close();
         } catch (IOException | InterruptedException e) {
-            Thread.currentThread().interrupt();
+            Thread.currentThread()
+                  .interrupt();
             throw new RuntimeException("Failed to close AsyncFileWriter", e);
         }
     }

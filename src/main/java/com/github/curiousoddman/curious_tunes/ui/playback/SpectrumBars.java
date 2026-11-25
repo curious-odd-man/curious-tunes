@@ -33,8 +33,8 @@ public class SpectrumBars {
     private final double[] peaks;
     private final double[] peakAge;
 
-    private int[] firstBand     = new int[0];
-    private int[] endBand       = new int[0];
+    private int[] firstBand      = new int[0];
+    private int[] endBand        = new int[0];
     private int   rangesForBands = -1;
 
     public SpectrumBars(int barCount) {

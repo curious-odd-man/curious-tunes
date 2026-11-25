@@ -89,9 +89,9 @@ public class LibraryHistoryTabController implements Initializable {
     @FXML
     public Button                                  loadMoreButton;
 
-    private final ObservableList<HistoryRow> rows    = FXCollections.observableArrayList();
+    private final ObservableList<HistoryRow> rows        = FXCollections.observableArrayList();
     private final CancellationToken          historyLoad = new CancellationToken();
-    private final NumberFormat               numbers = NumberFormat.getIntegerInstance();
+    private final NumberFormat               numbers     = NumberFormat.getIntegerInstance();
 
     private OffsetDateTime since;       // start of the shown period; null = everything
     private long           totalPlays;
@@ -141,9 +141,9 @@ public class LibraryHistoryTabController implements Initializable {
         if (loading) {
             return;
         }
-        CancellationToken.Snapshot load = historyLoad.snapshot();     // cancelled by a reload, not the other way
-        int            offset = rows.size();
-        OffsetDateTime period = since;
+        CancellationToken.Snapshot load   = historyLoad.snapshot();     // cancelled by a reload, not the other way
+        int                        offset = rows.size();
+        OffsetDateTime             period = since;
         setLoading(true);
         runInBackground(load, () -> dataAccess.getHistoryRows(period, PAGE_SIZE, offset), page -> {
             rows.addAll(page);
@@ -153,8 +153,8 @@ public class LibraryHistoryTabController implements Initializable {
     }
 
     private void reload() {
-        CancellationToken.Snapshot load = historyLoad.cancelAndSnapshot();   // a newer period replaces any load
-        OffsetDateTime period = sinceOf(selectedPeriod());
+        CancellationToken.Snapshot load   = historyLoad.cancelAndSnapshot();   // a newer period replaces any load
+        OffsetDateTime             period = sinceOf(selectedPeriod());
         since = period;
         setLoading(true);
         runInBackground(load, () -> new Loaded(dataAccess.getHistoryStats(period), dataAccess.getHistoryRows(period, PAGE_SIZE, 0)),
