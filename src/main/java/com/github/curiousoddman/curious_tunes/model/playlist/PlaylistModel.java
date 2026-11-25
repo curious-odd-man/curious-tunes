@@ -216,7 +216,7 @@ public class PlaylistModel {
         int adjustedTo = (int) (toIndex - before);
 
         playlistItems.removeAll(itemsToMove);
-        adjustedTo = Math.max(0, Math.min(adjustedTo, playlistItems.size()));
+        adjustedTo = Math.clamp(adjustedTo, 0, playlistItems.size());
         playlistItems.addAll(adjustedTo, itemsToMove);
 
         // Re-select the moved items at their new positions

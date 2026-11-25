@@ -58,8 +58,7 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
         if (BOX_MAP_CACHE != null) {
             mapping = new Properties(BOX_MAP_CACHE);
         } else {
-            InputStream is = ClassLoader.getSystemResourceAsStream("isoparser2-default.properties");
-            try {
+            try (InputStream is = ClassLoader.getSystemResourceAsStream("isoparser2-default.properties")) {
                 mapping = new Properties();
                 try {
                     mapping.load(is);
@@ -83,21 +82,11 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-            } finally {
-                try {
-                    if (is != null) {
-                        is.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    // ignore - I can't help
-                }
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+                // ignore - I can't help
             }
         }
-    }
-
-    public CustomizedPropertyBoxParser(Properties mapping) {
-        this.mapping = mapping;
     }
 
     @Override
@@ -111,17 +100,20 @@ public class CustomizedPropertyBoxParser extends AbstractBoxParser {
                 Class[]  constructorArgsClazz = new Class[param.length];
                 Object[] constructorArgs      = new Object[param.length];
                 for (int i = 0; i < param.length; i++) {
-                    if ("userType".equals(param[i])) {
-                        constructorArgs[i] = userType;
-                        constructorArgsClazz[i] = byte[].class;
-                    } else if ("type".equals(param[i])) {
-                        constructorArgs[i] = type;
-                        constructorArgsClazz[i] = String.class;
-                    } else if ("parent".equals(param[i])) {
-                        constructorArgs[i] = parent;
-                        constructorArgsClazz[i] = String.class;
-                    } else {
-                        throw new InternalError("No such param: " + param[i]);
+                    switch (param[i]) {
+                        case "userType" -> {
+                            constructorArgs[i] = userType;
+                            constructorArgsClazz[i] = byte[].class;
+                        }
+                        case "type" -> {
+                            constructorArgs[i] = type;
+                            constructorArgsClazz[i] = String.class;
+                        }
+                        case "parent" -> {
+                            constructorArgs[i] = parent;
+                            constructorArgsClazz[i] = String.class;
+                        }
+                        case null, default -> throw new InternalError("No such param: " + param[i]);
                     }
                 }
 

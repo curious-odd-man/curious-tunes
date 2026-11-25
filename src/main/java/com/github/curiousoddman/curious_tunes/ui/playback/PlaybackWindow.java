@@ -698,7 +698,7 @@ public class PlaybackWindow {
         leftPane.setMinWidth(leftWidth);
         leftPane.setMaxWidth(leftWidth);
 
-        double artSize = Math.max(120, Math.min(leftWidth - 40, root.getHeight() * ART_HEIGHT_SHARE));
+        double artSize = Math.clamp(leftWidth - 40, 120, root.getHeight() * ART_HEIGHT_SHARE);
         artView.setFitWidth(artSize);
         artView.setFitHeight(artSize);
 
@@ -828,7 +828,7 @@ public class PlaybackWindow {
         if (lastCurrent == null || lastTotal == null || lastTotal.toSeconds() <= 0) {
             return;
         }
-        double target = Math.max(0, Math.min(lastTotal.toSeconds() - 0.5, lastCurrent.toSeconds() + seconds));
+        double target = Math.clamp(lastTotal.toSeconds() - 0.5, 0, lastCurrent.toSeconds() + seconds);
         audioPlayer.seek(Duration.seconds(target));
     }
 

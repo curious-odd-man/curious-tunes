@@ -144,7 +144,7 @@ public class SpectrumBars {
     static int[][] bandRanges(int barCount, int bandCount) {
         int[] first   = new int[barCount];
         int[] end     = new int[barCount];
-        int   maxBand = Math.max(1, Math.min(bandCount, (int) Math.round(bandCount * MAX_BAND_SHARE)));
+        int   maxBand = Math.clamp(bandCount, 1, (int) Math.round(bandCount * MAX_BAND_SHARE));
         if (maxBand <= barCount) {
             for (int i = 0; i < barCount; i++) {
                 first[i] = Math.min(maxBand - 1, i * maxBand / barCount);

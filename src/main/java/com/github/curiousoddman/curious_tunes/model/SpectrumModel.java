@@ -49,8 +49,7 @@ public class SpectrumModel {
      */
     public Frame frameAt(long nanos) {
         Frame result = null;
-        for (Iterator<Frame> it = frames.iterator(); it.hasNext(); ) {
-            Frame frame = it.next();
+        for (Frame frame : frames) {
             if (frame.arrivedNanos() > nanos) {
                 break;
             }

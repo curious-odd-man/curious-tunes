@@ -1508,7 +1508,7 @@ public class LibraryController implements Initializable {
         }
         int next = current < 0
                 ? (delta > 0 ? 0 : ordered.size() - 1)
-                : Math.max(0, Math.min(ordered.size() - 1, current + delta));
+                : Math.clamp(ordered.size() - 1, 0, current + delta);
         TrackInfo target = ordered.get(next);
         model.selectOnly(target);
         ensureVisible(albumsScroll, model.rowOf(target));

@@ -327,7 +327,7 @@ public class LibraryPlaylistController implements Initializable {
             int     top    = firstVisibleIndex();
             shown.setAll(items);
             if (reused) {
-                playlistList.scrollTo(Math.min(top, Math.max(0, items.size() - 1)));
+                playlistList.scrollTo(Math.clamp(items.size() - 1, 0, top));
             } else {
                 playlistList.scrollTo(0);
             }

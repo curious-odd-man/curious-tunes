@@ -143,7 +143,7 @@ public class PlaybackWaveformView {
         }
 
         int splitX = totalMillis > 0
-                ? (int) Math.max(0, Math.min(width, currentMillis / totalMillis * width))
+                ? (int) Math.clamp(width, 0, currentMillis / totalMillis * width)
                 : 0;
         int version = model.getVersion();
 
