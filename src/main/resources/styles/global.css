@@ -141,6 +141,28 @@
     -fx-border-color: rgb(204, 190, 255);
 }
 
+/* ---- Queue list --------------------------------------------------------- */
+/* The queue is a ListView (virtualised, doc/performance-review.md item 3.1). Its rows draw themselves
+   (.bordered-item, .selected-item, .playlist-item-*), so the list and its cells stay plain: no background, no
+   alternating colours, no focus border, and the 2 px gap the rows used to have. */
+
+.playlist-list,
+.playlist-list:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 2;
+}
+
+.playlist-list .list-cell,
+.playlist-list .list-cell:odd,
+.playlist-list .list-cell:even,
+.playlist-list .list-cell:hover,
+.playlist-list .list-cell:focused,
+.playlist-list .list-cell:selected {
+    -fx-background-color: transparent;
+    -fx-padding: 1 0 1 0;
+}
+
 /* ---- Queue rows: playing / played -------------------------------------- */
 /* Playing = tinted background + accent bar on the left + bold title.
    Selected = solid accent background. A row can be both: it then keeps the bar and the selected background. */

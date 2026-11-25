@@ -392,6 +392,9 @@ check `load.isValid()` itself before each album and stop early; otherwise a supe
 
 ### 2.4 One FXML load per album, disc and track row
 
+**Status: done** (step 6). Track rows are built in code (`LibraryAlbumTrackRow`), each with its context menu made on the
+first right-click; `FxmlLoader` logs at DEBUG and closes its stream.
+
 **Where:** `LibraryController` → `LibraryArtistAlbumController` → `LibraryArtistAlbumDiscController` → one
 `LIBRARY_ARTIST_ALBUM_TRACK` FXML per track; `FxmlLoader.load` resolves every controller with `context::getBean` and
 logs at INFO each time.
@@ -409,6 +412,10 @@ logs at INFO each time.
 
 ### 2.5 Both album views built for every artist
 
+**Status: partly done** (step 6). The grid's cards are built the first time the grid is shown, and covers are only
+decoded for the view shown (step 2). The list's album controllers are still built in grid mode: the grid uses them for
+play, drag, sorting and keyboard navigation. Their expensive part, the per-track FXML, is gone (2.4).
+
 **Where:** `LibraryController.showAlbums` builds both the list nodes and an `AlbumCard` per album, whichever view is
 shown.
 
@@ -422,6 +429,12 @@ artist.
 ## 3. The queue (playlist)
 
 ### 3.1 The queue is not virtualised
+
+**Status: done** (step 6). The queue is a `ListView` with one `playlist-item.fxml` per *visible* cell, bound to
+whichever track the cell shows (`PlaylistItemController.bind`). Drag and drop works by cell index
+(`PlaylistDragHandler` now takes positions), and the app's own selection model is kept: the list has a no-op one.
+Auto-scroll while dragging and "drop below the last row" moved to the list. CSS keeps the list and its cells plain,
+so the rows look as before.
 
 **Where:** `LibraryPlaylistController`: a `VBox` (`playlistVbox`) with one `PLAYLIST_ITEM` FXML per track.
 

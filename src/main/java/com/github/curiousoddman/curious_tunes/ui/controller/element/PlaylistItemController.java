@@ -3,11 +3,11 @@ package com.github.curiousoddman.curious_tunes.ui.controller.element;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.event.PlaySpecificTrackEvent;
-import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistDragHandler;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItemStatus;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
+import com.github.curiousoddman.curious_tunes.util.CoverImages;
 import com.github.curiousoddman.curious_tunes.util.ImageUtils;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.UiIcons;
@@ -36,6 +36,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.IntSupplier;
 
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.BORDERED_ITEM;
 import static com.github.curiousoddman.curious_tunes.util.styles.CssClasses.PLAYLIST_DRAG_GUIDE;
@@ -70,6 +71,7 @@ public class PlaylistItemController implements Initializable {
     private       PlaylistItem              playlistItem;
     private       PlaylistModel             playlistSelectionModel;
     private       PlaylistDragHandler       playlistDragHandler;
+    private       IntSupplier               rowIndex;
     private final Tooltip                   missingFileTooltip = new Tooltip();
     private final ListChangeListener<PlaylistItem> selectionListener = this::onPlaylistSelectionChanged;
     private       boolean                   missingFileTooltipInstalled;
@@ -104,23 +106,54 @@ public class PlaylistItemController implements Initializable {
                 image.setManaged(showCover);
             });
         rightText.setContentDisplay(ContentDisplay.LEFT);
+    }
 
-        if (resources instanceof PlaylistItemResourceBundle playlistItemResourceBundle) {
-            AlbumRecord albumRecord = playlistItemResourceBundle.getPlaylistItem()
-                                                                .getTrackAlbum();
-            ImageUtils.setImageIfPresent(albumRecord, image);
-            playlistItem = playlistItemResourceBundle.getPlaylistItem();
-            TrackRecord trackRecord = playlistItem.getTrackRecord();
-            rightText.setText(TimeUtils.secondsToHumanTime(trackRecord.getDuration()));
-            topText.setText(trackRecord.getTitle());
-            bottomText.setText(playlistItemResourceBundle.getArtist() + " · " + albumRecord.getName());
-            playlistSelectionModel = playlistItemResourceBundle.getPlaylistModel();
-            playlistSelectionModel
-                    .getSelectionModel()
-                    .getSelectedItems()
-                    .addListener(selectionListener);
-            playlistDragHandler = playlistItemResourceBundle.getPlaylistDragHandler();
+    /**
+     * Connects the row to the queue, once: the row is a cell of a virtualised list (doc/performance-review.md,
+     * item 3.1), created for the visible part of the queue and then reused for other tracks through {@link #bind}.
+     *
+     * @param rowIndex the row's current position in the queue
+     */
+    public void setup(PlaylistModel playlistModel, PlaylistDragHandler dragHandler, IntSupplier rowIndex) {
+        this.playlistSelectionModel = playlistModel;
+        this.playlistDragHandler = dragHandler;
+        this.rowIndex = rowIndex;
+        playlistModel.getSelectionModel()
+                     .getSelectedItems()
+                     .addListener(selectionListener);
+    }
+
+    /**
+     * Shows {@code item} in this row, replacing whatever the row showed before.
+     */
+    public void bind(PlaylistItem item) {
+        playlistItem = item;
+        AlbumRecord albumRecord = item.getTrackAlbum();
+        TrackRecord trackRecord = item.getTrackRecord();
+        image.setImage(CoverImages.placeholder());      // a reused row must not keep the previous track's cover
+        ImageUtils.setImageIfPresent(albumRecord, image);
+        rightText.setText(TimeUtils.secondsToHumanTime(trackRecord.getDuration()));
+        topText.setText(trackRecord.getTitle());
+        bottomText.setText(item.getArtistName() + " · " + albumRecord.getName());
+        removeDropGuides();
+        ObservableList<String> styleClasses = pane.getStyleClass();
+        styleClasses.remove(SELECTED_ITEM);
+        if (playlistSelectionModel.isSelected(item)) {
+            styleClasses.add(SELECTED_ITEM);
         }
+        updateStyleFromPlayerStatus();
+    }
+
+    /**
+     * The row shows no track any more (its cell became empty).
+     */
+    public void unbind() {
+        playlistItem = null;
+        image.setImage(null);
+    }
+
+    public PlaylistItem getPlaylistItem() {
+        return playlistItem;
     }
 
     /**
@@ -138,6 +171,9 @@ public class PlaylistItemController implements Initializable {
     }
 
     private void onPlaylistSelectionChanged(ListChangeListener.Change<? extends PlaylistItem> change) {
+        if (playlistItem == null) {
+            return;                                     // an empty row
+        }
         while (change.next()) {
             if (change.getRemoved()
                       .contains(playlistItem)) {   // Replaced = added + removed
@@ -155,6 +191,9 @@ public class PlaylistItemController implements Initializable {
 
     @FXML
     public void onPaneClicked(MouseEvent mouseEvent) {
+        if (playlistItem == null) {
+            return;
+        }
         if (mouseEvent.getButton() == MouseButton.SECONDARY) {
             contextMenu.show(pane, mouseEvent.getScreenX(), mouseEvent.getScreenY());
         }
@@ -173,6 +212,9 @@ public class PlaylistItemController implements Initializable {
     }
 
     public void updateStyleFromPlayerStatus() {
+        if (playlistItem == null) {
+            return;
+        }
         PlaylistItemStatus     status         = playlistItem.getPlaylistItemStatus();
         ObservableList<String> styleClassList = pane.getStyleClass();
         styleClassList.removeAll(PLAYLIST_ITEM_PLAYING, PLAYLIST_ITEM_PLAYED, PLAYLIST_ITEM_MISSING, PLAYLIST_ITEM_SKIPPED);
@@ -216,7 +258,7 @@ public class PlaylistItemController implements Initializable {
 
     @FXML
     public void onDragDetected(MouseEvent mouseEvent) {
-        playlistDragHandler.dragInitiatedOn(pane);
+        playlistDragHandler.dragInitiatedOn(pane, rowIndex.getAsInt());
         if (!playlistSelectionModel.isSelected(playlistItem)) {
             playlistSelectionModel.selectOnly(playlistItem);
         }
@@ -232,7 +274,7 @@ public class PlaylistItemController implements Initializable {
 
     @FXML
     public void onDragDropped(DragEvent dragEvent) {
-        playlistDragHandler.dragDropped(pane, isLowerHalf(dragEvent));
+        playlistDragHandler.dragDropped(rowIndex.getAsInt(), isLowerHalf(dragEvent));
         dragEvent.setDropCompleted(true);
         dragEvent.consume();
     }

@@ -9,10 +9,8 @@ import com.github.curiousoddman.curious_tunes.event.player.PlaylistItemUpdatedEv
 import com.github.curiousoddman.curious_tunes.model.LibraryDragPayload;
 import com.github.curiousoddman.curious_tunes.model.LoadedFxml;
 import com.github.curiousoddman.curious_tunes.model.PlaybackState;
-import com.github.curiousoddman.curious_tunes.model.bundle.PlaylistItemResourceBundle;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistDragHandler;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItem;
-import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistItemMovement;
 import com.github.curiousoddman.curious_tunes.model.playlist.PlaylistModel;
 import com.github.curiousoddman.curious_tunes.util.TimeUtils;
 import com.github.curiousoddman.curious_tunes.util.UiStyles;
@@ -28,7 +26,9 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -36,10 +36,8 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,8 +47,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,15 +60,12 @@ import static com.sun.javafx.util.Utils.runOnFxThread;
 @Component
 @RequiredArgsConstructor
 public class LibraryPlaylistController implements Initializable {
-    private final Map<PlaylistItem, PlaylistItemController> playlistItemControllers = new HashMap<>();
-
     /**
-     * Rows that are shown now. Identity based: the same track may be in the queue twice.
+     * The rows showing a track now, by track. The queue is a virtualised list (doc/performance-review.md, item 3.1):
+     * there are rows only for the visible part, reused as it scrolls. Identity based: the same track may be in the
+     * queue twice.
      */
-    private final Map<PlaylistItem, Row> rows = new IdentityHashMap<>();
-
-    private record Row(Node node, PlaylistItemController controller) {
-    }
+    private final Map<PlaylistItem, PlaylistItemController> boundRows = new IdentityHashMap<>();
 
     private final PlaylistModel             playlistModel;
     private final FxmlLoader                fxmlLoader;
@@ -80,11 +73,9 @@ public class LibraryPlaylistController implements Initializable {
     private final LibraryDragPayload        libraryDragPayload;
 
     @FXML
-    private VBox       playlistVbox;
+    private ListView<PlaylistItem> playlistList;
     @FXML
-    private ScrollPane playlistScroll;
-    @FXML
-    private Label      queueSummaryLabel;
+    private Label                  queueSummaryLabel;
 
     // Drag state
     private       int                 dragFromIndex       = -1;
@@ -95,10 +86,9 @@ public class LibraryPlaylistController implements Initializable {
         }
 
         @Override
-        public void dragInitiatedOn(AnchorPane pane) {
-            dragFromIndex = playlistVbox.getChildren()
-                                        .indexOf(pane);
-            Dragboard        db = pane.startDragAndDrop(TransferMode.MOVE);
+        public void dragInitiatedOn(Node row, int index) {
+            dragFromIndex = index;
+            Dragboard        db = row.startDragAndDrop(TransferMode.MOVE);
             ClipboardContent cc = new ClipboardContent();
             cc.putString(String.valueOf(dragFromIndex)); // payload: from-index
             db.setContent(cc);
@@ -111,7 +101,7 @@ public class LibraryPlaylistController implements Initializable {
                                          .getSelectedIndices()
                                          .size();
                 if (count > 1) {
-                    db.setDragView(dragImage(pane, count));
+                    db.setDragView(dragImage(row, count));
                 }
             }
         }
@@ -142,9 +132,8 @@ public class LibraryPlaylistController implements Initializable {
         }
 
         @Override
-        public void dragDropped(AnchorPane pane, boolean below) {
-            int toIndex = playlistVbox.getChildren()
-                                      .indexOf(pane) + (below ? 1 : 0);
+        public void dragDropped(int index, boolean below) {
+            int toIndex = index + (below ? 1 : 0);
             if (libraryDragPayload.isActive()) {
                 insertFromLibrary(toIndex);
                 return;
@@ -157,14 +146,14 @@ public class LibraryPlaylistController implements Initializable {
 
         @Override
         public void dragDroppedAtEnd() {
+            int end = playlistModel.getPlaylistItems()
+                                   .size();
             if (libraryDragPayload.isActive()) {
-                insertFromLibrary(playlistVbox.getChildren()
-                                              .size());
+                insertFromLibrary(end);
                 return;
             }
             if (dragFromIndex >= 0) {
-                playlistModel.moveItemTo(dragFromIndex, playlistVbox.getChildren()
-                                                                    .size());
+                playlistModel.moveItemTo(dragFromIndex, end);
                 updatePlaylist();
             }
         }
@@ -174,20 +163,29 @@ public class LibraryPlaylistController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         updateSummary();
 
+        // The app's own selection model (PlaylistModel) selects rows; the list must not have a selection of its own.
+        playlistList.setSelectionModel(new NoSelectionModel<>());
+        playlistList.setCellFactory(list -> new PlaylistCell());
+        playlistList.setPlaceholder(new Label(""));
+
         // Scroll the list while a track is dragged close to its top or bottom edge.
-        playlistScroll.addEventFilter(DragEvent.DRAG_OVER, event -> {
-            double zone = 36;
-            double y    = event.getY();
+        playlistList.addEventFilter(DragEvent.DRAG_OVER, event -> {
+            double      zone = 36;
+            double      y    = event.getY();
+            VirtualFlow<?> flow = flow();
+            if (flow == null) {
+                return;
+            }
             if (y < zone) {
-                playlistScroll.setVvalue(Math.max(0, playlistScroll.getVvalue() - 0.02));
-            } else if (y > playlistScroll.getHeight() - zone) {
-                playlistScroll.setVvalue(Math.min(1, playlistScroll.getVvalue() + 0.02));
+                flow.scrollPixels(-8);
+            } else if (y > playlistList.getHeight() - zone) {
+                flow.scrollPixels(8);
             }
         });
 
         // Free space under the last row: drop here to move the track to the end.
         // (Rows consume the drag events themselves, so only the free space reaches these handlers.)
-        playlistScroll.setOnDragOver(event -> {
+        playlistList.setOnDragOver(event -> {
             boolean fromLibrary = libraryDragPayload.isActive();
             if ((dragFromIndex >= 0 || fromLibrary) && event.getDragboard()
                                                             .hasString()) {
@@ -195,7 +193,7 @@ public class LibraryPlaylistController implements Initializable {
             }
             event.consume();
         });
-        playlistScroll.setOnDragDropped(event -> {
+        playlistList.setOnDragDropped(event -> {
             playlistDragHandler.dragDroppedAtEnd();
             event.setDropCompleted(true);
             event.consume();
@@ -212,10 +210,8 @@ public class LibraryPlaylistController implements Initializable {
     public void onPlayerStatusEvent(PlayerStatusEvent playerStatusEvent) {
         playlistModel.updateStatus(playerStatusEvent);
         PlaylistItem           playlistItem           = playerStatusEvent.getPlaylistItem();
-        PlaylistItemController playlistItemController = playlistItemControllers.get(playlistItem);
-        if (playlistItemController == null) {
-            log.error("NPE: null for {}", playlistItem.getTitle());
-        } else {
+        PlaylistItemController playlistItemController = boundRows.get(playlistItem);
+        if (playlistItemController != null) {          // else not scrolled into view: styled when it is
             playlistItemController.updateStyleFromPlayerStatus();
         }
         if (playerStatusEvent.getStatus() == PlaybackState.LAUNCHING) {
@@ -229,7 +225,7 @@ public class LibraryPlaylistController implements Initializable {
     @EventListener
     public void onPlaylistItemUpdated(PlaylistItemUpdatedEvent event) {
         runOnFxThread(() -> {
-            PlaylistItemController controller = playlistItemControllers.get(event.getPlaylistItem());
+            PlaylistItemController controller = boundRows.get(event.getPlaylistItem());
             if (controller != null) {
                 controller.updateStyleFromPlayerStatus();
             }
@@ -254,33 +250,48 @@ public class LibraryPlaylistController implements Initializable {
         updatePlaylist();
     }
 
+    /**
+     * @param onlyIfHidden when true the list is scrolled only if the row is not fully visible
+     */
     private void scrollToItem(PlaylistItem item, boolean onlyIfHidden) {
-        int index = playlistModel.getPlaylistItems()
-                                 .indexOf(item);
-        ObservableList<Node> rows = playlistVbox.getChildren();
-        if (index < 0 || index >= rows.size()) {
+        int index = indexOf(item);
+        if (index < 0) {
             return;
         }
-        playlistScroll.applyCss();
-        playlistScroll.layout();
+        VirtualFlow<?> flow = flow();
+        if (flow == null || flow.getFirstVisibleCell() == null || flow.getLastVisibleCell() == null) {
+            playlistList.scrollTo(index);
+            return;
+        }
+        int first = flow.getFirstVisibleCell()
+                        .getIndex();
+        int last  = flow.getLastVisibleCell()
+                        .getIndex();
+        if (onlyIfHidden && index > first && index < last) {
+            return;                                     // fully visible (the first and last may be cut off)
+        }
+        int visible = Math.max(1, last - first);
+        playlistList.scrollTo(Math.max(0, index - visible / 2));     // center the row
+    }
 
-        double viewport = playlistScroll.getViewportBounds()
-                                        .getHeight();
-        double extra = playlistVbox.getHeight() - viewport;
-        if (extra <= 0) {
-            return;     // everything fits
+    /**
+     * Position of exactly this item (the same track may be in the queue twice).
+     */
+    private int indexOf(PlaylistItem item) {
+        List<PlaylistItem> items = playlistModel.getPlaylistItems();
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i) == item) {
+                return i;
+            }
         }
-        Node row = rows.get(index);
-        double rowTop = row.getBoundsInParent()
-                           .getMinY();
-        double rowBottom = row.getBoundsInParent()
-                              .getMaxY();
-        double viewTop = playlistScroll.getVvalue() * extra;
-        if (onlyIfHidden && rowTop >= viewTop && rowBottom <= viewTop + viewport) {
-            return;
-        }
-        double target = rowTop - (viewport - (rowBottom - rowTop)) / 2;     // center the row
-        playlistScroll.setVvalue(Math.max(0, Math.min(1, target / extra)));
+        return -1;
+    }
+
+    /**
+     * The list's scrolling part, or null before the list is shown.
+     */
+    private VirtualFlow<?> flow() {
+        return playlistList.lookup(".virtual-flow") instanceof VirtualFlow<?> flow ? flow : null;
     }
 
     private void updateSummary() {
@@ -301,80 +312,99 @@ public class LibraryPlaylistController implements Initializable {
     }
 
     /**
-     * Brings the rows in line with the queue. Rows of tracks that are still in the queue are kept (so their
-     * selection and style stay, and the scroll position is preserved); only new tracks get new rows.
+     * Brings the list in line with the queue, keeping the scroll position when the queue only changed (a completely
+     * new queue starts at the top).
      */
     private void updatePlaylist() {
         runOnFxThread(this::syncRows);
     }
 
     private void syncRows() {
-        List<PlaylistItem>     items  = playlistModel.getPlaylistItems();
-        Map<PlaylistItem, Row> synced = new IdentityHashMap<>();
-        List<Node>             nodes  = new ArrayList<>(items.size());
-        boolean                reused = false;
-        for (PlaylistItem item : items) {
-            Row row = rows.get(item);
-            if (row == null) {
-                row = buildRow(item);
-            } else {
-                reused = true;
-            }
-            synced.put(item, row);
-            nodes.add(row.node());
-        }
-
-        rows.forEach((item, row) -> {
-            if (!synced.containsKey(item)) {
-                row.controller()
-                   .dispose();          // its track left the queue
-            }
-        });
-        rows.clear();
-        rows.putAll(synced);
-        playlistItemControllers.clear();
-        synced.forEach((item, row) -> playlistItemControllers.put(item, row.controller()));
-
-        ObservableList<Node> children = playlistVbox.getChildren();
-        if (!children.equals(nodes)) {
-            double top = scrollTop();
-            children.setAll(nodes);
+        List<PlaylistItem>     items   = playlistModel.getPlaylistItems();
+        ObservableList<PlaylistItem> shown = playlistList.getItems();
+        if (!sameItems(shown, items)) {
+            boolean reused = containsAny(shown, items);
+            int     top    = firstVisibleIndex();
+            shown.setAll(items);
             if (reused) {
-                restoreScrollTop(top);
+                playlistList.scrollTo(Math.min(top, Math.max(0, items.size() - 1)));
             } else {
-                playlistScroll.setVvalue(0);        // a completely new queue starts at the top
+                playlistList.scrollTo(0);
             }
         }
+        boundRows.values()
+                 .forEach(PlaylistItemController::updateStyleFromPlayerStatus);
         updateSummary();
     }
 
-    private double scrollTop() {
-        double extra = Math.max(0, playlistVbox.getHeight() - playlistScroll.getViewportBounds()
-                                                                            .getHeight());
-        return playlistScroll.getVvalue() * extra;
+    private int firstVisibleIndex() {
+        VirtualFlow<?> flow = flow();
+        return flow == null || flow.getFirstVisibleCell() == null ? 0 : flow.getFirstVisibleCell()
+                                                                          .getIndex();
     }
 
-    private void restoreScrollTop(double top) {
-        playlistScroll.applyCss();
-        playlistScroll.layout();
-        double extra = playlistVbox.getHeight() - playlistScroll.getViewportBounds()
-                                                                .getHeight();
-        playlistScroll.setVvalue(extra <= 0 ? 0 : Math.max(0, Math.min(1, top / extra)));
+    private static boolean sameItems(List<PlaylistItem> a, List<PlaylistItem> b) {
+        if (a.size() != b.size()) {
+            return false;
+        }
+        for (int i = 0; i < a.size(); i++) {
+            if (a.get(i) != b.get(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    private Row buildRow(PlaylistItem playlistItem) {
-        LoadedFxml<PlaylistItemController> loadedFxml = fxmlLoader.load(
-                FxmlView.PLAYLIST_ITEM,
-                new PlaylistItemResourceBundle(
-                        playlistItem.getArtistName(),
-                        playlistItem,
-                        playlistModel,
-                        playlistDragHandler
-                )
-        );
-        PlaylistItemController controller = loadedFxml.controller();
-        controller.updateStyleFromPlayerStatus();
-        return new Row(loadedFxml.parent(), controller);
+    private static boolean containsAny(List<PlaylistItem> before, List<PlaylistItem> after) {
+        Map<PlaylistItem, Boolean> seen = new IdentityHashMap<>();
+        before.forEach(item -> seen.put(item, true));
+        for (PlaylistItem item : after) {
+            if (seen.containsKey(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * A row of the queue: one {@code playlist-item.fxml} per cell, loaded once and bound to whichever track the cell
+     * shows. Only the visible rows exist (doc/performance-review.md, item 3.1).
+     */
+    private final class PlaylistCell extends ListCell<PlaylistItem> {
+        private final Node                   node;
+        private final PlaylistItemController controller;
+
+        PlaylistCell() {
+            LoadedFxml<PlaylistItemController> loaded = fxmlLoader.load(FxmlView.PLAYLIST_ITEM, null);
+            node = loaded.parent();
+            controller = loaded.controller();
+            controller.setup(playlistModel, playlistDragHandler, this::getIndex);
+            if (node instanceof Region region) {
+                region.setMinWidth(0);
+                region.prefWidthProperty()
+                      .bind(playlistList.widthProperty()
+                                        .subtract(20));     // room for the scroll bar: no horizontal scrolling
+            }
+            getStyleClass().add("playlist-cell");
+            setText(null);
+        }
+
+        @Override
+        protected void updateItem(PlaylistItem item, boolean empty) {
+            PlaylistItem previous = controller.getPlaylistItem();
+            if (previous != null && boundRows.get(previous) == controller) {
+                boundRows.remove(previous);
+            }
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+                controller.unbind();
+                setGraphic(null);
+                return;
+            }
+            controller.bind(item);
+            boundRows.put(item, controller);
+            setGraphic(node);
+        }
     }
 
     public void onUpButtonClick(ActionEvent actionEvent) {
@@ -382,9 +412,10 @@ public class LibraryPlaylistController implements Initializable {
     }
 
     public void moveSelectedUp() {
-        List<PlaylistItemMovement> movements = playlistModel.moveSelectedUp();
-        ObservableList<Node>       nodes     = playlistVbox.getChildren();
-        movements.forEach(m -> swapNodes(nodes, m.fromIndex(), m.toIndex()));
+        if (!playlistModel.moveSelectedUp()
+                          .isEmpty()) {
+            syncRows();
+        }
     }
 
     public void onDownButtonClick(ActionEvent actionEvent) {
@@ -392,24 +423,15 @@ public class LibraryPlaylistController implements Initializable {
     }
 
     public void moveSelectedDown() {
-        List<PlaylistItemMovement> movements = playlistModel.moveSelectedDown();
-        ObservableList<Node>       nodes     = playlistVbox.getChildren();
-        movements.forEach(m -> swapNodes(nodes, m.fromIndex(), m.toIndex()));
+        if (!playlistModel.moveSelectedDown()
+                          .isEmpty()) {
+            syncRows();
+        }
     }
 
     public void selectAll() {
         playlistModel.getSelectionModel()
                      .selectAll();
-    }
-
-    private void swapNodes(ObservableList<Node> children, int i1, int i2) {
-        if (i1 < 0 || i2 < 0 || i1 >= children.size() || i2 >= children.size()) {
-            return;
-        }
-        Region placeholder = new Region();
-        Node   tmp         = children.set(i1, placeholder);
-        Node   node2       = children.set(i2, tmp);
-        children.set(i1, node2);
     }
 
     @FXML
@@ -443,7 +465,7 @@ public class LibraryPlaylistController implements Initializable {
                 "Remove all " + count + (count == 1 ? " track" : " tracks") + " from the queue?",
                 ButtonType.OK, ButtonType.CANCEL);
         alert.setHeaderText("Clear the queue?");
-        alert.initOwner(playlistVbox.getScene()
+        alert.initOwner(playlistList.getScene()
                                     .getWindow());
         UiStyles.apply(alert);
         if (alert.showAndWait()
