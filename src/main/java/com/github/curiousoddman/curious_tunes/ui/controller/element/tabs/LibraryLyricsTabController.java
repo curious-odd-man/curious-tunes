@@ -236,13 +236,13 @@ public class LibraryLyricsTabController implements Initializable {
     }
 
     private void changeFontSize(double delta) {
-        double size = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, fontSize + delta));
+        double size = Math.clamp(fontSize + delta, MIN_FONT_SIZE, MAX_FONT_SIZE);
         applyFontSize(size);
         userPreferencesService.saveLyricsFontSize(size);
     }
 
     private void applyFontSize(double size) {
-        fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, size));
+        fontSize = Math.clamp(size, MIN_FONT_SIZE, MAX_FONT_SIZE);
         lyricsTextArea.setFont(Font.font(fontSize));
         lyricsReadLabel.setFont(Font.font(fontSize));
         fontSmallerButton.setDisable(fontSize <= MIN_FONT_SIZE);

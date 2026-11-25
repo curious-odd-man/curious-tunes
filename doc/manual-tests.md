@@ -35,7 +35,7 @@ sensible order: start-up problems hide everything else.
 - [ ] With `-Dctunes.priority=high` the log and Task Manager say **High**; with `normal`, **Normal**; with a typo
   such as `fast`, a warning and **Above normal**.
 - [ ] Playing the first `.m4a` logs **`ALAC streaming: JavaFX media patch 25.0.1 active`**. If it says *not active*,
-  ALAC still plays (through the HTTP fallback): note which launch mode it was.
+  ALAC won't play (there's no fallback any more): note which launch mode it was.
 
 ## 2. ALAC playback (option G)
 
@@ -55,10 +55,34 @@ Use a few `.m4a` (ALAC) tracks and a few `.mp3`.
   in which case the virtual WAV would need to deliver 16-bit.
 - [ ] MP3 tracks play exactly as before.
 - [ ] **Spectrum and waveform** react to ALAC tracks the same as to MP3 (they come from the same player).
-- [ ] **Fallback** (optional): start `gradle run` without the two `jfxPatchArgs` in `build.gradle`. If `javafx.media`
-  is a named module there, the log says *not active* and ALAC still plays through HTTP.
-- [ ] The HTTP fallback listens on this computer only: from another device on your network,
-  `http://<this-pc-ip>:<SERVER_PORT>/current/track?name=x` must fail to connect.
+- [ ] If you have an **AAC** `.m4a` (an iTunes Store purchase or an AAC import, not ALAC): it plays, from the file.
+- [ ] **Patch missing** (optional): start `gradle run` without the two `jfxPatchArgs` in `build.gradle`. If
+  `javafx.media` is a named module there, the log has an *ALAC streaming: … not active* error, and playing an
+  ALAC track shows the usual playback-error notification instead of hanging.
+
+## 2a. No web server
+
+- [ ] The start-up log has no `Tomcat started on port` line, and nothing listens on the old ports: `netstat -ano |
+      findstr :7777` (prod) or `:6666` (dev, apart from the H2 console below) shows nothing.
+- [ ] Start-up feels at least as quick as before (it should be about a second quicker).
+- [ ] **Dev profile:** the log says `H2 console: http://…:6666`; opening `http://localhost:6666` shows the H2 login.
+  Connect with the JDBC URL from the log (`jdbc:h2:file:~/ctunes/ctunes-dev`, user `sa`, password `sa`) while the
+  app is running; the tables are there.
+- [ ] **Prod profile:** no H2 console line in the log.
+- [ ] Lyrics search still finds lyrics. LyricsMode is now on HTTPS and LyricsnMusic is gone; the log shows which
+  source answered.
+- [ ] The first start after this update applies migration `V008` (log: `Migrating schema "PUBLIC" to version "8 -
+      drop pending action"`). There is no `Executing pending actions...` line any more.
+- [ ] The tag editor and the lyrics tab still save, and a rescan still reads tags and covers (the tag classes are now
+  read-only).
+
+## 2b. After the inspection fixes
+
+- [ ] **History tab:** the table still fills the width and columns can be resized; the last column takes up the slack
+  (the resize policy constant changed from the deprecated one).
+- [ ] Add albums to the queue 5+ times, then click around the queue: it stays responsive, and in the dev log a
+  selection change no longer prints the whole queue several times.
+- [ ] The window icons (taskbar, title bar, Alt+Tab) and the preloader icon still show.
 
 ## 3. Playback window: spectrum visualiser and calibration
 

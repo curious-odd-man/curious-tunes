@@ -12,7 +12,6 @@ public final class UiIcons {
     public static final String PLAY            = "mdi2p-play";
     public static final String PAUSE           = "mdi2p-pause";
     public static final String SKIP_NEXT       = "mdi2s-skip-next";
-    public static final String SKIP_PREVIOUS   = "mdi2s-skip-previous";
     public static final String VOLUME_HIGH     = "mdi2v-volume-high";
     public static final String VOLUME_MEDIUM   = "mdi2v-volume-medium";
     public static final String VOLUME_LOW      = "mdi2v-volume-low";

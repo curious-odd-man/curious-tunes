@@ -9,7 +9,6 @@ import com.github.curiousoddman.curious_tunes.event.player.PlaylistChangedEvent;
 import com.github.curiousoddman.curious_tunes.event.player.PlaylistResetEvent;
 import com.github.curiousoddman.curious_tunes.model.Shuffle;
 import com.github.curiousoddman.curious_tunes.model.info.TrackInfo;
-import javafx.beans.InvalidationListener;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -58,16 +56,12 @@ public class PlaylistModel {
             return;
         }
         selectionModel.clearSelection();
-        playlistItems.addAll(Math.max(0, Math.min(index, playlistItems.size())), toInsert);
+        playlistItems.addAll(Math.clamp(index, 0, playlistItems.size()), toInsert);
         logPlaylistItems();
         changed();
     }
 
     public void addItems(AddToPlaylistEvent addToPlaylistEvent) {
-        selectionModel.getSelectedIndices()
-                      .addListener((InvalidationListener) o -> {
-                          logPlaylistItems();
-                      });
         List<PlaylistItem> tracksToAdd = new ArrayList<>();
         tracksToAdd.addAll(getTracks(addToPlaylistEvent));
         tracksToAdd.addAll(getTracksForArtist(addToPlaylistEvent));
@@ -274,26 +268,6 @@ public class PlaylistModel {
         eventPublisher.publishEvent(new PlaylistChangedEvent(this));
     }
 
-    public OptionalInt deleteSelected() {
-        int selectedIndex = selectionModel.getSelectedIndex();
-        if (selectedIndex < 0) {
-            return OptionalInt.empty();
-        }
-
-        PlaylistItem item = playlistItems.get(selectedIndex);
-        playlistItems.remove(selectedIndex);
-        selectionModel.notifyRemoved(selectedIndex);
-
-        // If this was the currently-playing item, clear it
-        if (item.equals(currentlyPlayingItem)) {
-            currentlyPlayingItem = null;
-        }
-
-        logPlaylistItems();
-        changed();
-        return OptionalInt.of(selectedIndex);
-    }
-
     public List<Integer> deleteAllSelected() {
         List<Integer> sorted = selectionModel.getSortedSelectedIndices();
         if (sorted.isEmpty()) {
@@ -331,22 +305,6 @@ public class PlaylistModel {
         if (currentlyPlayingItem != null) {
             playlistItems.addFirst(currentlyPlayingItem);
         }
-    }
-
-    public Optional<PlaylistItem> getNextForPlayback() {
-        logPlaylistItems();
-
-        int nextIndex = currentlyPlayingItem == null
-                ? 0
-                : (playlistItems.indexOf(currentlyPlayingItem) + 1);
-
-        if (nextIndex < playlistItems.size()) {
-            PlaylistItem playlistItem = playlistItems.get(nextIndex);
-            log.info("▶ Next item to play is: {}", playlistItem.getTrackRecord()
-                                                               .getTitle());
-            return Optional.of(playlistItem);
-        }
-        return Optional.empty();
     }
 
     public void updateStatus(PlayerStatusEvent playerStatusEvent) {

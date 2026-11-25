@@ -326,7 +326,7 @@ public class ProgressCanvasController implements TrackProgressController {
             hoverTip.hide();
             return;
         }
-        double   fraction = Math.max(0, Math.min(1, hoverX / width));
+        double   fraction = Math.clamp(hoverX / width, 0, 1);
         String   text     = TimeUtils.secondsToHumanTime((int) (fraction * totalDuration.toSeconds()));
         double[] bars     = waveformModel.getBars();
         int      index    = Math.min(bars.length - 1, (int) (fraction * bars.length));

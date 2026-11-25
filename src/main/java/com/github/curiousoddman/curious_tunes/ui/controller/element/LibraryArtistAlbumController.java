@@ -69,7 +69,6 @@ public class LibraryArtistAlbumController implements Initializable {
     public        BorderPane                pane;
     public        ImageView                 playImageButton;
 
-    private final List<LibraryArtistAlbumDiscController> discControllers = new ArrayList<>();
     private       AlbumInfo                              albumInfo;
     private       FadeTransition                         playFade;
 
@@ -111,7 +110,6 @@ public class LibraryArtistAlbumController implements Initializable {
                                 albumInfo
                         )
                 );
-                discControllers.add(loaded.controller());
                 albumDiscsVbox.getChildren()
                               .add(loaded.parent());
             }

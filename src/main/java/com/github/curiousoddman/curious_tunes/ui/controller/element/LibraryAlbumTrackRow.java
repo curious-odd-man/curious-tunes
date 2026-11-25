@@ -91,10 +91,6 @@ public class LibraryAlbumTrackRow extends HBox {
         updateNowPlayingStyle();
     }
 
-    public TrackInfo getTrackInfo() {
-        return trackInfo;
-    }
-
     private void buildLayout() {
         getStyleClass().add("library-album-track");
         setFillHeight(false);

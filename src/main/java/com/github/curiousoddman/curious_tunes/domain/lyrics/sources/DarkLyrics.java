@@ -39,6 +39,7 @@ public class DarkLyrics implements LyricsSource {
                 .matcher(songData.getAlbum().toLowerCase())
                 .replaceAll("");
 
+        // Plain HTTP on purpose: DarkLyrics doesn't serve HTTPS.
         String url = String.format(
                 "http://www.darklyrics.com/lyrics/%s/%s.html",
                 artist,

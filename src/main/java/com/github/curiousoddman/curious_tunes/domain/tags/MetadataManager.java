@@ -70,7 +70,7 @@ public class MetadataManager {
                     .filter(rb -> !(rb instanceof FreeBox))
                     .filter(rb -> !(rb instanceof UnknownBox))
                     .toList();
-            return new Mp4MetadataTags(isoFile, allBoxes, file);
+            return new Mp4MetadataTags(allBoxes, file);
         } catch (Exception e) {
             log.error("Failed to extract tags {}", file, e);
             return new Mp4FailedParsingTags(file.toString(), e.getMessage());

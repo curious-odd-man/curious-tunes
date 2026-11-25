@@ -50,10 +50,10 @@ public class MediaPlayerListeningTracker {
                                 float master = windowsVolumeService.getMasterVolume();
                                 double effective = windowsVolumeService.getEffectiveVolume(mpVol);
 
-                                log.info(String.format("MediaPlayer volume: %.0f%%", mpVol * 100));
-                                log.info(String.format("Windows master:     %.0f%%", master * 100));
+                                log.info("MediaPlayer volume: {}%", Math.round(mpVol * 100));
+                                log.info("Windows master:     {}%", Math.round(master * 100));
                                 double volumeToReport = effective * 100;
-                                log.info(String.format("Effective volume:   %.0f%%", volumeToReport));
+                                log.info("Effective volume:   {}%", Math.round(volumeToReport));
 
                                 log.info("Played 30 percent, current volume is: {}", volumeToReport);
                                 eventPublisher.publishEvent(new PlayedThirdOfTrackEvent(

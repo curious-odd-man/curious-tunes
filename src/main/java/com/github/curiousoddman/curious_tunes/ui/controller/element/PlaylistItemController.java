@@ -156,20 +156,6 @@ public class PlaylistItemController implements Initializable {
         return playlistItem;
     }
 
-    /**
-     * The row is no longer shown (its track left the queue): stop listening to the shared selection list. Without
-     * this, the selection list keeps every row ever created alive, with its nodes and cover
-     * (doc/performance-review.md, item 3.2), and notifies all of them on every selection change.
-     */
-    public void dispose() {
-        if (playlistSelectionModel != null) {
-            playlistSelectionModel.getSelectionModel()
-                                  .getSelectedItems()
-                                  .removeListener(selectionListener);
-        }
-        image.setImage(null);
-    }
-
     private void onPlaylistSelectionChanged(ListChangeListener.Change<? extends PlaylistItem> change) {
         if (playlistItem == null) {
             return;                                     // an empty row

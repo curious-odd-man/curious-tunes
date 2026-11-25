@@ -1,5 +1,6 @@
 package com.github.curiousoddman.curious_tunes.ui.playback;
 
+import com.github.curiousoddman.curious_tunes.util.AppResources;
 import com.github.curiousoddman.curious_tunes.domain.player.AudioPlayer;
 import com.github.curiousoddman.curious_tunes.domain.player.PlaybackSessionTimer;
 import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPreferencesService;
@@ -197,7 +198,6 @@ public class PlaybackWindow {
     private final List<FadeTransition> chromeFades = new ArrayList<>();
     private       boolean              wideBySize;           // the window is large enough for the wide view
     private       Runnable             volumeFill;
-    private       HBox                 headerBar;
     private       Button               libraryButton;
 
     // ── State ────────────────────────────────────────────────────────────────
@@ -703,7 +703,7 @@ public class PlaybackWindow {
         artView.setFitHeight(artSize);
 
         // The spectrum sits under the art, as wide as the art.
-        double spectrumHeight = Math.max(MIN_SPECTRUM_HEIGHT, Math.min(MAX_SPECTRUM_HEIGHT, artSize * SPECTRUM_HEIGHT_SHARE));
+        double spectrumHeight = Math.clamp(artSize * SPECTRUM_HEIGHT_SHARE, MIN_SPECTRUM_HEIGHT, MAX_SPECTRUM_HEIGHT);
         Region spectrum       = spectrumView.getNode();
         spectrum.setPrefSize(artSize, spectrumHeight);
         spectrum.setMinSize(artSize, spectrumHeight);
@@ -726,7 +726,6 @@ public class PlaybackWindow {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         HBox row = track(new HBox(10, libraryButton, spacer, sessionLabel, lyricsToggleButton, fullscreenButton, viewToggleButton));
         row.setAlignment(Pos.CENTER_LEFT);
-        headerBar = row;
         return row;
     }
 
@@ -1284,7 +1283,7 @@ public class PlaybackWindow {
 
     private static Image placeholder() {
         if (placeholderImage == null) {
-            placeholderImage = new Image(PlaybackWindow.class.getResourceAsStream(NO_IMAGE));
+            placeholderImage = AppResources.image(NO_IMAGE);
         }
         return placeholderImage;
     }

@@ -2,11 +2,10 @@ package com.github.curiousoddman.curious_tunes.domain.tags;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 
-import java.io.IOException;
-
+/**
+ * Tags read from an audio file. Read-only: edits from the tag editor and the lyrics tab are stored in the database.
+ */
 public interface MetadataTags {
-    <T> T validate(String description, T field, T newValue);
-
     boolean updateTrackIfChanged(TrackRecord trackRecord, Integer newAlbumId);
 
     String getFileLocation();
@@ -34,26 +33,4 @@ public interface MetadataTags {
     String getLyrics();
 
     AlbumCover getAlbumCover();
-
-    void setArtist(String artist);
-
-    void setAlbum(String album);
-
-    void setTitle(String title);
-
-    void setTrackNumber(Integer trackNumber);
-
-    void setReleaseDate(String releaseDate);
-
-    void setDiskNumber(Integer diskNumber);
-
-    void setGenre(String genre);
-
-    void setComposer(String composer);
-
-    void setLyrics(String lyrics);
-
-    void setAlbumCover(AlbumCover albumCover);
-
-    void updateFile() throws IOException;
 }

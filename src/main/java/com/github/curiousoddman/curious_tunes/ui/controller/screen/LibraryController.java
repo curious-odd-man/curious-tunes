@@ -363,7 +363,6 @@ public class LibraryController implements Initializable {
     @SneakyThrows
     public void onShowArtistAlbumEvent(ShowArtistAlbums showArtistAlbums) {
         ArtistRecord artistRecord = showArtistAlbums.getArtistRecord();
-        int          artistId     = artistRecord.getId();
         String       artistName   = artistRecord.getName();
         artistTitle.setText(artistName);
 
@@ -728,7 +727,7 @@ public class LibraryController implements Initializable {
                 double top = album.parent()
                                   .getBoundsInParent()
                                   .getMinY();
-                albumsScroll.setVvalue(Math.max(0, Math.min(1, top / extra)));
+                albumsScroll.setVvalue(Math.clamp(top / extra, 0, 1));
             }
         });
     }
@@ -1044,7 +1043,7 @@ public class LibraryController implements Initializable {
             return;
         }
         int index = (int) Math.floor(y / height * ARTIST_LETTERS.length());
-        index = Math.max(0, Math.min(ARTIST_LETTERS.length() - 1, index));
+        index = Math.clamp(index, 0, ARTIST_LETTERS.length() - 1);
         jumpToLetter(ARTIST_LETTERS.charAt(index));
     }
 
@@ -1581,8 +1580,8 @@ public class LibraryController implements Initializable {
         if (duration == null) {
             return;
         }
-        double seekTo = Math.max(0, Math.min(1,
-                (mouseEvent.getX() - currentTrackProgress.getLayoutX()) / currentTrackProgress.getWidth()));
+        double seekTo = Math.clamp(
+                (mouseEvent.getX() - currentTrackProgress.getLayoutX()) / currentTrackProgress.getWidth(), 0, 1);
         log.info("Seek to {} : {}", seekTo, duration * seekTo);
         audioPlayer.seek(Duration.seconds(duration * seekTo));
     }

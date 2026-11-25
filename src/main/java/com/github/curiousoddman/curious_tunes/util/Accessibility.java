@@ -34,7 +34,7 @@ public final class Accessibility {
         if (!noText || control.getGraphic() == null || control.getAccessibleText() != null) {
             return;
         }
-        Tooltip tooltip = ((Control) control).getTooltip();
+        Tooltip tooltip = control.getTooltip();
         if (tooltip != null && tooltip.getText() != null && !tooltip.getText()
                                                                     .isBlank()) {
             control.setAccessibleText(tooltip.getText()

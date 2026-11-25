@@ -62,7 +62,7 @@ public class PlaybackWaveformView {
         pane.setOnMouseClicked(event -> {
             double width = pane.getWidth();
             if (width > 0 && totalMillis > 0) {
-                double fraction = Math.max(0, Math.min(1, event.getX() / width));
+                double fraction = Math.clamp(event.getX() / width, 0, 1);
                 onSeek.accept(fraction);
             }
         });
@@ -94,7 +94,7 @@ public class PlaybackWaveformView {
             hoverTip.hide();
             return;
         }
-        double   fraction = Math.max(0, Math.min(1, hoverX / width));
+        double   fraction = Math.clamp(hoverX / width, 0, 1);
         String   text     = TimeUtils.secondsToHumanTime((int) (fraction * totalMillis / 1000));
         double[] bars     = model.getBars();
         int      index    = Math.min(bars.length - 1, (int) (fraction * bars.length));

@@ -1,6 +1,6 @@
 spring:
   main:
-    web-application-type: servlet
+    web-application-type: none   # desktop app: no HTTP server
   application:
     name: curious-tunes
   datasource:
@@ -11,13 +11,11 @@ spring:
   sql.init.mode: always
   jpa.defer-datasource-initialization: false
   title: cTunes
-  h2:
-    console:
-      enabled: ${H2_CONSOLE_ENABLED}
 
-server:
-  port: ${SERVER_PORT}
-  address: 127.0.0.1      # the audio endpoint is for this computer only, not the network
+ctunes:
+  h2-console:                 # H2's own web console (H2DevConsole), for development
+    enabled: ${H2_CONSOLE_ENABLED}
+    port: ${H2_CONSOLE_PORT:8082}
 
 logging.level:
   org.jooq.Constants: off

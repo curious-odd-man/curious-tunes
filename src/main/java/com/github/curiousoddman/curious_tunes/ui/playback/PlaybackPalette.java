@@ -123,6 +123,6 @@ public record PlaybackPalette(Color bgTop,
     }
 
     private static double clamp(double v, double min, double max) {
-        return Math.max(min, Math.min(max, v));
+        return Math.clamp(v, min, max);
     }
 }

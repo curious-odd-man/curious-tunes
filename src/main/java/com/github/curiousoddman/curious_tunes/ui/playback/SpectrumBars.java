@@ -88,7 +88,7 @@ public class SpectrumBars {
      * Moves the bars and peaks on by {@code seconds}.
      */
     public void step(double seconds) {
-        double dt     = Math.max(0, Math.min(seconds, 0.1));       // a long pause between frames must not jump
+        double dt     = Math.clamp(seconds, 0, 0.1);       // a long pause between frames must not jump
         double attack = 1 - Math.exp(-ATTACK_PER_SEC * dt);
         for (int i = 0; i < barCount; i++) {
             double target = targets[i];
@@ -168,6 +168,6 @@ public class SpectrumBars {
     }
 
     private static double clamp(double value) {
-        return Math.max(0, Math.min(1, value));
+        return Math.clamp(value, 0, 1);
     }
 }

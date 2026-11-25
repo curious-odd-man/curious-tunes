@@ -20,11 +20,11 @@ public class ExceptionTranslator implements ExecuteListener {
 
         // jOOQ exceptions (e.g. NoDataFoundException) have no underlying SQLException
         if (sqlException == null) {
-            Exception cause = ctx.exception();
-            if (cause instanceof RuntimeException re) {
-                throw re;
+            RuntimeException cause = ctx.exception();
+            if (cause != null) {
+                throw cause;
             }
-            throw new RuntimeException("Unexpected jOOQ error", cause);
+            throw new IllegalStateException("jOOQ reported an error without an exception");
         }
 
         SQLDialect dialect = ctx.configuration().dialect();

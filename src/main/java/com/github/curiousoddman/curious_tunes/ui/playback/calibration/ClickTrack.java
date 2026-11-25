@@ -80,7 +80,7 @@ public final class ClickTrack {
         }
         short[] result = new short[signal.length];
         for (int i = 0; i < signal.length; i++) {
-            double clipped = Math.max(-1, Math.min(1, signal[i]));
+            double clipped = Math.clamp(signal[i], -1, 1);
             result[i] = (short) Math.round(clipped * Short.MAX_VALUE);
         }
         return result;

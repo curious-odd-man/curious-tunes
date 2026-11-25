@@ -1,6 +1,5 @@
 package com.github.curiousoddman.curious_tunes.util.async;
 
-import lombok.SneakyThrows;
 
 public interface WaveformWriter {
     void append(double timestamp,

@@ -8,7 +8,6 @@ import com.github.curiousoddman.curious_tunes.dbobj.tables.Album;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.AlbumCoverThumb;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Artist;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.FlywaySchemaHistory;
-import com.github.curiousoddman.curious_tunes.dbobj.tables.PendingAction;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.PlaybackHistory;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.Track;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.TrackOverridesHistory;
@@ -66,11 +65,6 @@ public class Public extends SchemaImpl {
     public final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY;
 
     /**
-     * The table <code>public.PENDING_ACTION</code>.
-     */
-    public final PendingAction PENDING_ACTION = PendingAction.PENDING_ACTION;
-
-    /**
      * The table <code>public.PLAYBACK_HISTORY</code>.
      */
     public final PlaybackHistory PLAYBACK_HISTORY = PlaybackHistory.PLAYBACK_HISTORY;
@@ -110,7 +104,6 @@ public class Public extends SchemaImpl {
             AlbumCoverThumb.ALBUM_COVER_THUMB,
             Artist.ARTIST,
             FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY,
-            PendingAction.PENDING_ACTION,
             PlaybackHistory.PLAYBACK_HISTORY,
             Track.TRACK,
             TrackOverridesHistory.TRACK_OVERRIDES_HISTORY,

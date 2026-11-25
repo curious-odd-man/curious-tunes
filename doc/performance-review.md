@@ -231,8 +231,10 @@ before anything touches the disk.
   25.0.1 files in `src/jfxPatch/original/` for diffing. It was compile-checked and exercised against JavaFX 25.0.1's
   real `Locator` and `ConnectionHolder` sources (pull and push reads, seek, close, unregistered URIs).
 - Step 0 (the spike) was folded into the real thing: `AlacStreaming.isAvailable()` checks at run time that the
-  patch is active and otherwise logs a warning and uses the fallback.
-- The fallback is the existing HTTP endpoint, so step 7 (removing the web layer) is not done.
+  patch is active and otherwise logs an error.
+- **Step 7 done: the web layer is gone.** There is no ALAC fallback any more: if the patch isn't active, ALAC tracks
+  fail with the player's usual error notification. AAC `.m4a` files (not ALAC) play from their file, which JavaFX
+  decodes itself; they went through the HTTP decoder before, which couldn't decode them either.
 - **Still to verify on Windows:** an ALAC track plays, seeks and moves on to the next track; the log says
   `ALAC streaming: JavaFX media patch 25.0.1 active`, in both `gradle run` and the deployed jar.
 
@@ -278,6 +280,8 @@ before anything touches the disk.
    `HttpRestController`, the HTTP branch of `MediaProvider`,
    `spring-boot-starter-web`, `spring-boot-starter-actuator`, `server.port` / `SERVER_PORT`, and set
    `spring.main.web-application-type: none` (item 8.1). Keep the H2 console in a `dev` profile only, if wanted.
+   **Status: done**, without a fallback (see the step 6 status above). The H2 console is now H2's own web server
+   (`H2DevConsole`), on when `H2_CONSOLE_ENABLED` is true (the dev profile), at `http://localhost:6666`.
 8. **On every JavaFX upgrade:** diff the new `Locator.java` and `ConnectionHolder.java` against the stored originals,
    re-apply the two edits, run the spike test (step 0) and a seek test. Add a test that fails when the JavaFX version
    in `build.gradle` differs from the version the patch was made for, as a reminder.
@@ -739,6 +743,9 @@ memory, and open a network port (see 1.3), all for one internal endpoint.
 
 **How:** after option G (section 1), remove both starters and set `spring.main.web-application-type: none`. Keep the H2
 console in a `dev` profile only, if you still want it.
+
+**Status: done.** Both starters, `spring-boot-h2console`, `alac2wav`, `HttpRestController` and the `server.*` settings
+are removed; `web-application-type` is `none`.
 
 ### 8.2 Verbose logging in the shipped config
 

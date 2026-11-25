@@ -60,7 +60,7 @@ public class LyricsMode implements LyricsSource {
                         : "0-9";
 
         String url = String.format(
-                "http://www.lyricsmode.com/lyrics/%s/%s/%s.html",
+                "https://www.lyricsmode.com/lyrics/%s/%s/%s.html",
                 firstCharFolder,
                 artist,
                 title

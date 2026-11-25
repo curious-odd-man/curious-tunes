@@ -169,7 +169,7 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         } catch (Exception e) {
             // One unreadable file must not stop the scan of everything after it.
             counts[3]++;
-            log.warn("Skipped {}: {}", file, e.toString(), e);
+            log.warn("Skipped {}: {}", file, e.getMessage(), e);
         }
     }
 
@@ -313,13 +313,4 @@ public class FilesScanningService /*implements StartupRunnable*/ {
         }
         return description;
     }
-
-    // Uncomment if need to bulk fix lyrics again
-//    @Override
-//    public void onStartup() {
-//        List<TrackRecord> trackRecords = dataAccess.getAllTracks();
-//        for (TrackRecord trackRecord : trackRecords) {
-//            autoFixLyrics(trackRecord);
-//        }
-//    }
 }

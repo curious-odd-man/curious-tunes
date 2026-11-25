@@ -38,10 +38,7 @@ public enum UserPrefKey {
     // ── Library ─────────────────────────────────────────────────────────────
     LIBRARY_ROOT("library.root"),
     RECENT_LIBRARY_ROOTS("library.roots.recent"),    // folders scanned last, one per line
-    PLAY_SHUFFLED("playback.default.shuffled"),      // the play buttons of artists and albums shuffle                    // last folder used for "Rescan library"
-
-    // ── Session ─────────────────────────────────────────────────────────────
-    LAST_PLAYLIST_ID("session.last.playlist.id"); // FK → playlists.id
+    PLAY_SHUFFLED("playback.default.shuffled");      // the play buttons of artists and albums shuffle
 
     private final String key;
 }

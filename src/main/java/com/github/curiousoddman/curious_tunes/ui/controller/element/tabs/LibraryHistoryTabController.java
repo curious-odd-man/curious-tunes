@@ -109,7 +109,7 @@ public class LibraryHistoryTabController implements Initializable {
                                                                               .album()));
         artistColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue()
                                                                                .artist()));
-        latestSongsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        latestSongsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         latestSongsTable.setPlaceholder(new Label(""));         // the empty state is shown by emptyLabel
         latestSongsTable.setItems(rows);
         latestSongsTable.getSortOrder()

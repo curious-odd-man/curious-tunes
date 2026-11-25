@@ -12,10 +12,6 @@ public class RescanLibraryEvent extends ApplicationEvent {
      */
     private final boolean full;
 
-    public RescanLibraryEvent(Object source, String path) {
-        this(source, path, false);
-    }
-
     public RescanLibraryEvent(Object source, String path, boolean full) {
         super(source);
         this.path = path;

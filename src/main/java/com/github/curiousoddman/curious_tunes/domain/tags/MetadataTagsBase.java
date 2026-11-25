@@ -1,7 +1,6 @@
 package com.github.curiousoddman.curious_tunes.domain.tags;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
-import com.github.curiousoddman.curious_tunes.util.JooqUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +30,10 @@ public abstract class MetadataTagsBase implements MetadataTags {
     protected String lyrics;
     protected AlbumCover albumCover;
 
-    @Override
-    public <T> T validate(String description, T field, T newValue) {
+    /**
+     * @return {@code newValue}; logs when a file has the same tag twice with different values
+     */
+    protected <T> T validate(String description, T field, T newValue) {
         if (field == null) {
             return newValue;
         }
@@ -44,11 +45,7 @@ public abstract class MetadataTagsBase implements MetadataTags {
 
     @Override
     public boolean updateTrackIfChanged(TrackRecord trackRecord, Integer newAlbumId) {
-        // This cannot really change - they belong to album and artist
-
-        //updateFieldIfChanged(trackRecord, artist, TRACK.F);
-        // updateFieldIfChanged(trackRecord, albumCover, TRACK.);
-
+        // Artist and cover aren't track fields: they belong to the album and the artist.
         updateFieldIfChanged(trackRecord, newAlbumId, TRACK.FK_ALBUM);
         updateFieldIfChanged(trackRecord, fileLocation, TRACK.FILE_LOCATION);
         updateFieldIfChanged(trackRecord, title, TRACK.TITLE);
@@ -62,86 +59,6 @@ public abstract class MetadataTagsBase implements MetadataTags {
         updateFieldIfChanged(trackRecord, lyrics, TRACK.LYRICS);
         return trackRecord.changed();
     }
-
-    @Override
-    public void setArtist(String artist) {
-        this.artist = artist;
-        onArtistUpdated();
-    }
-
-    protected abstract void onArtistUpdated();
-
-    @Override
-    public void setAlbum(String album) {
-        this.album = album;
-        onAlbumUpdated();
-    }
-
-    protected abstract void onAlbumUpdated();
-
-    @Override
-    public void setTitle(String title) {
-        this.title = title;
-        onTitleUpdated();
-    }
-
-    protected abstract void onTitleUpdated();
-
-    @Override
-    public void setTrackNumber(Integer trackNumber) {
-        this.trackNumber = trackNumber;
-        onTrackNumberUpdated();
-    }
-
-    protected abstract void onTrackNumberUpdated();
-
-    @Override
-    public void setReleaseDate(String releaseDate) {
-        this.releaseDate = releaseDate;
-        onReleaseDateUpdated();
-    }
-
-    protected abstract void onReleaseDateUpdated();
-
-    @Override
-    public void setDiskNumber(Integer diskNumber) {
-        this.diskNumber = diskNumber;
-        onDiskNumberUpdated();
-    }
-
-    protected abstract void onDiskNumberUpdated();
-
-    @Override
-    public void setGenre(String genre) {
-        this.genre = genre;
-        onGenreUpdated();
-    }
-
-    protected abstract void onGenreUpdated();
-
-    @Override
-    public void setComposer(String composer) {
-        this.composer = composer;
-        onComposerUpdated();
-    }
-
-    protected abstract void onComposerUpdated();
-
-    @Override
-    public void setLyrics(String lyrics) {
-        this.lyrics = lyrics;
-        onLyricsUpdated();
-    }
-
-    protected abstract void onLyricsUpdated();
-
-    @Override
-    public void setAlbumCover(AlbumCover albumCover) {
-        this.albumCover = albumCover;
-        onAlbumCoverUpdated();
-    }
-
-    protected abstract void onAlbumCoverUpdated();
 
     protected void verifyRequiredValuesPresent() {
         List<String> missingFields = new ArrayList<>();

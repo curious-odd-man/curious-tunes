@@ -2,7 +2,6 @@ package com.github.curiousoddman.curious_tunes.domain;
 
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.AlbumRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.ArtistRecord;
-import com.github.curiousoddman.curious_tunes.dbobj.tables.records.PlaybackHistoryRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackOverridesHistoryRecord;
 import com.github.curiousoddman.curious_tunes.dbobj.tables.records.TrackRecord;
 import com.github.curiousoddman.curious_tunes.domain.user.prefs.UserPrefKey;
@@ -84,16 +83,6 @@ public class DataAccess {
                 .fetchOne();
     }
 
-    public TrackRecord getTrack(Integer albumFk, String title) {
-        return dsl
-                .selectFrom(TRACK)
-                .where(
-                        TRACK.FK_ALBUM.eq(albumFk),
-                        TRACK.TITLE.eq(title)
-                )
-                .fetchOne();
-    }
-
     public TrackRecord insertTrack(TrackRecord newTrackRecord) {
         return dsl
                 .insertInto(TRACK)
@@ -145,14 +134,6 @@ public class DataAccess {
            .forEach(track -> byAlbum.get(track.getFkAlbum())
                                     .add(track));
         return byAlbum;
-    }
-
-    public List<TrackRecord> getAlbumTracks(int albumFk) {
-        return dsl
-                .selectFrom(TRACK)
-                .where(TRACK.FK_ALBUM.eq(albumFk))
-                .stream()
-                .toList();
     }
 
     public List<TrackOverridesHistoryRecord> getTrackOverrides(int id) {
@@ -283,22 +264,6 @@ public class DataAccess {
                         row.get(ARTIST.NAME)));
     }
 
-    public List<PlaybackHistoryRecord> getAllHistoryRecords() {
-        return dsl
-                .selectFrom(PLAYBACK_HISTORY)
-                .orderBy(PLAYBACK_HISTORY.DATETIME.desc())
-                .stream()
-                .toList();
-    }
-
-    public List<TrackRecord> getTracks(List<Integer> trackIds) {
-        return dsl
-                .selectFrom(TRACK)
-                .where(TRACK.ID.in(trackIds))
-                .stream()
-                .toList();
-    }
-
     public AlbumRecord getAlbum(Integer id) {
         return dsl.fetchSingle(ALBUM, ALBUM.ID.eq(id));
     }
@@ -365,12 +330,5 @@ public class DataAccess {
                 .fetchOne();
 
         return record != null ? record.value1() : defaultValue;
-    }
-
-    public List<TrackRecord> getAllTracks() {
-        return dsl
-                .selectFrom(TRACK)
-                .stream()
-                .toList();
     }
 }

@@ -52,7 +52,7 @@ public final class WaveformRaster {
             for (int b = first; b < end && b < bars.length; b++) {
                 amp = Math.max(amp, bars[b]);
             }
-            amp = Math.max(MIN_AMPLITUDE, Math.min(1, amp));
+            amp = Math.clamp(amp, MIN_AMPLITUDE, 1);
 
             double halfH = amp * (centerY - 2);
             int    yTop  = Math.max(0, (int) (centerY - halfH));

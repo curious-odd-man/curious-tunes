@@ -81,7 +81,7 @@ public class UserPreferencesService {
     }
 
     public void saveVolume(int volume) {
-        dataAccess.setUserPref(UserPrefKey.VOLUME, String.valueOf(Math.max(0, Math.min(100, volume))));
+        dataAccess.setUserPref(UserPrefKey.VOLUME, String.valueOf(Math.clamp(volume, 0, 100)));
     }
 
     private double getDouble(UserPrefKey key, double defaultValue) {
@@ -121,7 +121,7 @@ public class UserPreferencesService {
     }
 
     public static int clampVisualiserDelay(int millis) {
-        return Math.max(0, Math.min(MAX_VISUALISER_DELAY_MS, millis));
+        return Math.clamp(millis, 0, MAX_VISUALISER_DELAY_MS);
     }
 
     public int getVolume() {

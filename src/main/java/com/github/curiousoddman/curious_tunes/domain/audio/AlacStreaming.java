@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * (doc/performance-review.md, section 1, option G): each track becomes an {@link AlacVirtualWav}, registered with
  * the patched JavaFX media module ({@link StreamSources}) under a URI that names no real file.
  * <p>
- * {@link #isAvailable()} says whether the patch is in place; if it isn't (a JavaFX upgrade, a launch without the
- * patch), the caller falls back to another way of playing the file.
+ * {@link #isAvailable()} says whether the patch is in place. If it isn't (a JavaFX upgrade, a launch without the
+ * patch), ALAC files cannot be played: there is no fallback since the HTTP endpoint was removed.
  */
 @Slf4j
 @Component
@@ -52,7 +52,8 @@ public class AlacStreaming {
             if (active) {
                 log.info("ALAC streaming: JavaFX media patch {} active", StreamSources.PATCH_VERSION);
             } else {
-                log.warn("ALAC streaming: JavaFX media patch not active; ALAC files play through the fallback");
+                log.error("ALAC streaming: JavaFX media patch not active; ALAC files will not play. Was the patch built for JavaFX {}?",
+                        StreamSources.PATCH_VERSION);
             }
         }
         return result;

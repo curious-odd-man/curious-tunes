@@ -74,6 +74,6 @@ public class SpectrumModel {
         for (float magnitude : magnitudes) {
             loudest = Math.max(loudest, magnitude);
         }
-        return Math.max(0, Math.min(1, (loudest - thresholdDb) / -thresholdDb));
+        return Math.clamp((loudest - thresholdDb) / -thresholdDb, 0, 1);
     }
 }

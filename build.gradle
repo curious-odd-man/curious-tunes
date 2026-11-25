@@ -179,15 +179,11 @@ springBoot {
 
 dependencies {
     runtimeOnly "org.jooq:jooq-codegen"
-    runtimeOnly 'com.h2database:h2'
+    // implementation, not runtimeOnly: H2DevConsole starts H2's own console server (no servlet container needed)
+    implementation 'com.h2database:h2'
 
-    implementation 'org.springframework.boot:spring-boot-h2console'
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.springframework.boot:spring-boot-starter-jooq'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    implementation("com.github.curious-odd-man:alac2wav:1.2")
     implementation 'org.jsoup:jsoup:1.22.1'
     implementation 'com.squareup.okhttp3:okhttp:5.3.2'
 
